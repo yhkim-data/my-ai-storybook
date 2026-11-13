@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>이야기 씨앗</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Noto Sans KR',sans-serif;color:#17233A}
+a{color:#2459C4}a:hover{color:#173F8F}
+</style>
+</helmet>
+<div style="min-height: 820px; box-sizing: border-box; background: #F3F6FA; display: flex; flex-direction: column">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 40px; background: #FFFFFF; border-bottom: 1px solid #D5DCE8">
+<span style="font-family: 'Gowun Dodum', sans-serif; font-size: 22px">나만의 AI 동화책</span>
+<div role="img" aria-label="8단계 중 2단계" style="display: flex; align-items: center; gap: 10px">
+<span style="width: 14px; height: 14px; border-radius: 999px; background: #2459C4"></span>
+<span style="width: 44px; height: 14px; border-radius: 999px; background: #2459C4"></span>
+<span style="width: 14px; height: 14px; border-radius: 999px; background: #C3CDDD"></span>
+<span style="width: 14px; height: 14px; border-radius: 999px; background: #C3CDDD"></span>
+<span style="width: 14px; height: 14px; border-radius: 999px; background: #C3CDDD"></span>
+<span style="width: 14px; height: 14px; border-radius: 999px; background: #C3CDDD"></span>
+<span style="width: 14px; height: 14px; border-radius: 999px; background: #C3CDDD"></span>
+<span style="width: 14px; height: 14px; border-radius: 999px; background: #C3CDDD"></span>
+<span style="margin-left: 6px; font-size: 15px; font-weight: 500; color: #4A5872">2 / 8 이야기 씨앗</span>
+</div>
+<span style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 10px; background: #17233A; color: #FFFFFF; font-weight: 700; font-size: 15px; letter-spacing: 0.02em">DI Lab</span>
+</header>
+<main style="flex-grow: 1; width: 100%; max-width: 960px; box-sizing: border-box; margin: 0 auto; padding: 36px 40px; display: flex; flex-direction: column; gap: 28px">
+<h1 style="margin: 0; font-family: 'Gowun Dodum', sans-serif; font-weight: 400; font-size: 36px; line-height: 1.3">어떤 이야기의 씨앗을 심을까요?</h1>
+<fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 12px">
+<legend style="padding: 0; margin-bottom: 12px; font-size: 20px; font-weight: 700">누가 읽을 책인가요?</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<button type="button" style="min-height: 52px; padding: 0 22px; border: 2px solid #D5DCE8; border-radius: 999px; background: #FFFFFF; color: #17233A; font: 500 18px 'Noto Sans KR', sans-serif">5~7살</button>
+<button type="button" aria-pressed="true" style="min-height: 52px; padding: 0 22px; border: 2px solid #2459C4; border-radius: 999px; background: #E3ECFB; color: #173F8F; font: 700 18px 'Noto Sans KR', sans-serif">8~10살</button>
+<button type="button" style="min-height: 52px; padding: 0 22px; border: 2px solid #D5DCE8; border-radius: 999px; background: #FFFFFF; color: #17233A; font: 500 18px 'Noto Sans KR', sans-serif">11~13살</button>
+</div>
+</fieldset>
+<fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 12px">
+<legend style="padding: 0; margin-bottom: 12px; font-size: 20px; font-weight: 700">무엇에 대한 이야기인가요?</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<button type="button" style="min-height: 52px; padding: 0 22px; border: 2px solid #D5DCE8; border-radius: 999px; background: #FFFFFF; color: #17233A; font: 500 18px 'Noto Sans KR', sans-serif">우정</button>
+<button type="button" aria-pressed="true" style="min-height: 52px; padding: 0 22px; border: 2px solid #2459C4; border-radius: 999px; background: #E3ECFB; color: #173F8F; font: 700 18px 'Noto Sans KR', sans-serif">모험</button>
+<button type="button" style="min-height: 52px; padding: 0 22px; border: 2px solid #D5DCE8; border-radius: 999px; background: #FFFFFF; color: #17233A; font: 500 18px 'Noto Sans KR', sans-serif">가족</button>
+<button type="button" style="min-height: 52px; padding: 0 22px; border: 2px solid #D5DCE8; border-radius: 999px; background: #FFFFFF; color: #17233A; font: 500 18px 'Noto Sans KR', sans-serif">동물</button>
+<button type="button" style="min-height: 52px; padding: 0 22px; border: 2px solid #D5DCE8; border-radius: 999px; background: #FFFFFF; color: #17233A; font: 500 18px 'Noto Sans KR', sans-serif">우주</button>
+<button type="button" style="min-height: 52px; padding: 0 22px; border: 2px dashed #8FA0BC; border-radius: 999px; background: #FFFFFF; color: #17233A; font: 500 18px 'Noto Sans KR', sans-serif">직접 쓸래요</button>
+</div>
+</fieldset>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<label for="hero-name" style="font-size: 20px; font-weight: 700">주인공 이름</label>
+<input id="hero-name" type="text" placeholder="지어낸 이름을 써요 (예: 토리)" style="min-height: 56px; box-sizing: border-box; padding: 0 18px; border: 2px solid #8FA0BC; border-radius: 12px; font: 400 18px 'Noto Sans KR', sans-serif; color: #17233A">
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span id="pages-label" style="font-size: 20px; font-weight: 700">몇 쪽으로 만들까요?</span>
+<div role="group" aria-labelledby="pages-label" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<button type="button" style="min-height: 56px; border: 2px solid #D5DCE8; border-radius: 12px; background: #FFFFFF; color: #17233A; font: 500 18px 'Noto Sans KR', sans-serif">4쪽</button>
+<button type="button" style="min-height: 56px; border: 2px solid #D5DCE8; border-radius: 12px; background: #FFFFFF; color: #17233A; font: 500 18px 'Noto Sans KR', sans-serif">6쪽</button>
+<button type="button" aria-pressed="true" style="min-height: 56px; border: 2px solid #2459C4; border-radius: 12px; background: #E3ECFB; color: #173F8F; font: 700 18px 'Noto Sans KR', sans-serif">8쪽</button>
+</div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<label for="hero-look" style="font-size: 20px; font-weight: 700">주인공은 어떻게 생겼나요?</label>
+<textarea id="hero-look" rows="3" placeholder="예: 빨간 목도리를 한 작은 여우, 꼬리 끝이 하얘요" style="box-sizing: border-box; padding: 14px 18px; border: 2px solid #8FA0BC; border-radius: 12px; font: 400 18px/1.6 'Noto Sans KR', sans-serif; color: #17233A; resize: vertical"></textarea>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 12px; background: #FFE8D9; color: #8A3206; font-size: 16px; font-weight: 500">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8.5"></circle><path d="M11 6.5v5.5M11 15.2v.3"></path></svg>
+진짜 이름, 주소, 전화번호는 쓰지 마세요.
+</div>
+</main>
+<footer style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 40px; border-top: 1px solid #D5DCE8; background: #FFFFFF">
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; min-height: 56px; padding: 0 24px; border: 1px solid #D5DCE8; border-radius: 12px; color: #17233A; font-weight: 500; font-size: 18px; text-decoration: none">이전</a>
+<span style="font-size: 15px; color: #4A5872">쓰는 동안 자동으로 저장돼요</span>
+<a href="Pictures.dc.html" style="display: inline-flex; align-items: center; min-height: 56px; padding: 0 36px; border-radius: 12px; background: #2459C4; color: #FFFFFF; font-weight: 700; font-size: 18px; text-decoration: none">다음</a>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
