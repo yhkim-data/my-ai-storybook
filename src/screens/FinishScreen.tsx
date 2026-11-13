@@ -1,0 +1,210 @@
+// 8단계 완성 화면: 책 넘겨보기, 지은이 이름, PDF·그림 묶음·작업 파일 받기.
+import { useState, type KeyboardEvent } from 'react';
+import { Brand, DiLabBadge, Shell, StepDots } from '../components/Shell';
+import { Busy, Notice } from '../components/Notice';
+import { CreditsPageView, PageView } from '../components/PageView';
+import type { ProgressFn } from '../export/export_book';
+import { page_name, useT } from '../i18n';
+import { book_file_name, book_file_stem, download_blob, serialize_book } from '../storage/book_file';
+import { useBook } from '../store/book_store';
+import type { Book } from '../types';
+import { useElementWidth } from '../utils/use_element_width';
+import './FinishScreen.css';
+
+/** 넘겨보기 쪽 그림의 가장 큰 너비(px) */
+const VIEWER_MAX_SIZE = 560;
+/** 너비를 재기 전에 쓰는 처음 너비(px) */
+const VIEWER_INITIAL_SIZE = 420;
+/** 지은이 이름의 가장 긴 글자 수 */
+const AUTHOR_MAX_LENGTH = 30;
+/** 작업 파일의 형식 */
+const BOOK_FILE_MIME = 'application/json';
+
+/** 받기 종류 */
+type ExportKind = 'pdf' | 'print' | 'zip' | 'file';
+/** 진행 상태 */
+interface Progress {
+  done: number;
+  total: number;
+}
+
+interface DownloadChoiceProps {
+  test_id: string;
+  title: string;
+  desc: string;
+  is_primary?: boolean;
+  disabled: boolean;
+  on_click: () => void;
+}
+
+/**
+ * 받기 단추 하나. 제목과 설명이 들어 있다.
+ */
+function DownloadChoice({ test_id, title, desc, is_primary = false, disabled, on_click }: DownloadChoiceProps) {
+  return (
+    <button
+      type="button"
+      className={is_primary ? 'choice medium primary' : 'choice medium'}
+      data-testid={test_id}
+      disabled={disabled}
+      onClick={on_click}
+    >
+      <span className="choice-title">{title}</span>
+      <span className="choice-desc">{desc}</span>
+    </button>
+  );
+}
+
+/**
+ * 책 넘겨보기: 표지, 본문, 만든 사람 쪽을 한 쪽씩 보여 준다.
+ */
+function BookViewer({ book }: { book: Book }) {
+  const t = useT();
+  const [index, set_index] = useState(0);
+  const [wrap_ref, wrap_width] = useElementWidth<HTMLDivElement>(VIEWER_INITIAL_SIZE);
+  const size = Math.min(wrap_width, VIEWER_MAX_SIZE);
+  const total = book.pages.length + 1;
+  const last = total - 1;
+  const page = index < book.pages.length ? book.pages[index] : undefined;
+
+  /** 화살표 키로 쪽을 넘긴다. */
+  const handle_key = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'ArrowLeft') set_index((now) => Math.max(0, now - 1));
+    if (event.key === 'ArrowRight') set_index((now) => Math.min(last, now + 1));
+  };
+
+  return (
+    <section className="finish-viewer" aria-label={t('finish.viewer_aria')} tabIndex={0} onKeyDown={handle_key}>
+      <div className="finish-viewer-page" ref={wrap_ref}>
+        {page ? (
+          <PageView page={page} size={size} image_alt={page_name(t, index)} class_name="page-shadow" />
+        ) : (
+          <CreditsPageView book={book} size={size} class_name="page-shadow" />
+        )}
+      </div>
+      <div className="finish-viewer-bar">
+        <button type="button" className="btn" disabled={index === 0} onClick={() => set_index(index - 1)}>
+          {t('finish.prev_page')}
+        </button>
+        <span className="finish-page-of" aria-live="polite">
+          {t('finish.page_of', { n: index + 1, total })}
+        </span>
+        <button type="button" className="btn" disabled={index === last} onClick={() => set_index(index + 1)}>
+          {t('finish.next_page')}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * 8단계 완성 화면.
+ */
+export function FinishScreen() {
+  const t = useT();
+  const book = useBook((s) => s.book);
+  const is_demo = useBook((s) => s.is_demo);
+  const go = useBook((s) => s.go);
+  const close_book = useBook((s) => s.close_book);
+  const set_author = useBook((s) => s.set_author);
+  const [progress, set_progress] = useState<Progress | null>(null);
+  const [is_done, set_is_done] = useState(false);
+  const [has_error, set_has_error] = useState(false);
+
+  if (!book) return null;
+  const total_pages = book.pages.length + 1;
+  const is_busy = progress !== null;
+
+  /** 파일을 만들어 내려받는다. 만드는 동안 단추를 잠근다. */
+  const run_export = async (kind: ExportKind) => {
+    set_is_done(false);
+    set_has_error(false);
+    set_progress({ done: 0, total: total_pages });
+    const on_progress: ProgressFn = (done, total) => set_progress({ done, total });
+    try {
+      const stem = book_file_stem(book);
+      if (kind === 'file') {
+        download_blob(new Blob([serialize_book(book)], { type: BOOK_FILE_MIME }), book_file_name(book));
+      } else {
+        // 내보내기 코드는 크기가 커서 처음 쓸 때 불러온다. 첫 화면이 빨리 뜨게 하기 위해서다.
+        const { export_image_zip, export_pdf } = await import('../export/export_book');
+        if (kind === 'pdf') download_blob(await export_pdf(book, false, on_progress), `${stem}.pdf`);
+        else if (kind === 'print') download_blob(await export_pdf(book, true, on_progress), `${stem}-print.pdf`);
+        else download_blob(await export_image_zip(book, on_progress), `${stem}-pages.zip`);
+      }
+      set_is_done(true);
+    } catch {
+      set_has_error(true);
+    } finally {
+      set_progress(null);
+    }
+  };
+
+  return (
+    <Shell
+      width="wide"
+      header={
+        <>
+          <Brand />
+          <StepDots screen="finish" />
+          <DiLabBadge />
+        </>
+      }
+      footer={
+        <>
+          <button type="button" className="btn footer-prev" onClick={() => (is_demo ? close_book() : go('editor'))}>
+            {t('common.prev')}
+          </button>
+          <span className="footer-hint">{t('start.rights_line')}</span>
+          <button type="button" className="btn" onClick={close_book}>
+            {t('common.home')}
+          </button>
+        </>
+      }
+    >
+      {is_demo && (
+        <Notice
+          kind="ok"
+          action={
+            <button type="button" className="btn small" onClick={close_book}>
+              {t('finish.demo_start')}
+            </button>
+          }
+        >
+          {t('finish.demo_badge')}
+        </Notice>
+      )}
+      <h1 className="title-lg">{t('finish.heading')}</h1>
+      <div className="finish-body">
+        <BookViewer book={book} />
+        <div className="finish-actions">
+          {!is_demo && (
+            <div className="finish-author">
+              <label htmlFor="author-input">{t('finish.author_label')}</label>
+              <input
+                id="author-input"
+                className="text-input"
+                type="text"
+                maxLength={AUTHOR_MAX_LENGTH}
+                placeholder={t('finish.author_placeholder')}
+                value={book.author}
+                onChange={(event) => set_author(event.target.value)}
+              />
+            </div>
+          )}
+          <DownloadChoice test_id="download-pdf" is_primary title={t('finish.pdf_screen.title')} desc={t('finish.pdf_screen.desc')} disabled={is_busy} on_click={() => void run_export('pdf')} />
+          <DownloadChoice test_id="download-print" title={t('finish.pdf_print.title')} desc={t('finish.pdf_print.desc')} disabled={is_busy} on_click={() => void run_export('print')} />
+          <DownloadChoice test_id="download-zip" title={t('finish.zip.title')} desc={t('finish.zip.desc')} disabled={is_busy} on_click={() => void run_export('zip')} />
+          <DownloadChoice test_id="download-file" title={t('finish.file.title')} desc={t('finish.file.desc')} disabled={is_busy} on_click={() => void run_export('file')} />
+          {progress && <Busy>{t('finish.working', { n: progress.done, total: progress.total })}</Busy>}
+          {is_done && <Notice kind="ok">{t('finish.done')}</Notice>}
+          {has_error && (
+            <Notice kind="warn" role="alert">
+              {t('finish.error')}
+            </Notice>
+          )}
+        </div>
+      </div>
+    </Shell>
+  );
+}
