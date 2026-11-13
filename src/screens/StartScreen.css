@@ -1,0 +1,45 @@
+/* 시작 화면에서만 쓰는 모양 */
+.start-choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.start-choice-icon {
+  flex: none;
+}
+.start-row {
+  gap: 16px;
+}
+.start-file-input {
+  display: none;
+}
+.start-connect-btn {
+  gap: 12px;
+}
+.start-footer-line {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+.start-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.start-dialog-title {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: 26px;
+}
+
+@media (max-width: 720px) {
+  .start-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .start-dialog-actions .btn {
+    flex: 1 1 100%;
+  }
+}

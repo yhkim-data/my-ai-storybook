@@ -1,0 +1,44 @@
+/* 5단계 그림체 화면 모양 */
+.style-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.style-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 44px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--text);
+  text-align: left;
+}
+.style-card[aria-pressed='true'] {
+  border: 2px solid var(--primary);
+  background: var(--selected-bg);
+  color: var(--primary-dark);
+  /* 테두리가 1px 늘어난 만큼 안쪽 여백을 줄여 칸 크기를 지킨다. */
+  padding: 11px;
+}
+.style-sample {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  background: var(--canvas-bg);
+}
+.style-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .style-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+}

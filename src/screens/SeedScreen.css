@@ -1,0 +1,22 @@
+/* 2단계(이야기 씨앗) 화면에서만 쓰는 모양 */
+.seed-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.seed-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.seed-seg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .seed-chips .chip {
+    flex: 1 1 auto;
+  }
+}

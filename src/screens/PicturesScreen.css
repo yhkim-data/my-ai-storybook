@@ -1,0 +1,161 @@
+/* 6단계 그림 화면 모양 (design/Pictures.dc.html 기준) */
+.pic-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+.pic-nav {
+  flex: 1 1 200px;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pic-nav-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+.pic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pic-item {
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 500;
+}
+.pic-item[aria-current='true'] {
+  border: 2px solid var(--primary);
+  background: var(--selected-bg);
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+.pic-item .pic-has {
+  color: var(--ok-text);
+  font-weight: 700;
+}
+.pic-item .pic-none {
+  color: var(--text-sub);
+}
+.pic-all {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+.pic-main {
+  flex: 999 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.pic-middle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.pic-frame {
+  flex: 1 1 320px;
+  max-width: 400px;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--card);
+}
+.pic-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pic-frame.empty {
+  border: 2px dashed var(--line-input);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-sub);
+  font-size: 17px;
+  font-weight: 500;
+}
+.pic-frame.working {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--line-input);
+}
+.pic-side {
+  flex: 1 1 300px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pic-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pic-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+.pic-text {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  font-size: 17px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.pic-textarea {
+  font-size: 17px;
+  line-height: 1.6;
+}
+.pic-fallback {
+  width: 100%;
+  font-size: 15px;
+}
+
+@media (max-width: 720px) {
+  .pic-layout {
+    gap: 20px;
+  }
+  .pic-nav {
+    flex-basis: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+  /* 작은 화면에서는 쪽 목록을 가로로 넘겨 보는 한 줄로 바꾼다. */
+  .pic-list {
+    min-width: 0;
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .pic-item {
+    flex: none;
+    min-width: 150px;
+  }
+  .pic-frame {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
