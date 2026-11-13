@@ -2,7 +2,7 @@
 
 [English](teacher-guide.en.md) | **한국어**
 
-이 안내서는 "나만의 AI 동화책"으로 수업을 하려는 선생님을 위한 글이에요. 바로 써보기: https://yhkim-data.github.io/my-ai-storybook/
+이 안내서는 "나만의 AI 동화책"으로 수업을 하려는 선생님을 위한 글이에요. 바로 써보기: https://di-lab.io/my-ai-storybook/
 
 ## 수업 준비물
 

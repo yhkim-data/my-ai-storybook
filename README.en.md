@@ -10,7 +10,7 @@ A tool for making a short picture book in your web browser. No install and no si
 
 ## Try it now
 
-https://yhkim-data.github.io/my-ai-storybook/
+https://di-lab.io/my-ai-storybook/
 
 If this is your first time, press [See a sample] on the start screen to flip through a finished book.
 

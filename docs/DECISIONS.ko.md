@@ -66,3 +66,7 @@
 - 보조 작업자 `builder`, `writer`, `checker`가 정의대로 불렸다. 모델 이름 문제는 없었다.
 - 작업 중간의 작은 검사는 주 작업자가 직접 돌렸고, 올리기 전 전체 검사는 `checker`에게 맡겼다.
 - 화면과 검사를 여러 보조 작업자가 동시에 만들었다. 그래서 커밋은 전체 검사가 통과한 뒤에 7장의 단계별로 나눠서 했다.
+
+## 배포
+
+- 이 GitHub 계정에는 사용자 도메인(di-lab.io)이 걸려 있어서, 바로 써보기 주소는 `https://di-lab.io/my-ai-storybook/`다. `https://yhkim-data.github.io/my-ai-storybook/`로 열어도 그 주소로 넘어간다.
