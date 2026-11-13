@@ -1,0 +1,20 @@
+/* 권리 안내 화면에서만 쓰는 모양 */
+.rights-header-title {
+  font-family: var(--font-title);
+  font-size: 24px;
+}
+.rights-statement {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.rights-paragraph {
+  font-size: 17px;
+}
+
+@media (max-width: 720px) {
+  .rights-header-title {
+    font-size: 19px;
+  }
+}
