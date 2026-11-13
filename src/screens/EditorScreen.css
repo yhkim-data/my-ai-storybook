@@ -1,0 +1,363 @@
+/* 꾸미기 화면 모양. design/Editor.dc.html 시안의 배치와 색을 따른다. */
+
+.shell:has(.editor-layout) .shell-main {
+  max-width: 1400px;
+  padding: 24px 32px;
+}
+.shell:has(.editor-layout) .shell-footer {
+  padding: 16px 32px;
+}
+.shell:has(.editor-layout) .shell-footer .btn {
+  min-height: 52px;
+  font-size: 17px;
+}
+.editor-tools {
+  gap: 10px;
+}
+.editor-title {
+  margin: 0 10px 0 0;
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: 22px;
+}
+.editor-badge {
+  padding: 8px 14px;
+}
+.editor-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+.editor-side-title,
+.editor-label {
+  font-size: 15px;
+  font-weight: 700;
+}
+.editor-side-title {
+  color: var(--text-sub);
+}
+.editor-small-hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-sub);
+}
+
+/* 쪽 순서 */
+.editor-pages {
+  flex: 1 1 120px;
+  max-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.editor-thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.editor-thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background-color: var(--card);
+  background-size: cover;
+  background-position: center;
+  color: var(--text-sub);
+  font-weight: 500;
+  font-size: 15px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+.editor-thumb .thumb-label {
+  margin: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+}
+.editor-thumb[aria-current='true'] {
+  border: 3px solid var(--primary);
+  background-color: var(--selected-bg);
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+.btn.dashed {
+  border-style: dashed;
+  border-color: var(--line-input);
+}
+.editor-page-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 쪽 미리보기 */
+.editor-canvas {
+  flex: 999 1 480px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--canvas-bg);
+}
+.editor-canvas-fit {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  justify-content: center;
+}
+.editor-canvas .book-page {
+  overflow: visible;
+}
+.editor-canvas .page-inner {
+  overflow: visible;
+}
+
+/* 고치는 글상자 */
+.book-page .text-box.editor-box {
+  overflow: visible;
+  outline: 2px solid var(--primary);
+  cursor: move;
+  touch-action: none;
+}
+.book-page .text-box.editor-box.dragging {
+  user-select: none;
+}
+.editor-text {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  resize: none;
+  overflow: hidden;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  line-height: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
+}
+.editor-text:focus-visible {
+  outline: none;
+}
+.editor-text::placeholder {
+  color: var(--line-input);
+}
+.box-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: #ffffff;
+  border: 2px solid var(--primary);
+  border-radius: 2px;
+  touch-action: none;
+}
+/* 손가락으로도 잡기 쉽게 보이지 않는 넓은 잡는 자리를 둔다. */
+.box-handle::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+}
+.box-handle.nw {
+  left: -8px;
+  top: -8px;
+  cursor: nwse-resize;
+}
+.box-handle.ne {
+  right: -8px;
+  top: -8px;
+  cursor: nesw-resize;
+}
+.box-handle.sw {
+  left: -8px;
+  bottom: -8px;
+  cursor: nesw-resize;
+}
+.box-handle.se {
+  right: -8px;
+  bottom: -8px;
+  cursor: nwse-resize;
+}
+.box-grip {
+  position: absolute;
+  left: 50%;
+  top: -34px;
+  width: 44px;
+  height: 28px;
+  margin-left: -22px;
+  padding: 0;
+  border: 2px solid var(--primary);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: move;
+  touch-action: none;
+}
+.snap-guide {
+  position: absolute;
+  z-index: 3;
+  background: #e5484d;
+  pointer-events: none;
+}
+.snap-guide.vertical {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+.snap-guide.horizontal {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+/* 글상자 설정 */
+.editor-settings {
+  flex: 1 1 280px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+.editor-range {
+  min-height: 44px;
+  accent-color: var(--primary);
+}
+.editor-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.editor-swatch {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--line-input);
+}
+.editor-swatch[aria-pressed='true'] {
+  border: 3px solid var(--primary);
+  box-shadow: 0 0 0 2px #ffffff inset;
+}
+.editor-seg-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.editor-layouts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.editor-layout-btn {
+  aspect-ratio: 1 / 1;
+  min-height: 44px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  display: flex;
+}
+.editor-layout-btn[aria-pressed='true'] {
+  border: 2px solid var(--primary);
+  background: var(--selected-bg);
+}
+.layout-icon {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+}
+.layout-icon.column {
+  flex-direction: column;
+}
+.layout-icon .image-part {
+  flex-grow: 2;
+  border-radius: 3px;
+  background: var(--primary);
+}
+.layout-icon .text-part {
+  flex-grow: 1;
+  border-radius: 3px;
+  background: var(--line-input);
+}
+.layout-icon.full {
+  align-items: flex-end;
+  padding: 3px;
+  border-radius: 3px;
+  background: var(--primary);
+}
+.layout-icon.full .text-part {
+  flex-grow: 0;
+  width: 100%;
+  height: 30%;
+  border-radius: 2px;
+  background: #ffffff;
+}
+
+/* 작은 화면: 쪽 순서를 가로 줄로, 설정을 아래로 */
+@media (max-width: 720px) {
+  .shell:has(.editor-layout) .shell-main {
+    padding: 16px;
+  }
+  .shell:has(.editor-layout) .shell-footer {
+    padding: 12px 16px;
+  }
+  .editor-title {
+    flex-basis: 100%;
+    font-size: 19px;
+  }
+  .editor-badge {
+    display: none;
+  }
+  .editor-layout {
+    gap: 16px;
+  }
+  .editor-pages {
+    flex: 1 1 100%;
+    max-width: none;
+    min-width: 0;
+  }
+  .editor-thumbs {
+    min-width: 0;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 4px;
+  }
+  .editor-thumb {
+    flex: 0 0 72px;
+    width: 72px;
+  }
+  .editor-page-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .editor-canvas {
+    flex-basis: 100%;
+    padding: 40px 12px 16px;
+  }
+  .editor-settings {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
