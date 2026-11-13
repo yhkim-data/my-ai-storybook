@@ -119,7 +119,7 @@ npm run dev
 ## 배포
 
 - GitHub Actions(`.github/workflows/deploy.yml`)가 빌드해서 GitHub Pages에 올려요.
-- 배포 주소는 https://yhkim-data.github.io/my-ai-storybook/ 예요.
+- 배포 주소는 https://di-lab.io/my-ai-storybook/ 예요.
 - 앱이 놓이는 경로는 `vite.config.ts`의 `base`(`/my-ai-storybook/`)예요. 저장소 이름을 바꾸면 `base`와 `playwright.config.ts`의 `APP_PATH`도 함께 바꿔요.
 - 배포가 끝난 뒤에는 주소를 열어 앱 이름이 보이는지 확인해요. 화면이 비어 있다면 `base` 경로를 먼저 의심해요.
 

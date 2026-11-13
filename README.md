@@ -10,7 +10,7 @@
 
 ## 바로 써보기
 
-https://yhkim-data.github.io/my-ai-storybook/
+https://di-lab.io/my-ai-storybook/
 
 처음이라면 시작 화면에서 [체험판 보기]를 눌러 다 만든 책을 먼저 넘겨 보세요.
 
