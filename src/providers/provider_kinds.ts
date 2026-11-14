@@ -16,8 +16,8 @@ const CLAUDE_KEY_PREFIX = 'sk-ant-';
 const OPENAI_KEY_PREFIX = 'sk-';
 
 /** Claude 설정 */
-export const CLAUDE_TEXT_MODEL = 'claude-opus-5-5';
-export const CLAUDE_TEXT_CHOICES = ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'];
+export const CLAUDE_TEXT_MODEL = 'claude-haiku-5-5';
+export const CLAUDE_TEXT_CHOICES = ['claude-haiku-5-5', 'claude-sonnet-5-5', 'claude-opus-5-5'];
 export const CLAUDE_KEY_PAGE_URL = 'https://platform.claude.com/settings/keys';
 
 /** OpenAI 설정 */
