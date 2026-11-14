@@ -23,6 +23,8 @@ const LANG: Lang = 'ko';
 /** 검사용 가짜 키. 끝 4자리는 A1b2 */
 const GOOD_KEY = 'test-good-key-A1b2';
 const GOOD_KEY_TAIL = 'A1b2';
+/** 이 가짜 키는 sk- 로 시작하지 않으므로 Gemini 키로 본다 */
+const GOOD_KEY_NAME = 'Google Gemini';
 const BAD_KEY = 'test-bad-key-Z9y8';
 /** 제공사 주소 */
 const PROVIDER_ORIGIN = 'https://generativelanguage.googleapis.com';
@@ -196,7 +198,7 @@ test.describe('AI 연결하기', () => {
     // 맞는 키: 끝 4자리만 보인다.
     await key_input.fill(GOOD_KEY);
     await check.click();
-    await expect(page.getByText(`연결됐어요. 키 끝자리 ····${GOOD_KEY_TAIL}`)).toBeVisible();
+    await expect(page.getByText(tr(LANG, 'connect.ok', { name: GOOD_KEY_NAME, tail: GOOD_KEY_TAIL }))).toBeVisible();
     await expect_key_hidden(page);
     expect(await read_saved_text_key(page)).toBe(GOOD_KEY);
 
@@ -207,7 +209,7 @@ test.describe('AI 연결하기', () => {
 
     // 다시 열면 저장된 키 끝자리와 오늘 쓴 횟수, 나이 안내와 함께 쓰는 기기 안내가 보인다.
     await page.getByRole('button', { name: tr(LANG, 'start.connect') }).click();
-    await expect(page.getByText(`저장된 키 끝자리 ····${GOOD_KEY_TAIL}`)).toBeVisible();
+    await expect(page.getByText(tr(LANG, 'connect.saved_tail', { name: GOOD_KEY_NAME, tail: GOOD_KEY_TAIL }))).toBeVisible();
     await expect(page.getByTestId('usage-line')).toContainText('오늘 쓴 횟수');
     await expect(page.getByTestId('usage-line')).toContainText(tr(LANG, 'connect.shared_line'));
     await expect(page.getByText(tr(LANG, 'connect.age_line'))).toBeVisible();

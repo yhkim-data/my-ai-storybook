@@ -3,6 +3,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { translate } from '../i18n';
+import { PROVIDER_INFO } from '../providers/provider_kinds';
 import { useBook } from '../store/book_store';
 import { useSettings } from '../store/settings_store';
 import { ConnectScreen } from './ConnectScreen';
@@ -12,6 +13,11 @@ const ko = (key: string, params?: Record<string, string | number>) => translate(
 const FAKE_KEY = 'FAKE-KEY-for-test-ABCD1234';
 /** 가짜 키의 끝 4자리 */
 const FAKE_TAIL = '1234';
+/** 가짜 키의 회사 이름 (회사 모를 때 Gemini로 본다) */
+const FAKE_NAME = 'Google Gemini';
+/** 다른 회사 모양의 가짜 키. 실제 키가 아니다. */
+const CLAUDE_FAKE_KEY = 'sk-ant-' + 'test-fake-A1b2';
+const OPENAI_FAKE_KEY = 'sk-' + 'test-fake-A1b2';
 
 beforeEach(() => {
   useSettings.setState({ lang: 'ko', practice: true, text_key: '', image_key: '' });
@@ -31,7 +37,7 @@ describe('ConnectScreen', () => {
     render(<ConnectScreen />);
     await userEvent.type(screen.getByLabelText(ko('connect.key_label')), FAKE_KEY);
     await userEvent.click(screen.getByRole('button', { name: ko('connect.check') }));
-    await waitFor(() => expect(screen.getByText(ko('connect.ok', { tail: FAKE_TAIL }))).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(ko('connect.ok', { name: FAKE_NAME, tail: FAKE_TAIL }))).toBeInTheDocument());
     expect(useSettings.getState().text_key).toBe(FAKE_KEY);
     expect(document.body.textContent).not.toContain(FAKE_KEY);
     document.querySelectorAll('input').forEach((input) => expect(input.value).not.toContain(FAKE_KEY));
@@ -46,7 +52,7 @@ describe('ConnectScreen', () => {
   it('저장된 키가 있으면 끝자리만 보여 준다', () => {
     useSettings.setState({ text_key: FAKE_KEY });
     render(<ConnectScreen />);
-    expect(screen.getByText(ko('connect.saved_tail', { tail: FAKE_TAIL }))).toBeInTheDocument();
+    expect(screen.getByText(ko('connect.saved_tail', { name: FAKE_NAME, tail: FAKE_TAIL }))).toBeInTheDocument();
     expect(document.body.textContent).not.toContain(FAKE_KEY);
   });
 
@@ -57,7 +63,7 @@ describe('ConnectScreen', () => {
     expect(useSettings.getState().text_key).toBe('');
     expect(useSettings.getState().image_key).toBe('');
     expect(screen.getByText(ko('connect.cleared'))).toBeInTheDocument();
-    expect(screen.queryByText(ko('connect.saved_tail', { tail: FAKE_TAIL }))).toBeNull();
+    expect(screen.queryByText(ko('connect.saved_tail', { name: FAKE_NAME, tail: FAKE_TAIL }))).toBeNull();
   });
 
   it('건너뛰기를 누르면 돌아갈 화면으로 간다', async () => {
@@ -80,5 +86,33 @@ describe('ConnectScreen', () => {
     expect(useSettings.getState().text_model).toBe('gemini-3.8-flash');
     await userEvent.click(screen.getByRole('button', { name: ko('connect.kind_reset') }));
     expect(useSettings.getState().text_model).toBe('gemini-3.5-flash-lite');
+  });
+
+  it('Claude 모양 키를 저장하면 그림 없음 안내가 뜨고 글 AI 종류가 Claude 것이다', async () => {
+    render(<ConnectScreen />);
+    await userEvent.type(screen.getByLabelText(ko('connect.key_label')), CLAUDE_FAKE_KEY);
+    await userEvent.click(screen.getByRole('button', { name: ko('connect.check') }));
+    await waitFor(() => expect(screen.getByText(ko('connect.no_image'))).toBeInTheDocument());
+    expect(useSettings.getState().text_key).toBe(CLAUDE_FAKE_KEY);
+    const options = Array.from(document.querySelectorAll<HTMLOptionElement>('#text-model-select option')).map((option) => option.value);
+    expect(options).toEqual(PROVIDER_INFO.claude.text_choices);
+    expect(document.querySelector('#image-model-select')).toBeNull();
+  });
+
+  it('OpenAI 모양 키는 그림 AI 종류도 OpenAI 것이고 그림 없음 안내가 없다', () => {
+    useSettings.setState({ text_key: OPENAI_FAKE_KEY });
+    render(<ConnectScreen />);
+    expect(screen.queryByText(ko('connect.no_image'))).toBeNull();
+    const options = Array.from(document.querySelectorAll<HTMLOptionElement>('#image-model-select option')).map((option) => option.value);
+    expect(options).toEqual(PROVIDER_INFO.openai.image_choices);
+  });
+
+  it('그림용 칸에 Claude 모양 키를 넣으면 경고하고 저장하지 않는다', async () => {
+    render(<ConnectScreen />);
+    await userEvent.click(screen.getByText(ko('connect.details')));
+    await userEvent.type(screen.getByLabelText(ko('connect.image_key_label')), CLAUDE_FAKE_KEY);
+    await userEvent.click(screen.getByRole('button', { name: ko('connect.image_key_save') }));
+    expect(screen.getByRole('alert')).toHaveTextContent(ko('connect.image_key_claude'));
+    expect(useSettings.getState().image_key).toBe('');
   });
 });
