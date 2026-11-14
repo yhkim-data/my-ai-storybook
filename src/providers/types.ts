@@ -9,6 +9,8 @@ export type ProviderErrorKind =
   | 'network'
   | 'bad_key'
   | 'no_permission'
+  /** 키는 맞지만 그 회사의 조직 설정에서 브라우저 사용이 꺼져 있다 */
+  | 'browser_blocked'
   | 'unknown';
 
 /** 연결부가 던지는 오류. retry_at은 다시 해 볼 수 있는 시각(ms)이다. */

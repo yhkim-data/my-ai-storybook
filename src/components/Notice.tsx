@@ -8,6 +8,8 @@ const MS_PER_SECOND = 1000;
 /** 남은 시간을 다시 세는 간격(ms) */
 const COUNTDOWN_TICK_MS = 500;
 const ICON_SIZE = 22;
+/** 다시 눌러도 소용없어서 다시 하기 단추를 두지 않는 오류 (하루 한도, 틀린 키, 설정 문제) */
+const NO_RETRY_KINDS: ProviderErrorKind[] = ['quota_daily', 'bad_key', 'no_permission', 'browser_blocked'];
 
 /**
  * 주의 아이콘 (동그라미 안 느낌표).
@@ -114,8 +116,7 @@ export function AiErrorNotice({ error, on_retry, extra_action }: AiErrorNoticePr
     return () => clearInterval(timer);
   }, [is_rate, error]);
 
-  // 하루 한도와 틀린 키는 다시 눌러도 소용없으므로 다시 하기 단추를 두지 않는다.
-  const can_retry = error.kind !== 'quota_daily' && error.kind !== 'bad_key' && error.kind !== 'no_permission';
+  const can_retry = !NO_RETRY_KINDS.includes(error.kind);
   return (
     <Notice
       kind="warn"
