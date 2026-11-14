@@ -22,7 +22,7 @@
 - 키가 있으면 `e2e/real-api.spec.ts`로 실제 호출 검사를 돌릴 수 있다. `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` 중 있는 것만 돈다. 예: `ANTHROPIC_API_KEY=... npx playwright test e2e/real-api.spec.ts`
 - 무료 한도의 분당·하루 횟수는 공식 문서에 숫자가 없어서 적지 못했다. Gemini는 Google AI Studio에서 확인해야 한다. OpenAI는 무료 한도가 문서에 없다. Claude는 무료 한도가 없다.
 - OpenAI 그림 값은 장당이 아니라 토큰당(그림 출력 100만 토큰당 $30)이고 장당 값은 문서에 없어서, OpenAI로 책 한 권을 만드는 비용은 계산하지 못했다. Claude는 글만이라 책 한 권에 약 0.002달러다(기본 종류, `PROVIDER_NOTES.md` 8장).
-- Claude는 기관용 안내(2026-11-14 확인)를 읽었지만, 키를 받는 사람의 나이 조건은 약관 원문으로 확인하지 못했다. OpenAI는 18세 미만 API 안내를 읽었지만 서비스 약관의 나이 조항은 확인하지 못했다. 세 약관 주소(`openai.com/policies/...`)가 자동으로 읽으려 하면 HTTP 403으로 막혔다. 사람이 브라우저로 직접 열어 확인해야 한다.
+- Claude는 기관용 안내와 약관을 읽었다(2026-11-14). 키에 적용되는 상업 서비스 약관에는 나이 조항이 없고, 18세 이상 조건은 개인용 서비스 약관에 있다(`PROVIDER_NOTES.md` 8장). OpenAI는 18세 미만 API 안내를 읽었지만 서비스 약관의 나이 조항은 확인하지 못했다. 세 약관 주소(`openai.com/policies/...`)가 자동으로 읽으려 하면 HTTP 403으로 막혔다. 사람이 브라우저로 직접 열어 확인해야 한다.
 - Claude와 OpenAI가 입력한 내용을 어떻게 쓰는지, 결과물의 권리는 약관 원문을 확인하지 못했다.
 - 자동 검사는 Chromium에서만 돌렸다. Safari와 Firefox는 직접 써 보지 않았다. Safari에서는 쪽을 그림으로 바꿀 때 처음 한 번 그림이 빠지는 일이 있다고 알려져 있다. 그럴 때는 받기 단추를 한 번 더 누른다.
 

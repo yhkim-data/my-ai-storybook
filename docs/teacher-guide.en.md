@@ -39,7 +39,7 @@ Read this in the following way.
 - "It is the responsibility of organizations to comply with all applicable child safety and data privacy regulations, such as the Children's Online Privacy Protection Act (COPPA) in the United States. Compliance with these regulations should be clearly stated on the organization's website or similar public-facing documentation."
 - "Organizations must disclose to their users that they are interacting with an AI system rather than a human."
 - "Anthropic will periodically audit organizations for compliance with these safeguards." Not following them "may lead to the suspension or termination of your account."
-- This page is written for organizations. The age rule for the person who gets a key is not on it, and we could not check it in the original terms.
+- This page is written for organizations. The age of the person who gets a key: Anthropic's Commercial Terms of Service, which cover keys and the Console, have no age clause (checked 2026-11-14). The 18-or-older rule is in the Consumer Terms (effective 2025-10-08), which cover personal services such as Claude.ai.
 
 **OpenAI: people under 18 may use it when the safeguards are in place.** The text below comes from OpenAI's guidance for serving people under 18 through the API (the page has no date), checked on 2026-11-14. Source: https://developers.openai.com/api/docs/guides/safety-checks/under-18-api-guidance
 
