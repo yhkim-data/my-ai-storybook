@@ -36,11 +36,12 @@ Your book uses three fonts. All three are shared under the SIL Open Font License
 
 ## The AI company's terms
 
-The AI this tool connects to is Google's Gemini. The terms (Gemini API Additional Terms of Service, effective March 23, 2026) say this. (Checked 2026-11-14. Source: https://aistudio.google.com/docs/terms)
+This tool can connect to AI from Google Gemini, Claude (Anthropic), and OpenAI. The terms of Google Gemini (Gemini API Additional Terms of Service, effective March 23, 2026) say this. (Checked 2026-11-14. Source: https://aistudio.google.com/docs/terms)
 
 > "Some of our Services allow you to generate original content. Google won't claim ownership over that content."
 
 - Google does not claim ownership of the words and pictures the AI makes.
+- We did not check in the original terms how Claude and OpenAI treat the rights to what the AI makes. Check each company's terms before you use them.
 - But whether AI-made pictures are protected by copyright differs from country to country. This tool cannot decide how the law will treat them.
 - If you want to sell the book or enter it in a contest, check the rules of your country and of that contest.
 - For the age requirement and privacy points about using AI, see [How to get a key](key-guide.en.md) and the [teacher guide](teacher-guide.en.md).

@@ -10,7 +10,7 @@
 | `src/screens/` | 화면 하나가 파일 하나예요. 시작, AI 연결하기, 이야기 씨앗, 줄거리, 쪽 나누기, 그림체, 그림, 꾸미기, 완성, 권리 안내. 화면마다 CSS와 검사 파일이 있어요. |
 | `src/components/` | 여러 화면이 함께 쓰는 부품 (`Shell`, `PageView`, `Notice`) |
 | `src/editor/` | 꾸미기 화면의 글상자 편집 (`EditableTextBox.tsx`, 자리 계산 `geometry.ts`) |
-| `src/providers/` | AI 연결부. 글, 그림, 가짜(연습용) 연결부와 오류 흉내가 있어요. |
+| `src/providers/` | AI 연결부. 회사별(Gemini, Claude, OpenAI) 글·그림 연결부, 가짜(연습용) 연결부, 오류 흉내가 있어요. 아래 "AI 연결부 구조"를 보세요. |
 | `src/store/` | 상태 저장소 (zustand). `book_store.ts`, `book_model.ts`, `settings_store.ts` |
 | `src/storage/` | 저장. `db.ts`(IndexedDB), `autosave.ts`, `book_file.ts`(작업 파일) |
 | `src/export/` | 내보내기 (`export_book.ts`: PDF, 인쇄용 PDF, 그림 묶음) |
@@ -52,6 +52,8 @@ npm run dev
 | `npm run check:secrets` | 코드에 키가 들어갔는지 찾아요. |
 | `npm run check:i18n` | 한국어와 영어 문구의 키가 같은지 봐요. |
 | `npm run screenshots` | 화면 사진을 찍어 `docs/images/`에 넣어요. |
+| `CLAUDE_BRIDGE=1 npx playwright test e2e/claude-subscription.spec.ts` | 앱이 `api.anthropic.com`으로 보내는 요청을 가로채서, 이 컴퓨터의 Claude Code(`claude -p`, 구독)로 실제 Claude가 답을 만들게 해요. 요청 모양과 실제 Claude가 만든 글을 앱이 읽을 수 있는지 확인해요. 진짜 서버가 요청을 받아 주는지는 알 수 없어요(그것은 `real-api.spec.ts`가 봐요). `CLAUDE_BRIDGE=1`이 없으면 건너뛰어요. |
+| `npx playwright test e2e/real-api.spec.ts` | 실제 키로 호출하는 검사. `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` 중 환경 변수에 있는 회사만 돌고, 없는 것은 건너뛰어요. |
 
 코드를 고친 뒤에는 `lint`, `typecheck`, `test`, `build`를 모두 통과해야 해요.
 
@@ -91,6 +93,26 @@ npm run dev
 - 키와 설정, 오늘 쓴 횟수: localStorage (`storybook.settings`, `storybook.usage`)
 - 서버는 없어요.
 
+## AI 연결부 구조
+
+파일은 `src/providers/`에 있어요.
+
+| 파일 | 하는 일 |
+|---|---|
+| `provider_kinds.ts` | 키 앞머리로 회사를 알아보는 `detect_provider`, 회사별 기본 AI 종류와 고를 수 있는 종류, 키 받는 곳 주소를 모아 둬요. 저장된 AI 종류가 그 회사 것이 아니면 회사 기본값을 쓰는 `resolve_text_model`, `resolve_image_model`도 여기 있어요. |
+| `index.ts` | 지금 설정에 맞는 연결부를 골라 줘요. `get_text_provider`, `get_image_provider`, 그리고 "AI 연결하기" 화면용 `create_text_provider_for_key`가 있어요. 사용 횟수 세기도 여기서 붙어요. |
+| `gemini_client.ts`, `gemini_text.ts`, `gemini_image.ts`, `gemini_config.ts` | Gemini. `fetch`로 직접 불러요. 모델 이름과 주소 같은 값은 `gemini_config.ts`에 있어요. |
+| `claude_text.ts` | Claude 글 연결부. 공식 SDK `@anthropic-ai/sdk`로 불러요. SDK는 Claude 키를 쓸 때만 내려받아요. Claude는 그림을 만들지 않아서 그림 연결부가 없어요. |
+| `openai_client.ts`, `openai_text.ts`, `openai_image.ts` | OpenAI. `fetch`로 직접 불러요. `openai_client.ts`가 요청과 오류 변환을, 나머지 둘이 글(`/v1/responses`)과 그림(`/v1/images/generations`)을 맡아요. |
+| `strict_schema.ts` | 응답 형식(JSON 스키마)을 Claude와 OpenAI가 받는 엄격한 모양으로 바꿔요. Claude에는 배열 길이 제한을 빼고 보내요. |
+| `prompts.ts` | 세 회사가 함께 쓰는 지시문과 응답 읽기 |
+| `mock_*.ts` | 연습 모드용 가짜 연결부 |
+
+- 키 한 개가 들어오면 `detect_provider`가 회사를 정하고, `index.ts`가 그 회사의 연결부를 만들어요.
+- 글 키와 그림 키는 따로 있어요. 그림 키가 비어 있으면 글 키를 함께 써요. 글 키가 Claude라서 그림을 만들 수 없으면 `get_image_provider`는 `null`을 돌려주고, 화면은 직접 올리기를 안내해요.
+- 모든 연결부는 오류를 `ProviderError`로 바꿔 던져요. 그래서 화면은 회사를 몰라도 같은 문구를 보여 줄 수 있어요.
+- 검사는 연결부마다 가짜 네트워크로 해요. Claude와 OpenAI 모양의 가짜 키로 연결 확인부터 줄거리, 쪽 나누기, 그림까지 보는 검사는 `e2e/multi-provider.spec.ts`예요. 실제 키로 부르는 검사는 `e2e/real-api.spec.ts`이고 평소에는 건너뛰어요.
+
 ## AI 연결부 추가하는 법
 
 연결부는 갈아끼울 수 있게 되어 있어요. 새 제공사를 넣는 순서예요.
@@ -100,12 +122,12 @@ npm run dev
 3. **`src/providers/types.ts`의 `TextProvider`와 `ImageProvider`를 구현해요.**
    - `TextProvider`: `id`, `suggestPlots`, `splitIntoPages`, `testConnection`
    - `ImageProvider`: `id`, `model_name`(책의 AI 표시에 쓰여요), `supportsReferenceImage`, `generate`, `testConnection`
-4. **`src/providers/index.ts`의 `get_text_provider` / `get_image_provider`에 갈래를 더해요.** 사용 횟수 세기는 `with_text_usage`, `with_image_usage`가 붙여 줘요.
+4. **`src/providers/provider_kinds.ts`에 회사를 더하고(`ProviderKind`, `PROVIDER_INFO`, 키 앞머리), `src/providers/index.ts`의 `create_text_for_key` / `create_image_for_key`에 갈래를 더해요.** 사용 횟수 세기는 `with_text_usage`, `with_image_usage`가 붙여 줘요.
 5. **오류는 `ProviderError`로 바꿔 던져요.** 종류는 `blocked`, `quota_daily`, `rate`, `network`, `bad_key`, `no_permission`, `unknown`이에요. 다시 해 볼 수 있는 시각을 알면 `retry_at`(ms)에 넣어요. 화면 문구는 `error.<kind>` 번역 키로 골라요.
 6. 키 확인(`testConnection`)은 `ConnectionResult`를 돌려줘요.
 7. 단위 검사를 더해요. 실제 키로 부르는 검사는 넣지 않아요.
 
-참고로 지금의 Gemini 연결부는 `gemini_client.ts`, `gemini_text.ts`, `gemini_image.ts`, `gemini_config.ts`에 있어요. 모델 이름과 주소 같은 값은 `gemini_config.ts`에 모여 있고, 값이 바뀌면 `PROVIDER_NOTES.md`도 함께 고쳐요.
+참고로 모델 이름과 주소 같은 값은 Gemini는 `gemini_config.ts`에, Claude와 OpenAI는 `provider_kinds.ts`에 모여 있어요. 값이 바뀌면 `PROVIDER_NOTES.md`도 함께 고쳐요.
 
 ## 번역 문구 더하는 법
 

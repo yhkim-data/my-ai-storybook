@@ -4,64 +4,98 @@
 
 A key is like your own password for using AI. You can finish a book without one.
 
+## Which company's key should I get?
+
+You can use a key from any of three companies. The app looks at the start of the key and works out which company it is from.
+
+| Company | Words | Pictures | Cost | Where to get a key |
+|---|---|---|---|---|
+| Google Gemini | Yes | Yes | Words have a free limit. Pictures need a paid key. | https://aistudio.google.com/apikey |
+| Claude (Anthropic) | Yes | **No** | No free limit. You need a paid key. | https://platform.claude.com/settings/keys |
+| OpenAI | Yes | Yes | A free limit is not in the documents. | https://platform.openai.com/api-keys |
+
+- **If you are not sure, choose Google Gemini.**
+- Claude writes words only. With only a Claude key, add your own pictures, or enter a separate key for pictures (Gemini or OpenAI) in [More settings].
+- If you put a Claude key in the [Key for pictures] box, the app says "A Claude key cannot make pictures."
+
 ## Who can get a key?
 
-Only people 18 or older. This is a condition in Google's terms. (Checked: 2026-11-14)
+Each company has its own age rule. The person who got the key must follow that company's terms.
 
-- The terms say: "You must be 18 years of age or older to use the APIs."
-- A student getting their own key does not fit the terms.
-- The terms also do not allow connecting the AI to a service that people under 18 are likely to use.
-- So on devices that students use, we recommend not connecting AI. See the [teacher guide](teacher-guide.en.md).
+- **Google Gemini:** Only people 18 or older can get a key. This is a condition in Google's terms. (Checked: 2026-11-14)
+  - The terms say: "You must be 18 years of age or older to use the APIs."
+  - A student getting their own key does not fit the terms.
+  - The terms also do not allow connecting the AI to a service that people under 18 are likely to use.
+- **Claude and OpenAI:** We did not check the age rule in their original terms this time. You need to check each company's terms.
+- The person who uses the tool (a teacher or an operator) decides whether to use an AI connection in class. The things to look at when deciding are in the [teacher guide](teacher-guide.en.md).
 
 ## Steps to get a key
 
 On the start screen of the app, press [Connect AI]. The same steps are shown there.
 
-1. **Open the key page.** Press [Open the key page] and a new window opens. To open it yourself, go to https://aistudio.google.com/apikey. You need to sign in with a Google account.
+1. **Open the key page.** Press the button for the company you want (Google Gemini, Claude, or OpenAI) and a new window opens. To open it yourself, go to the address in the table above. You need to sign in with an account from that company.
 2. **Make a key and copy it.** Press the button that says Create and key. Copy the long text that appears.
 3. **Paste it into the app.** Paste it in the [My key] box on the [Connect AI] screen and press [Check connection].
 
 ![Connect AI screen](images/connect.png)
 
-If you see "Connected. Key ends with ····" and the last 4 characters, it worked. The screen shows only the last 4 characters.
+If you see "Connected to {company name}. Key ends with ····" and the last 4 characters, it worked. The screen shows only the last 4 characters.
 
-[Check connection] only checks that the key exists. So even when it says "Connected", pictures may fail if billing is not connected.
+[Check connection] only checks that the key is accepted. It does not try to make any words or pictures. So even when it says "Connected", words or pictures may fail if billing is not set up.
 
 ## What is free and what costs money
 
-Prices were checked in Google's official documents on 2026-11-14. The full record is in [PROVIDER_NOTES](PROVIDER_NOTES.md), which is written in Korean.
+Prices were checked in each company's official documents on 2026-11-14. The full record is in [PROVIDER_NOTES](PROVIDER_NOTES.md), which is written in Korean. All prices are per 1 million tokens. A token is the unit AI uses to count words.
 
-| What you do | Free limit | When it costs money |
-|---|---|---|
-| Plot ideas and page text (writing) | Yes. Check Google AI Studio for the number of uses. | When you go over the free limit |
-| Making pictures | None | $0.0336 per picture |
-| Add my picture | No AI used | Free |
-| Copy picture note | No AI used | Free (the other AI app has its own terms) |
+| Company | Default AI type for words | Price for words (input / output) | Pictures | Free limit |
+|---|---|---|---|---|
+| Google Gemini | `gemini-3.5-flash-lite` | $0.30 / $2.50 | $0.0336 per picture | For words only. Check Google AI Studio for the number of uses. |
+| Claude | `claude-opus-5-5` | $4 / $20 | Does not make pictures | None |
+| OpenAI | `gpt-6-luna` | $0.10 / $0.50 | $30 per 1 million picture output tokens (the price per picture is not in the documents) | Not in the documents |
 
-- 9 pictures (1 cover and 8 pages) cost $0.3024. One book costs about 0.31 US dollars.
-- The daily limit resets at midnight Pacific time.
-- When you use the free limit, what you type is used by Google to improve its services, and people may read it. Do not write real names, addresses, or phone numbers.
+Other kinds of AI for words can be chosen too.
+
+- Claude: `claude-sonnet-5-5` ($2 / $10), `claude-haiku-5-5` ($0.10 / $0.50)
+- OpenAI: `gpt-6.1-terra` ($1 / $5), `gpt-6.1-sol` ($2 / $10)
+
+| What you do | When it costs money |
+|---|---|
+| Plot ideas and page text (writing) | Gemini: when you go over the free limit. Claude and OpenAI: every time you use them |
+| Making pictures | Gemini: $0.0336 per picture. OpenAI: see the table above. Claude does not make pictures. |
+| Add my picture | Free (no AI used) |
+| Copy picture note | Free (the other AI app has its own terms) |
+
+- With Gemini, 9 pictures (1 cover and 8 pages) cost $0.3024. One book costs about 0.31 US dollars.
+- We did not work out the cost of one book with Claude or OpenAI.
+- Gemini's daily limit resets at midnight Pacific time.
+- When you use Gemini's free limit, what you type is used by Google to improve its services, and people may read it. Do not write real names, addresses, or phone numbers.
+- We did not check how Claude and OpenAI use what you type this time. With any company, do not write real names, addresses, or phone numbers.
 
 ## A separate key for pictures
 
-You can use the same key for words and pictures. If you enter only one key, it is used for both.
+You can use the same key for words and pictures. If you enter only one key, it is used for both. A Claude key cannot make pictures, so enter a separate key for pictures.
 
-If you have another key just for pictures, do this.
+Enter a separate key for pictures when:
+
+- you write with a Claude key and want Gemini or OpenAI to make the pictures, or
+- you have another key just for pictures.
+
+Do this.
 
 1. On the [Connect AI] screen, open [More settings (separate key for pictures, change the kind of AI)].
-2. Paste it in the [Key for pictures] box. If you leave it empty, the key above is used too.
+2. Paste a Gemini or OpenAI key in the [Key for pictures] box. If you leave it empty, the key above is used too.
 3. Press [Check picture key].
 
-The boxes for changing the kind of AI are in the same place. Not sure? Leave them as they are. To go back to the first values, press [Back to the first values].
+The boxes for changing the kind of AI are in the same place. The choices change to match the company of your key for words. Not sure? Leave them as they are. To go back to the first values, press [Back to the first values].
 
 ## Why you must not show your key to others
 
 - Anyone who knows your key can use AI on your account.
-- Pictures cost money, so you may have to pay when someone else uses your key.
+- A key that costs money can leave you with a bill when someone else uses it.
 - Do not post your key in messages, email, online boards, or screenshots.
-- If someone else learns your key, delete that key at https://aistudio.google.com/apikey and make a new one.
+- If someone else learns your key, delete that key where you got it (the addresses in the table above) and make a new one.
 
-This tool saves the key only in the browser on this device (localStorage). It sends the key only to Google.
+This tool saves the key only in the browser on this device (localStorage). It sends the key only to the company the key belongs to (Google, Anthropic, or OpenAI), and only when AI is called. It sends it nowhere else.
 
 ## On a shared device
 
@@ -76,10 +110,12 @@ These are the messages you may see on the screen, and what to do.
 | "That key doesn't match. Shall we copy it again?" | Copy the key again from the first character to the last. Check that no spaces came along. If it still fails, make a new key. |
 | "You've used all of today's turns. You can use it again from {time}." | The daily limit is used up. Try again after the time shown on the screen. Meanwhile you can write the words yourself and add your own pictures. |
 | "Let's try again in a little while. Press [Try again] after {seconds} seconds." | Too many requests came in a short time. Press [Try again] after the seconds shown. |
-| "This key can't make that. Pictures need a key that is paid for. You can press [Add my picture] instead." | The AI that draws pictures needs a key with billing connected. Connect billing, or press [Add my picture] and add your own. |
+| "This key can't make that. Pictures need a key that is paid for. You can press [Add my picture] instead." | The key is not set up to pay. Gemini pictures, Claude, and OpenAI need a key that is paid for. Connect billing, or press [Add my picture] and add your own. |
 | "We can't make it with these words. Shall we try different words?" | The AI did not make it for safety reasons. Change the picture note or the story words and try again. |
 
 {time} and {seconds} are replaced by the real time and seconds on the screen.
+
+If a Claude key is surely right but you see "That key doesn't match", an organization setting may be blocking calls straight from the browser. In that case Claude answers with 401 and "CORS requests are not allowed for this Organization". The app does not show this reason on the screen. Ask the organization's administrator, or try a key from another company.
 
 Other things to try.
 
