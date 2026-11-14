@@ -6,8 +6,6 @@ export const GEMINI_INTERACTIONS_URL = `${GEMINI_ORIGIN}/v1beta/interactions`;
 export const GEMINI_MODELS_URL = `${GEMINI_ORIGIN}/v1beta/models`;
 /** 키를 받는 곳 */
 export const GEMINI_KEY_PAGE_URL = 'https://aistudio.google.com/apikey';
-/** 그림 요청 예시에 붙어 있는 머리글 값 */
-export const GEMINI_API_REVISION = '2026-05-20';
 
 /** 기본 AI 종류 */
 export const DEFAULT_TEXT_MODEL = 'gemini-3.5-flash-lite';
