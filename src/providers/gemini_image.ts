@@ -2,7 +2,6 @@
 import { base64_to_blob, split_data_url } from '../utils/image';
 import { call_interactions, check_api_key } from './gemini_client';
 import {
-  GEMINI_API_REVISION,
   IMAGE_ASPECT_RATIO,
   IMAGE_MIME_TYPE,
   IMAGE_SIZE,
@@ -39,24 +38,23 @@ function build_input(req: ImageRequest, use_reference: boolean): object[] {
 export function create_gemini_image(api_key: string, model: string): ImageProvider {
   const supports_reference = REFERENCE_IMAGE_MODELS.includes(model);
 
-  /** 그림 요청을 한 번 보낸다. */
+  /**
+   * 그림 요청을 한 번 보낸다. Api-Revision 머리글은 붙이지 않는다.
+   * Google이 브라우저의 사전 확인(CORS)에서 이 머리글을 거절하고, 2026-06-08부터는 서버가 무시하는 값이다.
+   */
   const request_image = (req: ImageRequest, with_safety_settings: boolean) =>
-    call_interactions(
-      api_key,
-      {
-        model,
-        input: build_input(req, supports_reference),
-        response_format: {
-          type: 'image',
-          mime_type: IMAGE_MIME_TYPE,
-          aspect_ratio: IMAGE_ASPECT_RATIO,
-          image_size: IMAGE_SIZE,
-        },
-        ...(with_safety_settings ? { safety_settings: SAFETY_SETTINGS } : {}),
-        store: false,
+    call_interactions(api_key, {
+      model,
+      input: build_input(req, supports_reference),
+      response_format: {
+        type: 'image',
+        mime_type: IMAGE_MIME_TYPE,
+        aspect_ratio: IMAGE_ASPECT_RATIO,
+        image_size: IMAGE_SIZE,
       },
-      { 'Api-Revision': GEMINI_API_REVISION },
-    );
+      ...(with_safety_settings ? { safety_settings: SAFETY_SETTINGS } : {}),
+      store: false,
+    });
 
   return {
     id: 'gemini-image',

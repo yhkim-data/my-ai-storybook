@@ -156,7 +156,8 @@ describe('그림 연결부', () => {
     expect(body.response_format.aspect_ratio).toBe('1:1');
     expect(body.store).toBe(false);
     const call = mock.mock.calls[0] as FetchCall;
-    expect(call[1].headers['Api-Revision']).toBeTruthy();
+    // Google이 브라우저 사전 확인(CORS)에서 거절하는 머리글은 붙이지 않는다.
+    expect(Object.keys(call[1].headers).map((name) => name.toLowerCase()).sort()).toEqual(['content-type', 'x-goog-api-key']);
   });
 
   it('기본 그림 AI는 참고 그림을 지원하지 않고 보내도 input에 image가 없다', async () => {
