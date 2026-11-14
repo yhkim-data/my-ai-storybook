@@ -176,7 +176,12 @@
 - "Organizations must disclose to their users that they are interacting with an AI system rather than a human."
 - "Anthropic will periodically audit organizations for compliance with these safeguards." 지키지 않으면 "may lead to the suspension or termination of your account."
 
-이 쪽은 기관용 안내다. **키를 받는 개인의 나이 조건은 이 문서에 적혀 있지 않고, 약관 원문으로는 확인하지 못했다.**
+이 쪽은 기관용 안내다. 키를 받는 사람의 나이 조건은 이 문서에 없어서 약관을 따로 읽었다(2026-11-14).
+
+- 상업 서비스 약관 <https://www.anthropic.com/legal/commercial-terms>: API 키와 콘솔에 적용된다. **나이 조항이 없다.** 영어판 본문에 "18", "minor"가 나오지 않는다. 원문: "Services under these Terms are not for consumer use."
+- 개인용 서비스 약관 <https://www.anthropic.com/legal/consumer-terms> (2025-10-08 시행): Claude.ai 같은 개인용 서비스에 적용된다. 한국어판 원문: "최소 연령. 귀하는 18세 이상 또는 귀하의 지역에서 당사 서비스 이용에 대한 동의에 요구되는 최소 연령 중 더 높은 연령 이상이어야 합니다." 같은 쪽에 API 키와 콘솔은 상업 서비스 약관이 다룬다고 적혀 있다.
+- 사용 정책 <https://www.anthropic.com/legal/aup> (2026-11-12 시행): 한국어판 원문: "미성년자 또는 아동은 관할권에 관계없이 18세 미만의 모든 개인으로 정의됩니다." 미성년자에게 제공되는 제품은 위 기관용 안내와 관련 법을 지켜야 한다고 적혀 있다.
+- 뒤의 두 쪽은 한국어판으로만 읽혀서 영어 원문은 옮기지 못했다.
 
 ## 9. OpenAI
 
@@ -248,4 +253,4 @@
 | 무료 한도 | 글만 있음 | 없음 | 문서에 없음 |
 | 그림 1장 값 | $0.0336 | 해당 없음 | 문서에 없음 |
 | 부르는 법 | `fetch` | 공식 SDK | `fetch` |
-| 나이 조건 | 키는 18세 이상. 18세 미만이 쓰는 서비스에는 연결할 수 없음 (약관 확인함) | 조건부: 18세 미만이 쓰게 하려면 기관이 보호 조치를 갖춰야 함 (기관 안내 확인함). 키를 받는 사람의 나이는 확인 못 함 | 조건부: 18세 미만에게 쓰게 하려면 보호 조치가 필요함 (안내 확인함). 서비스 약관의 나이 조항은 확인 못 함 (HTTP 403) |
+| 나이 조건 | 키는 18세 이상. 18세 미만이 쓰는 서비스에는 연결할 수 없음 (약관 확인함) | 조건부: 18세 미만이 쓰게 하려면 기관이 보호 조치를 갖춰야 함 (기관 안내 확인함). 키에 적용되는 상업 약관에는 나이 조항 없음 (약관 확인함) | 조건부: 18세 미만에게 쓰게 하려면 보호 조치가 필요함 (안내 확인함). 서비스 약관의 나이 조항은 확인 못 함 (HTTP 403) |

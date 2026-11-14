@@ -39,7 +39,7 @@
 - "It is the responsibility of organizations to comply with all applicable child safety and data privacy regulations, such as the Children's Online Privacy Protection Act (COPPA) in the United States. Compliance with these regulations should be clearly stated on the organization's website or similar public-facing documentation."
 - "Organizations must disclose to their users that they are interacting with an AI system rather than a human."
 - "Anthropic will periodically audit organizations for compliance with these safeguards." 지키지 않으면 "may lead to the suspension or termination of your account."
-- 이 쪽은 기관용 안내예요. 키를 받는 사람의 나이 조건은 이 문서에 없고, 약관 원문으로는 확인하지 못했어요.
+- 이 쪽은 기관용 안내예요. 키를 받는 사람의 나이: 키와 콘솔에 적용되는 Anthropic 상업 서비스 약관(Commercial Terms of Service)에는 나이 조항이 없어요(2026-11-14 확인). 18세 이상 조건은 Claude.ai 같은 개인용 서비스 약관(Consumer Terms, 2025-10-08 시행)에 있어요.
 
 **OpenAI: 조건을 갖추면 18세 미만이 쓸 수 있어요.** 아래는 OpenAI의 18세 미만 API 안내(쪽에 날짜 없음)에서 2026-11-14에 확인한 내용이에요. 출처: https://developers.openai.com/api/docs/guides/safety-checks/under-18-api-guidance
 
