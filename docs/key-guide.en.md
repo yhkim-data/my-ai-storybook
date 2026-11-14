@@ -20,14 +20,16 @@ You can use a key from any of three companies. The app looks at the start of the
 
 ## Who can get a key?
 
-Each company has its own age rule. The person who got the key must follow that company's terms.
+Each company has its own age rule. (Checked: 2026-11-14)
 
-- **Google Gemini:** Only people 18 or older can get a key. This is a condition in Google's terms. (Checked: 2026-11-14)
+- **Google Gemini:** Only people 18 or older can get a key. This is a condition in Google's terms.
   - The terms say: "You must be 18 years of age or older to use the APIs."
-  - A student getting their own key does not fit the terms.
-  - The terms also do not allow connecting the AI to a service that people under 18 are likely to use.
-- **Claude and OpenAI:** We did not check the age rule in their original terms this time. You need to check each company's terms.
-- The person who uses the tool (a teacher or an operator) decides whether to use an AI connection in class. The things to look at when deciding are in the [teacher guide](teacher-guide.en.md).
+  - Students (under 18) cannot get a key.
+  - The terms also do not allow connecting it to a service that people under 18 use. So on devices and in classes where students use the tool, the Gemini connection cannot be turned on.
+- **Claude (Anthropic):** It is not banned, but there are conditions. For people under 18 to use it, the adult or organization that got the key must have an age check, content filtering, a way to watch and report problems, and guidance on safe use. The age rule for the person who gets a key is not in this guidance, and we could not check it in the original terms.
+- **OpenAI:** It is not banned, but there are conditions. For people under 18 to use it, the organization that got the key must have safeguards in place. We could not check the age clause in OpenAI's terms of service (the terms pages were blocked with HTTP 403). A person must open and read them.
+- This tool does not have an age check or a way to watch and report problems. So in a class with students, using it without an AI connection is the basic way.
+- The original text and what a teacher should weigh are in the [teacher guide](teacher-guide.en.md).
 
 ## Steps to get a key
 
@@ -50,12 +52,12 @@ Prices were checked in each company's official documents on 2026-11-14. The full
 | Company | Default AI type for words | Price for words (input / output) | Pictures | Free limit |
 |---|---|---|---|---|
 | Google Gemini | `gemini-3.5-flash-lite` | $0.30 / $2.50 | $0.0336 per picture | For words only. Check Google AI Studio for the number of uses. |
-| Claude | `claude-opus-5-5` | $4 / $20 | Does not make pictures | None |
+| Claude | `claude-haiku-5-5` | $0.10 / $0.50 | Does not make pictures | None |
 | OpenAI | `gpt-6-luna` | $0.10 / $0.50 | $30 per 1 million picture output tokens (the price per picture is not in the documents) | Not in the documents |
 
 Other kinds of AI for words can be chosen too.
 
-- Claude: `claude-sonnet-5-5` ($2 / $10), `claude-haiku-5-5` ($0.10 / $0.50)
+- Claude: `claude-sonnet-5-5` ($2 / $10), `claude-opus-5-5` ($4 / $20)
 - OpenAI: `gpt-6.1-terra` ($1 / $5), `gpt-6.1-sol` ($2 / $10)
 
 | What you do | When it costs money |
@@ -66,7 +68,8 @@ Other kinds of AI for words can be chosen too.
 | Copy picture note | Free (the other AI app has its own terms) |
 
 - With Gemini, 9 pictures (1 cover and 8 pages) cost $0.3024. One book costs about 0.31 US dollars.
-- We did not work out the cost of one book with Claude or OpenAI.
+- Claude writes words only, so the words of one book cost about 0.002 US dollars (default type, 2 writing calls, about 2 thousand input tokens and about 4 thousand output tokens). Pictures cost extra. They are free if you add your own.
+- We could not work out the cost of one book with OpenAI, because the price of one picture is not in the documents.
 - Gemini's daily limit resets at midnight Pacific time.
 - When you use Gemini's free limit, what you type is used by Google to improve its services, and people may read it. Do not write real names, addresses, or phone numbers.
 - We did not check how Claude and OpenAI use what you type this time. With any company, do not write real names, addresses, or phone numbers.
@@ -112,10 +115,11 @@ These are the messages you may see on the screen, and what to do.
 | "Let's try again in a little while. Press [Try again] after {seconds} seconds." | Too many requests came in a short time. Press [Try again] after the seconds shown. |
 | "This key can't make that. Pictures need a key that is paid for. You can press [Add my picture] instead." | The key is not set up to pay. Gemini pictures, Claude, and OpenAI need a key that is paid for. Connect billing, or press [Add my picture] and add your own. |
 | "We can't make it with these words. Shall we try different words?" | The AI did not make it for safety reasons. Change the picture note or the story words and try again. |
+| "The key looks right, but the Claude organization that made it has browser use turned off in its settings. Ask the person who manages the organization to turn it on, or put in a different key." | The Claude organization's setting blocks calls straight from the browser. The key is not wrong. Ask the person who manages the organization to turn it on, or put in a different key. |
 
 {time} and {seconds} are replaced by the real time and seconds on the screen.
 
-If a Claude key is surely right but you see "That key doesn't match", an organization setting may be blocking calls straight from the browser. In that case Claude answers with 401 and "CORS requests are not allowed for this Organization". The app does not show this reason on the screen. Ask the organization's administrator, or try a key from another company.
+While making a book, the same problem shows as "The Claude organization that made this key has browser use turned off in its settings. Ask the person who manages the organization to turn it on, or put in a different key at [Connect AI]." In that case Claude answers with 401 and "CORS requests are not allowed for this Organization". A 401 without those words still shows as "That key doesn't match".
 
 Other things to try.
 

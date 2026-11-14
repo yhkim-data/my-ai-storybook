@@ -53,6 +53,7 @@ npm run dev
 | `npm run check:i18n` | 한국어와 영어 문구의 키가 같은지 봐요. |
 | `npm run screenshots` | 화면 사진을 찍어 `docs/images/`에 넣어요. |
 | `CLAUDE_BRIDGE=1 npx playwright test e2e/claude-subscription.spec.ts` | 앱이 `api.anthropic.com`으로 보내는 요청을 가로채서, 이 컴퓨터의 Claude Code(`claude -p`, 구독)로 실제 Claude가 답을 만들게 해요. 요청 모양과 실제 Claude가 만든 글을 앱이 읽을 수 있는지 확인해요. 진짜 서버가 요청을 받아 주는지는 알 수 없어요(그것은 `real-api.spec.ts`가 봐요). `CLAUDE_BRIDGE=1`이 없으면 건너뛰어요. |
+| `npx playwright test e2e/live-cors.spec.ts` | 키 없이 실제 서버로 보내는 브라우저 검사. 세 회사 연결부가 실제로 보내는 주소, 머리글, 본문 그대로 키 값만 빈 문자열로 바꿔 Playwright Chromium에서 보내요. HTTP 상태(예: 401)를 읽으면 통과이고, 요청 자체가 실패("Failed to fetch")하면 실패예요. 9가지 호출을 봐요. Gemini 키 확인·글·그림, Claude 키 확인·글·글(이어받기를 켠 종류), OpenAI 키 확인·글·그림이에요. 키가 없어서 돈이 들지 않아요. 인터넷이 있어야 하고, tablet 크기에서만 한 번 돌아요. `npm run e2e`에 들어 있어서 GitHub의 "End-to-end tests" 워크플로에서도 돌아요. |
 | `npx playwright test e2e/real-api.spec.ts` | 실제 키로 호출하는 검사. `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` 중 환경 변수에 있는 회사만 돌고, 없는 것은 건너뛰어요. |
 
 코드를 고친 뒤에는 `lint`, `typecheck`, `test`, `build`를 모두 통과해야 해요.
@@ -111,7 +112,7 @@ npm run dev
 - 키 한 개가 들어오면 `detect_provider`가 회사를 정하고, `index.ts`가 그 회사의 연결부를 만들어요.
 - 글 키와 그림 키는 따로 있어요. 그림 키가 비어 있으면 글 키를 함께 써요. 글 키가 Claude라서 그림을 만들 수 없으면 `get_image_provider`는 `null`을 돌려주고, 화면은 직접 올리기를 안내해요.
 - 모든 연결부는 오류를 `ProviderError`로 바꿔 던져요. 그래서 화면은 회사를 몰라도 같은 문구를 보여 줄 수 있어요.
-- 검사는 연결부마다 가짜 네트워크로 해요. Claude와 OpenAI 모양의 가짜 키로 연결 확인부터 줄거리, 쪽 나누기, 그림까지 보는 검사는 `e2e/multi-provider.spec.ts`예요. 실제 키로 부르는 검사는 `e2e/real-api.spec.ts`이고 평소에는 건너뛰어요.
+- 검사는 연결부마다 가짜 네트워크로 해요. 가짜 네트워크는 브라우저의 사전 확인(CORS preflight)을 거치지 않아서, 사전 확인에서 막히는 문제는 못 잡아요. 그 부분은 `e2e/live-cors.spec.ts`(키 없이 실제 서버로 보내요)가 봐요. Claude와 OpenAI 모양의 가짜 키로 연결 확인부터 줄거리, 쪽 나누기, 그림까지 보는 검사는 `e2e/multi-provider.spec.ts`예요. 실제 키로 부르는 검사는 `e2e/real-api.spec.ts`이고 평소에는 건너뛰어요.
 
 ## AI 연결부 추가하는 법
 
@@ -123,7 +124,7 @@ npm run dev
    - `TextProvider`: `id`, `suggestPlots`, `splitIntoPages`, `testConnection`
    - `ImageProvider`: `id`, `model_name`(책의 AI 표시에 쓰여요), `supportsReferenceImage`, `generate`, `testConnection`
 4. **`src/providers/provider_kinds.ts`에 회사를 더하고(`ProviderKind`, `PROVIDER_INFO`, 키 앞머리), `src/providers/index.ts`의 `create_text_for_key` / `create_image_for_key`에 갈래를 더해요.** 사용 횟수 세기는 `with_text_usage`, `with_image_usage`가 붙여 줘요.
-5. **오류는 `ProviderError`로 바꿔 던져요.** 종류는 `blocked`, `quota_daily`, `rate`, `network`, `bad_key`, `no_permission`, `unknown`이에요. 다시 해 볼 수 있는 시각을 알면 `retry_at`(ms)에 넣어요. 화면 문구는 `error.<kind>` 번역 키로 골라요.
+5. **오류는 `ProviderError`로 바꿔 던져요.** 종류는 `blocked`, `quota_daily`, `rate`, `network`, `bad_key`, `no_permission`, `browser_blocked`(Claude 조직이 브라우저 사용을 꺼 둠), `unknown`이에요. 다시 해 볼 수 있는 시각을 알면 `retry_at`(ms)에 넣어요. 화면 문구는 `error.<kind>` 번역 키로 골라요.
 6. 키 확인(`testConnection`)은 `ConnectionResult`를 돌려줘요.
 7. 단위 검사를 더해요. 실제 키로 부르는 검사는 넣지 않아요.
 

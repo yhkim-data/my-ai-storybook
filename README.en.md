@@ -56,7 +56,7 @@ Prices were checked in each company's official documents on 2026-11-14. The full
 | Company | Writing (default AI type) | Pictures | Free limit |
 |---|---|---|---|
 | Google Gemini | `gemini-3.5-flash-lite`: input $0.30, output $2.50 | $0.0336 per picture | For writing only. None for pictures. |
-| Claude | `claude-opus-5-5`: input $4, output $20 (`claude-sonnet-5-5` $2 / $10, `claude-haiku-5-5` $0.10 / $0.50) | Does not make pictures | None. You need a paid key. |
+| Claude | `claude-haiku-5-5`: input $0.10, output $0.50 (`claude-sonnet-5-5` $2 / $10, `claude-opus-5-5` $4 / $20) | Does not make pictures | None. You need a paid key. |
 | OpenAI | `gpt-6-luna`: input $0.10, output $0.50 (`gpt-6.1-terra` $1 / $5, `gpt-6.1-sol` $2 / $10) | $30 per 1 million picture output tokens. The price per picture is not in the documents. | Not in the documents. |
 
 This is the cost of one book with Google Gemini.
@@ -68,18 +68,19 @@ This is the cost of one book with Google Gemini.
 - The Gemini AI that draws pictures has no free limit. You need a key with billing connected.
 - For the number of free uses, check Google AI Studio.
 
-We did not work out the cost of one book with Claude or OpenAI. The price of one OpenAI picture is not in the documents.
+Claude writes words only, so the words of one book cost about 0.002 US dollars. Pictures cost extra. They are free if you add your own. We could not work out the cost of one book with OpenAI, because the price of one picture is not in the documents.
 
 Prices can change. Price check date: 2026-11-14
 
 ## Age requirement
 
-Each company has its own age rule. The person who got the key must follow that company's terms.
+Each company has its own age rule. (Checked 2026-11-14)
 
-- Google Gemini: Under the terms, only people 18 or older can get a key. The terms also do not allow connecting the AI to a service that people under 18 are likely to use. (Checked 2026-11-14)
-- Claude and OpenAI: We did not check the age rule in their original terms this time. You need to check each company's terms.
+- Google Gemini: Only people 18 or older can get a key. Under the terms, it cannot be connected where people under 18 use it. On devices and in classes where students use the tool, the Gemini connection cannot be turned on.
+- Claude: For people under 18 to use it, the adult or organization that got the key must have the safeguards Anthropic sets (an age check, content filtering, a way to watch and report problems, and more). We could not check the age rule for the person who gets a key in the original terms.
+- OpenAI: For people under 18 to use it, the organization that got the key must have the safeguards OpenAI sets. We could not check the age clause in the terms of service.
 
-The person who uses the tool (a teacher or an operator) decides whether to use an AI connection in class. A book can be finished without any AI connection. The things to look at when deciding are in the [teacher guide](docs/teacher-guide.en.md).
+This tool does not have an age check or a way to watch and report problems. In a class with students, using it without an AI connection is the basic way. A book can be finished without any AI connection. The original text and the details are in the [teacher guide](docs/teacher-guide.en.md).
 
 ## Frequently asked questions
 

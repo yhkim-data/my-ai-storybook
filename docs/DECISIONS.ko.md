@@ -9,17 +9,20 @@
 - 기본 그림 AI는 참고 그림 입력을 문서로 확인하지 못해서 참고 그림을 보내지 않는다. "자세한 설정"에서 `gemini-nano-banana-2.1`이나 `gemini-3.1-flash-image`를 고르면 첫 AI 그림을 참고 그림으로 함께 보낸다.
 - 안전 설정은 제공사 기본값(끔)보다 엄격한 `block_low_and_above`로 보낸다.
 - 요청마다 `store: false`를 보내 제공사 쪽에 대화를 저장하지 않게 한다.
-- "AI 연결하기" 화면에는 회사마다 나이 조건이 있다는 안내를 한 줄 둔다. AI 연결 없이도 모든 단계를 끝낼 수 있게 해서, 연결을 쓰지 않는 길이 늘 열려 있다.
+- "AI 연결하기" 화면에는 회사별 나이 조건 안내를 한 줄 둔다(`connect.age_line`). AI 연결 없이도 모든 단계를 끝낼 수 있게 해서, 연결을 쓰지 않는 길이 늘 열려 있다.
 - 연결 확인은 글이나 그림을 만들지 않는 목록 조회로 한다. 횟수를 아끼기 위해서다.
 - **여러 회사의 키를 받는다.** 지금은 Google Gemini, Claude(Anthropic), OpenAI다. 세 회사 모두 2026-11-14에 공식 문서에서 가격과 부르는 방법을 확인했다(`PROVIDER_NOTES.md` 8장, 9장). 쓰는 사람이 이미 가진 키를 그대로 쓸 수 있게 하려는 것이다.
 - **키 앞머리로 회사를 알아본다.** `sk-ant-`는 Claude, 그 밖에 `sk-`로 시작하면 OpenAI, 나머지는 Gemini다. Claude 키도 `sk-`로 시작하므로 긴 앞머리부터 견준다. 쓰는 사람이 회사를 따로 고르지 않아도 되게 하려는 것이다. 모르는 모양은 Gemini로 본다(`provider_kinds.ts`).
 - **Claude 연결은 공식 SDK(`@anthropic-ai/sdk`)로, OpenAI 연결은 `fetch`로 직접 한다.** Claude는 공식 SDK가 오류 종류와 다시 시도를 챙겨 주고, 서버 쪽 이어받기 같은 기능을 쓰기 쉬워서 SDK를 골랐다. 서버가 없는 도구라서 브라우저에서 직접 부르도록 `dangerouslyAllowBrowser`를 켠다. SDK는 Claude 키를 쓸 때만 내려받아 다른 사람의 첫 화면을 무겁게 하지 않는다. OpenAI는 요청이 둘(글, 그림)뿐이라서 SDK를 더하지 않고 `fetch`로 썼고, Gemini도 같은 방식이다.
-- **Claude의 기본 글 AI 종류는 `claude-opus-5-5`로 둔다.** 고를 수 있는 것은 `claude-sonnet-5-5`, `claude-haiku-5-5`다. 비싼 순서로는 opus, sonnet, haiku다(입력 $4, $2, $0.10). 기본값을 가장 좋은 것으로 둔 까닭은 Anthropic의 개발 안내가 새 코드의 기본값으로 최신 Opus를 권하기 때문이다. 책 한 권에 글 요청은 두세 번뿐이라 값 차이는 작다. 더 싸게 쓰려면 "자세한 설정"에서 sonnet이나 haiku를 고른다. 기본값 자체는 `provider_kinds.ts`의 `CLAUDE_TEXT_MODEL` 한 곳만 고치면 된다.
-- **Claude는 요청이 거절되면 다른 Claude가 이어받게 한다.** `claude-opus-5-5`와 `claude-sonnet-5-5`에만 켠다(`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`). `claude-haiku-5-5`에는 켜지 않는다.
+- **Claude의 기본 글 AI 종류는 `claude-haiku-5-5`로 둔다.** 고를 수 있는 것은 `claude-sonnet-5-5`, `claude-opus-5-5`다. 싼 순서로는 haiku, sonnet, opus다(입력 $0.10, $2, $4). 2026-11-14 운영자 지시로 기본값을 opus에서 haiku로 바꿨다. 까닭은 짧은 어린이 이야기 글이라 가장 싼 종류로 충분하고, 책 한 권의 글 값이 약 0.2센트이기 때문이다. 더 좋은 종류는 "자세한 설정"에서 고른다. 기본값 자체는 `provider_kinds.ts`의 `CLAUDE_TEXT_MODEL` 한 곳만 고치면 된다.
+- **Claude는 요청이 거절되면 다른 Claude가 이어받게 한다.** `claude-opus-5-5`와 `claude-sonnet-5-5`에만 켠다(`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`). `claude-haiku-5-5`에는 켜지 않는다. 기본값이 haiku라서 기본값에서는 꺼져 있다.
+- **Claude 키의 조직이 브라우저 사용을 꺼 둔 경우를 따로 안내한다.** 401 응답 문구에 "CORS requests are not allowed for this Organization"이 있으면 "키가 맞지 않아요" 대신 `browser_blocked`로 보여 준다. 키가 틀린 것이 아닌데 틀렸다고 알려 주면 헛수고를 시키기 때문이다.
 - **Claude에는 배열 길이 제한을 보내지 않는다.** 응답 형식(`output_config.format`)이 `minItems`, `maxItems`를 받지 않아서 뺐다. 개수는 지시문에 쓰고, 받은 뒤 코드가 다시 확인한다.
 - **Claude는 그림을 만들지 않으므로 Claude 키만 있으면 그림 연결부가 없다.** 직접 올리거나 "자세한 설정"에서 그림용 키(Gemini나 OpenAI)를 따로 넣게 한다.
-- **OpenAI 그림은 참고 그림을 보내지 않는다.** 크기는 1024x1024, 품질은 medium, 안전 검사는 auto로 보낸다. 요청마다 `store: false`를 보낸다.
-- **수업에서 AI 연결을 쓸지는 쓰는 사람(교사·운영자)이 자유롭게 정한다.** 이 도구와 문서는 정할 때 볼 조건(회사별 나이 조건)만 알려 준다. Gemini 약관 내용은 문서에 있는 그대로 두고, Claude와 OpenAI의 나이 조건은 약관 원문을 확인하지 못해서 "각 회사 약관을 확인해야 한다"고만 쓴다.
+- **OpenAI 그림은 참고 그림을 보내지 않는다.** 크기는 1024x1024, 품질은 medium, 안전 검사는 auto로 보낸다. 요청마다 `store: false`를 보낸다. 2026-11-14에 공식 문서를 다시 확인했다. `/v1/images/generations`에는 reasoning effort 값이 없다(`svg` 출력 안에만 있다). 품질은 여전히 `quality`로 정한다. 따로 있는 `complexity`는 보내지 않아 회사 기본값(`high`)을 쓴다. 문서에 2.6 종류로 이 주소를 부르는 공식 예시가 없고 실제 키로 확인하지 못해서, 요청 값은 바꾸지 않았다(`PROVIDER_NOTES.md` 9장).
+- **회사별 나이 조건을 단정해서 적는다.** 수업에서 AI 연결을 쓸지를 쓰는 사람이 자유롭게 정한다고 쓰지 않는다. Gemini는 약관(2026-03-23 시행판)상 18세 미만이 쓰는 서비스에 연결할 수 없다. Claude와 OpenAI는 금지가 아니라 조건부라서, 18세 미만이 쓰게 하려면 키를 받은 어른이나 기관이 회사가 정한 보호 조치를 갖추고 책임져야 한다고 쓴다. 이 도구는 나이 확인과 지켜보고 신고하는 장치를 갖추지 못했으므로, 학생 수업의 기본은 AI 연결 없이(A) 또는 선생님 시연(B)이다. OpenAI 서비스 약관은 HTTP 403으로 읽지 못해서 나이 조항을 추측하지 않고 "확인하지 못했다"고 쓴다(`PROVIDER_NOTES.md` 2장, 8장, 9장).
+- **Gemini 그림 요청에 `Api-Revision` 머리글을 보내지 않는다.** Google 서버가 브라우저의 사전 확인(CORS preflight)에서 이 머리글을 거절해서 그림 요청이 "Failed to fetch"로 실패했다. 이 머리글은 2026년 5월 응답 모양 변경 때의 옮겨 가기용 스위치이고, 문서의 일정표(6월 8일)상 지금은 무시된다. 그래서 머리글만 빼고 Interactions API를 그대로 쓴다(`generateContent`로 바꾸지 않았다).
+- **키 없이 실제 서버로 보내는 브라우저 검사를 둔다(`e2e/live-cors.spec.ts`).** 가짜 네트워크 검사는 사전 확인을 거치지 않아 위 문제를 못 잡았다. 그래서 세 회사 연결부가 실제로 보내는 주소, 머리글, 본문 그대로 키 값만 빈 문자열로 바꿔 실제 서버에 보낸다. HTTP 상태(예: 401)를 읽으면 통과이고, 요청이 "Failed to fetch"로 실패하면 실패다. 키가 없어 돈이 들지 않는다.
 - 다시 시도할 시간을 응답에서 알 수 없어서, 분당 한도는 60초 뒤, 하루 한도는 태평양 시간 자정으로 계산해 보여 준다.
 
 ## 화면과 흐름
@@ -78,3 +81,4 @@
 ## 배포
 
 - 이 GitHub 계정에는 사용자 도메인(di-lab.io)이 걸려 있어서, 바로 써보기 주소는 `https://di-lab.io/my-ai-storybook/`다. `https://yhkim-data.github.io/my-ai-storybook/`로 열어도 그 주소로 넘어간다.
+- 2026-11-14에 이 저장소의 GitHub Pages "HTTPS 강제"를 켰다(`gh api -X PUT repos/yhkim-data/my-ai-storybook/pages -F https_enforced=true`, 조회 결과 `https_enforced: true`). 사용자 도메인 `di-lab.io`가 걸린 `yhkim-data/yhkim-data.github.io` 저장소는 이미 켜져 있었다.
