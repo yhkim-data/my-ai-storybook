@@ -16,27 +16,46 @@
 
 ### 1. AI를 연결할 것인가
 
-수업에서 AI 연결을 쓸지는 **쓰는 사람(선생님, 운영하는 사람)이 자유롭게 정해요.** 이 도구는 AI 연결 없이도 책을 끝까지 만들 수 있어요. 정할 때 볼 조건은 아래와 같아요.
+이 도구는 Google Gemini, Claude, OpenAI 키를 쓸 수 있어요. 회사마다 조건이 달라요. 학생(18세 미만)이 쓰는 수업이라면 아래 조건을 먼저 읽어 보세요. 이 도구는 AI 연결 없이도 책을 끝까지 만들 수 있어요.
 
-이 도구는 Google Gemini, Claude, OpenAI 키를 쓸 수 있어요. 회사마다 나이 조건이 있고, 키를 받은 사람이 그 회사 약관을 지켜야 해요.
-
-**Google Gemini.** 아래는 Google의 Gemini API 약관(2026-03-23 시행판)에서 2026-11-14에 확인한 내용이에요.
+**Google Gemini: 학생이 쓰는 기기에서는 연결할 수 없어요.** 아래는 Google의 Gemini API 약관(2026-03-23 시행판)에서 2026-11-14에 확인한 내용이에요.
 
 - 나이: "You must be 18 years of age or older to use the APIs." 키는 만 18세 이상만 받을 수 있어요.
 - 18세 미만 대상 서비스: "You also will not use the Services as part of a website, application, or other service (collectively, "API Clients") that is directed towards or is likely to be accessed by individuals under the age of 18." 이 조항은 현재 판에 남아 있어요.
 
-이 말은 이렇게 읽을 수 있어요.
+이 말은 이렇게 읽어요.
 
-- 학생이 자기 키를 받는 것은 약관에 맞지 않아요.
-- 18세 미만이 쓸 가능성이 있는 서비스에 AI를 연결하는 것 자체를 약관이 막고 있어요.
-- 그래서 학생 기기에서 Gemini 연결을 켠 채로 쓰는 것은 이 조항에 걸릴 수 있어요.
+- 학생은 Gemini 키를 받을 수 없어요.
+- 학생이 쓰는 기기와 수업에서는 Gemini 연결을 켜 둘 수 없어요.
+- 선생님이 자기 기기에서 자기 키로 시연만 하는 것(아래 B 방식)과 AI 연결 없이 쓰는 것(아래 A 방식)은 그대로 할 수 있어요.
 
-**Claude와 OpenAI.** 나이 조건을 이번에 약관 원문으로 확인하지 못했어요. 각 회사 약관을 확인해야 해요.
+**Claude (Anthropic): 조건을 갖추면 18세 미만이 쓸 수 있어요.** 아래는 Anthropic의 기관용 안내(쪽에 적힌 날짜 2026-03-16)에서 2026-11-14에 확인한 내용이에요. 출처: https://support.claude.com/en/articles/9307344-responsible-use-of-anthropic-s-models-guidelines-for-organizations-serving-minors
 
-**정할 때 도움이 되는 것.**
+- "organizations providing minors with the ability to directly interact with products that incorporate our API(s) should implement the following safeguards:"
+  - "Age verification systems to ensure only intended users can access the product"
+  - "Content moderation and filtering to block inappropriate or harmful content"
+  - "Monitoring and reporting mechanisms to identify and address potential issues"
+  - "Educational resources and guidance for minors on safe and responsible use of the product"
+- "It is the responsibility of organizations to comply with all applicable child safety and data privacy regulations, such as the Children's Online Privacy Protection Act (COPPA) in the United States. Compliance with these regulations should be clearly stated on the organization's website or similar public-facing documentation."
+- "Organizations must disclose to their users that they are interacting with an AI system rather than a human."
+- "Anthropic will periodically audit organizations for compliance with these safeguards." 지키지 않으면 "may lead to the suspension or termination of your account."
+- 이 쪽은 기관용 안내예요. 키를 받는 사람의 나이 조건은 이 문서에 없고, 약관 원문으로는 확인하지 못했어요.
 
-- AI 연결 없이 쓰면 이 조건들은 걸리지 않아요.
-- 학생 수업에서 AI 연결을 켜기 전에, 쓰려는 회사의 약관을 읽어 보세요.
+**OpenAI: 조건을 갖추면 18세 미만이 쓸 수 있어요.** 아래는 OpenAI의 18세 미만 API 안내(쪽에 날짜 없음)에서 2026-11-14에 확인한 내용이에요. 출처: https://developers.openai.com/api/docs/guides/safety-checks/under-18-api-guidance
+
+- "developers should implement additional safeguards when using our API to serve minors (under 18 years old). These are in addition to requirements under our usage policies and terms and conditions."
+- "Organizations serving minors must comply with all applicable child protection, safety, and privacy laws, including the Children's Online Privacy Protection Act (COPPA)."
+- "You should not use OpenAI services to process any personal data of children under 13 or the applicable age of digital consent without first implementing zero data retention in our API."
+- "Organizations serving minors must take reasonable steps to ensure that the content they are serving to minors via the API is safe and age appropriate"
+- 조치: "Providing age-appropriate disclosures to minors about AI tools and how to use them responsibly." / "Implementing age-appropriate content filters to address potentially sensitive content." / "Implementing reasonable monitoring and reporting mechanisms, including escalation paths for high-risk interactions." / "Where required or otherwise appropriate for your use case, using age assurance systems to ensure only intended users can access the product."
+- "OpenAI reserves the right to audit organizations for compliance with this policy."
+- **OpenAI 서비스 약관의 나이 조항은 확인하지 못했어요.** 약관 주소 세 곳이 자동으로 읽으려 하면 HTTP 403으로 막혔어요(2026-11-14). 쓰기 전에 사람이 브라우저로 직접 열어 읽어야 해요: https://openai.com/policies/terms-of-use/ , https://openai.com/policies/services-agreement/ , https://openai.com/policies/usage-policies/
+
+**이 도구가 갖춘 것과 갖추지 못한 것.**
+
+- 갖춘 것: AI에 보내는 지시문에 어린이용이고 폭력, 공포, 선정적인 내용을 쓰지 않는다는 규칙을 고정해 뒀어요. 회사의 안전 설정을 기본보다 낮추지 않아요. AI 그림이 있으면 책의 "만든 사람" 쪽에 AI 표시가 들어가요. 진짜 이름, 주소, 전화번호를 쓰지 말라는 안내가 있어요.
+- 갖추지 못한 것: 나이 확인 장치, 지켜보고 신고하는 장치(이 도구에는 서버가 없어요), 13세 미만의 개인정보에 대한 OpenAI의 zero data retention 설정(키를 가진 조직이 OpenAI 쪽에서 해야 해요).
+- 그래서 Claude나 OpenAI를 학생이 쓰게 하려면, **키를 받은 어른이나 기관(학교)이 위 조치를 갖추고 책임져야 해요.** 갖추지 못했다면 A 방식(AI 연결 없이)이나 B 방식(선생님 시연)을 쓰세요.
 - Claude는 글만 만들어요. 그림은 직접 올리거나 다른 회사의 그림용 키를 따로 넣어요.
 - 이 안내서는 법률 조언이 아니에요.
 
@@ -89,10 +108,10 @@ AI 연결 없이 쓰면 0원이에요. 회사마다 값이 달라요. 가격은 
 | 회사 | 글 | 그림 | 무료 한도 |
 |---|---|---|---|
 | Google Gemini | 기본 `gemini-3.5-flash-lite`: 입력 $0.30, 출력 $2.50 (100만 토큰당) | 한 장 $0.0336 | 글에만 있어요 |
-| Claude | 기본 `claude-opus-5-5`: 입력 $4, 출력 $20 (`claude-sonnet-5-5` $2 / $10, `claude-haiku-5-5` $0.10 / $0.50) | 만들지 않아요 | 없어요 |
+| Claude | 기본 `claude-haiku-5-5`: 입력 $0.10, 출력 $0.50 (`claude-sonnet-5-5` $2 / $10, `claude-opus-5-5` $4 / $20) | 만들지 않아요 | 없어요 |
 | OpenAI | 기본 `gpt-6-luna`: 입력 $0.10, 출력 $0.50 (`gpt-6.1-terra` $1 / $5, `gpt-6.1-sol` $2 / $10) | 그림 출력 100만 토큰당 $30. 한 장 값은 문서에 없어요. | 문서에 없어요 |
 
-아래 계산은 Google Gemini로 만들 때예요. Claude와 OpenAI는 책 한 권의 값을 계산하지 않았어요. OpenAI의 그림 한 장 값이 문서에 없기 때문이에요.
+아래 계산은 Google Gemini로 만들 때예요. Claude는 글만 만들어서 책 한 권의 글 값이 약 0.002달러예요(기본 종류, 글 2회, 입력 약 2천 토큰과 출력 약 4천 토큰으로 계산). 그림 값은 따로 들어요. 직접 올리면 0원이에요. OpenAI는 그림 한 장 값이 문서에 없어서 계산하지 못했어요.
 
 - 책 한 권 = 그림 9장(표지 1장 + 본문 8장) x $0.0336 = $0.3024
 - 글을 쓰는 비용은 무료 한도 안에서는 0원이고, 유료로 내도 한 권에 약 $0.011이에요.
@@ -105,7 +124,7 @@ AI 연결 없이 쓰면 0원이에요. 회사마다 값이 달라요. 가격은 
 | 학생 25명이 한 권씩 | 25 x 0.31달러 | 약 7.75달러 |
 | 학생 25명이 한 권씩, 그림을 다시 2장씩 만들 때 | 25 x (0.31 + 2 x 0.0336)달러 | 약 9.43달러 |
 
-- 이 예시는 학생 수를 곱해 본 것뿐이에요. 학생 기기에서 AI를 켜는 것은 쓰는 사람이 정해요. 위의 나이 조건을 먼저 확인하세요.
+- 이 예시는 학생 수를 곱해 본 것뿐이에요. 학생이 쓰는 기기에서는 Gemini 연결을 쓸 수 없고, Claude와 OpenAI는 위 조건을 갖춰야 해요.
 - Gemini로 글만 쓰고 그림은 올리면 무료 한도 안에서 0원이에요.
 - 무료 한도의 횟수는 Google AI Studio에서 확인하세요. 이 안내서에는 공식 문서에서 찾지 못한 숫자를 적지 않았어요.
 - 한도는 키가 아니라 프로젝트 단위로 걸려요. 같은 프로젝트의 키를 여럿이 쓰면 한도를 함께 써요.
@@ -146,7 +165,7 @@ AI 연결 없이 쓰면 0원이에요. 회사마다 값이 달라요. 가격은 
 | AI가 "이 내용으로는 만들 수 없어요."라고 해요. | 이야기나 그림 설명을 다른 말로 바꿔요. 안전 때문에 막은 거예요. |
 | "오늘 쓸 수 있는 횟수를 다 썼어요." | 하루 한도예요. 화면의 시각 뒤에 다시 하거나, 직접 쓰고 그림을 올려요. |
 | 그림은 안 되는데 글은 돼요. | Claude는 그림을 만들지 않아요. 직접 올리거나 [자세한 설정]에서 Gemini나 OpenAI 그림용 키를 넣어요. Gemini의 그림은 결제를 연결한 키가 필요해요. 키 확인은 키가 맞는지만 봐요. |
-| Claude 키가 "키가 맞지 않아요"라고 나와요. | 키가 맞는데도 그렇다면, 조직 설정이 브라우저에서 직접 부르는 것을 막았을 수 있어요(응답: 401, "CORS requests are not allowed for this Organization"). 조직 관리자에게 물어보거나 다른 회사의 키를 써요. |
+| "키는 맞는 것 같지만, 이 키를 만든 Claude 조직의 설정에서 브라우저 사용이 꺼져 있어요." | Claude 조직의 설정이 브라우저에서 직접 부르는 것을 막은 거예요. 조직을 관리하는 사람에게 켜 달라고 하거나 다른 키를 넣어요. |
 | 주인공이 쪽마다 달라 보여요. | 주인공 모습을 더 자세히 쓰고, 마음에 안 드는 그림은 꾸미기에서 [이 그림만 다시 만들기]로 다시 만들어요. |
 | 휴대폰에서 글상자가 불편해요. | 큰 화면에서 하거나, 글을 눌러 직접 고치는 방법을 써요. |
 
