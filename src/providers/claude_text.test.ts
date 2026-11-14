@@ -11,6 +11,8 @@ const OPUS = 'claude-opus-5-5';
 const SONNET = 'claude-sonnet-5-5';
 const HAIKU = 'claude-haiku-5-5';
 const FALLBACK_BETA = 'server-side-fallback-2026-07-01';
+/** 조직 설정에서 브라우저 사용이 꺼져 있을 때 Claude가 401과 함께 주는 문구 */
+const BROWSER_BLOCKED_MESSAGE = 'CORS requests are not allowed for this Organization';
 const MESSAGES_URL = 'https://api.anthropic.com/v1/messages';
 const MODELS_URL = 'https://api.anthropic.com/v1/models';
 const PAGE_COUNT = 4;
@@ -43,8 +45,8 @@ function message_response(text: string, stop_reason = 'end_turn', model = OPUS):
 }
 
 /** 오류 응답을 만든다. SDK가 스스로 다시 보내지 않게 한다. */
-function error_response(status: number, error_type: string, extra: Record<string, string> = {}): Response {
-  return new Response(JSON.stringify({ type: 'error', error: { type: error_type, message: 'x' } }), {
+function error_response(status: number, error_type: string, extra: Record<string, string> = {}, message = 'x'): Response {
+  return new Response(JSON.stringify({ type: 'error', error: { type: error_type, message } }), {
     status,
     headers: { 'content-type': 'application/json', 'x-should-retry': 'false', ...extra },
   });
@@ -167,6 +169,10 @@ describe('Claude 오류 바꾸기', () => {
     await expect_plot_error([error_response(401, 'authentication_error')], 'bad_key');
   });
 
+  it('401 이고 문구가 CORS 막힘이면 bad_key 가 아니라 browser_blocked', async () => {
+    await expect_plot_error([error_response(401, 'authentication_error', {}, BROWSER_BLOCKED_MESSAGE)], 'browser_blocked');
+  });
+
   it('403 은 no_permission', async () => {
     await expect_plot_error([error_response(403, 'permission_error')], 'no_permission');
   });
@@ -206,5 +212,10 @@ describe('Claude 키 확인', () => {
   it('401 이면 bad_key', async () => {
     stub_fetch(error_response(401, 'authentication_error'));
     expect(await create_claude_text(TEST_KEY, OPUS).testConnection()).toEqual({ ok: false, reason: 'bad_key' });
+  });
+
+  it('401 이고 문구가 CORS 막힘이면 browser_blocked', async () => {
+    stub_fetch(error_response(401, 'authentication_error', {}, BROWSER_BLOCKED_MESSAGE));
+    expect(await create_claude_text(TEST_KEY, HAIKU).testConnection()).toEqual({ ok: false, reason: 'browser_blocked' });
   });
 });

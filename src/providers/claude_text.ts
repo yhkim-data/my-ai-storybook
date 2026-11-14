@@ -27,6 +27,8 @@ const KEY_CHECK_LIST_LIMIT = 1;
 /** 요청이 거절되면 다른 Claude가 이어받게 하는 기능의 꼬리표와, 그 기능을 받는 AI 종류 */
 const FALLBACK_BETA = 'server-side-fallback-2026-07-01';
 const FALLBACK_MODELS = ['claude-opus-5-5', 'claude-sonnet-5-5'];
+/** 조직 설정에서 브라우저 사용이 꺼져 있을 때 401 응답에 들어 있는 문구 */
+const BROWSER_BLOCKED_TEXT = 'CORS requests are not allowed';
 /** 돈 문제를 알리는 HTTP 상태 */
 const HTTP_PAYMENT_REQUIRED = 402;
 /** 서버가 붐빌 때의 HTTP 상태 */
@@ -58,7 +60,11 @@ function read_retry_at(headers: Headers | undefined): number {
  */
 export function to_claude_error(sdk: AnthropicModule['default'], cause: unknown): ProviderError {
   if (cause instanceof ProviderError) return cause;
-  if (cause instanceof sdk.AuthenticationError) return new ProviderError('bad_key', null, cause.message);
+  if (cause instanceof sdk.AuthenticationError) {
+    // 같은 401이라도 이 문구면 키가 틀린 것이 아니라 조직 설정에서 브라우저 사용이 꺼진 것이다.
+    const kind = cause.message.includes(BROWSER_BLOCKED_TEXT) ? 'browser_blocked' : 'bad_key';
+    return new ProviderError(kind, null, cause.message);
+  }
   if (cause instanceof sdk.PermissionDeniedError) return new ProviderError('no_permission', null, cause.message);
   if (cause instanceof sdk.RateLimitError) return new ProviderError('rate', read_retry_at(cause.headers), cause.message);
   if (cause instanceof sdk.APIConnectionError) return new ProviderError('network', null, cause.message);

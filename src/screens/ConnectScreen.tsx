@@ -31,6 +31,7 @@ interface Message {
  * 실패 이유를 안내 문구 키로 바꾼다.
  */
 function failure_key(reason: ProviderErrorKind): string {
+  if (reason === 'browser_blocked') return 'connect.browser_blocked';
   if (reason === 'bad_key' || reason === 'no_permission') return 'connect.bad_key';
   if (reason === 'network') return 'connect.network';
   return 'connect.failed';
