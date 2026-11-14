@@ -4,16 +4,17 @@ import { DiLabBadge, Shell } from '../components/Shell';
 import { Notice } from '../components/Notice';
 import { useT } from '../i18n';
 import { create_text_provider_for_key } from '../providers/index';
+import { DEFAULT_IMAGE_MODEL, DEFAULT_TEXT_MODEL } from '../providers/gemini_config';
 import {
-  DEFAULT_IMAGE_MODEL,
-  DEFAULT_TEXT_MODEL,
-  GEMINI_KEY_PAGE_URL,
-  IMAGE_MODEL_CHOICES,
-  TEXT_MODEL_CHOICES,
-} from '../providers/gemini_config';
+  PROVIDER_INFO,
+  PROVIDER_ORDER,
+  detect_provider,
+  resolve_image_model,
+  resolve_text_model,
+} from '../providers/provider_kinds';
 import type { ProviderErrorKind } from '../providers/types';
 import { useBook } from '../store/book_store';
-import { key_tail, useSettings } from '../store/settings_store';
+import { effective_image_key, key_tail, useSettings } from '../store/settings_store';
 import './ConnectScreen.css';
 
 /** 그림 상자 안 그림의 좌표 크기 */
@@ -128,10 +129,21 @@ export function ConnectScreen() {
   /**
    * 키를 확인한다. 맞으면 on_ok로 저장하고 입력 칸을 비운 뒤 결과를 알린다. 틀리면 저장하지 않는다.
    */
-  const check_key = async (raw_key: string, on_ok: (key: string) => void, clear_input: () => void, show: (message: Message) => void) => {
+  const check_key = async (
+    raw_key: string,
+    for_image: boolean,
+    on_ok: (key: string) => void,
+    clear_input: () => void,
+    show: (message: Message) => void,
+  ) => {
     const key = raw_key.trim();
     if (!key) {
       show({ kind: 'warn', text: t('connect.empty') });
+      return;
+    }
+    const info = PROVIDER_INFO[detect_provider(key)];
+    if (for_image && info.image_model === null) {
+      show({ kind: 'warn', text: t('connect.image_key_claude') });
       return;
     }
     set_is_checking(true);
@@ -140,7 +152,7 @@ export function ConnectScreen() {
       if (result.ok) {
         on_ok(key);
         clear_input();
-        show({ kind: 'ok', text: t('connect.ok', { tail: key_tail(key) }) });
+        show({ kind: 'ok', text: t('connect.ok', { name: info.label, tail: key_tail(key) }) });
       } else {
         show({ kind: 'warn', text: t(failure_key(result.reason)) });
       }
@@ -152,9 +164,9 @@ export function ConnectScreen() {
   };
 
   /** 글용 키 확인 */
-  const handle_check = () => check_key(key_input, set_text_key, () => set_key_input(''), set_message);
+  const handle_check = () => check_key(key_input, false, set_text_key, () => set_key_input(''), set_message);
   /** 그림용 키 확인 */
-  const handle_check_image = () => check_key(image_key_input, set_image_key, () => set_image_key_input(''), set_image_message);
+  const handle_check_image = () => check_key(image_key_input, true, set_image_key, () => set_image_key_input(''), set_image_message);
 
   /** Enter를 누르면 확인한다. */
   const handle_enter = (event: KeyboardEvent<HTMLInputElement>, action: () => Promise<void>) => {
@@ -177,11 +189,19 @@ export function ConnectScreen() {
     set_image_model(DEFAULT_IMAGE_MODEL);
   };
 
-  /** 저장된 값이 목록에 없어도 고른 값으로 보이게 목록 앞에 둔다. */
-  const options_of = (choices: string[], current: string) => (choices.includes(current) ? choices : [current, ...choices]);
+  /** 저장된 키를 "회사 이름과 끝자리"로 알리는 안내를 만든다. */
+  const saved_message = (key: string): Message | null =>
+    key ? { kind: 'ok', text: t('connect.saved_tail', { name: PROVIDER_INFO[detect_provider(key)].label, tail: key_tail(key) }) } : null;
 
-  const shown_message: Message | null = message ?? (text_key ? { kind: 'ok', text: t('connect.saved_tail', { tail: key_tail(text_key) }) } : null);
-  const shown_image_message: Message | null = image_message ?? (image_key ? { kind: 'ok', text: t('connect.saved_tail', { tail: key_tail(image_key) }) } : null);
+  const shown_message: Message | null = message ?? saved_message(text_key);
+  const shown_image_message: Message | null = image_message ?? saved_message(image_key);
+
+  // AI 종류 목록은 저장된 키의 회사에 맞춘다. 키가 없으면 Gemini 목록을 보여 준다.
+  const text_info = PROVIDER_INFO[detect_provider(text_key)];
+  const image_info = PROVIDER_INFO[detect_provider(effective_image_key({ text_key, image_key }))];
+  const shown_text_model = resolve_text_model(text_info.kind, text_model);
+  const shown_image_model = resolve_image_model(image_info.kind, image_model);
+  const has_no_image_ai = text_key !== '' && shown_image_model === null;
 
   return (
     <Shell width="wide" header={<SideHeader title={t('connect.title')} />}>
@@ -196,9 +216,13 @@ export function ConnectScreen() {
           <strong className="connect-step-title">{t('connect.step1.title')}</strong>
           <span className="connect-step-body">{t('connect.step1.body')}</span>
           <StepArtOpen label={t('connect.step1.alt')} />
-          <a className="btn outline connect-step-link" href={GEMINI_KEY_PAGE_URL} target="_blank" rel="noopener noreferrer">
-            {t('connect.step1.button')}
-          </a>
+          <div className="connect-step-links">
+            {PROVIDER_ORDER.map((kind) => (
+              <a key={kind} className="btn outline connect-step-link" href={PROVIDER_INFO[kind].key_page_url} target="_blank" rel="noopener noreferrer">
+                {PROVIDER_INFO[kind].label}
+              </a>
+            ))}
+          </div>
         </li>
         <li className="card">
           <span className="connect-step-num" aria-hidden="true">2</span>
@@ -238,6 +262,11 @@ export function ConnectScreen() {
             {shown_message.text}
           </Notice>
         )}
+        {has_no_image_ai && (
+          <Notice kind="warn" role="status">
+            {t('connect.no_image')}
+          </Notice>
+        )}
 
         <details className="connect-details">
           <summary>{t('connect.details')}</summary>
@@ -271,26 +300,28 @@ export function ConnectScreen() {
               <label htmlFor="text-model-select" className="field-label small">
                 {t('connect.text_kind_label')}
               </label>
-              <select id="text-model-select" className="select" value={text_model} onChange={(event) => set_text_model(event.target.value)}>
-                {options_of(TEXT_MODEL_CHOICES, text_model).map((choice) => (
+              <select id="text-model-select" className="select" value={shown_text_model} onChange={(event) => set_text_model(event.target.value)}>
+                {text_info.text_choices.map((choice) => (
                   <option key={choice} value={choice}>
                     {choice}
                   </option>
                 ))}
               </select>
             </div>
-            <div className="connect-field">
-              <label htmlFor="image-model-select" className="field-label small">
-                {t('connect.image_kind_label')}
-              </label>
-              <select id="image-model-select" className="select" value={image_model} onChange={(event) => set_image_model(event.target.value)}>
-                {options_of(IMAGE_MODEL_CHOICES, image_model).map((choice) => (
-                  <option key={choice} value={choice}>
-                    {choice}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {shown_image_model !== null && (
+              <div className="connect-field">
+                <label htmlFor="image-model-select" className="field-label small">
+                  {t('connect.image_kind_label')}
+                </label>
+                <select id="image-model-select" className="select" value={shown_image_model} onChange={(event) => set_image_model(event.target.value)}>
+                  {image_info.image_choices.map((choice) => (
+                    <option key={choice} value={choice}>
+                      {choice}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <p className="hint">{t('connect.kind_hint')}</p>
             <div>
               <button type="button" className="btn" onClick={handle_reset_kinds}>
