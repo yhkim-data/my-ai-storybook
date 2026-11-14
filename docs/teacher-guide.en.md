@@ -8,7 +8,7 @@ This guide is for teachers who want to run a class with My AI Storybook. Try it 
 
 - A computer, tablet, or phone with internet (one per student)
 - A current browser (Chrome, Edge, Safari, and so on)
-- No install, no sign-up, and no cost. (Money is needed only when you use AI pictures.)
+- No install, no sign-up, and no cost. (Money may be needed only when you connect AI.)
 - If students will add their own drawings: paper, colored pencils, and a device to photograph the drawings
 - If you will print the books: a print shop
 
@@ -16,7 +16,11 @@ This guide is for teachers who want to run a class with My AI Storybook. Try it 
 
 ### 1. Will you connect AI?
 
-First, know the age requirement. The text below comes from Google's Gemini API Additional Terms of Service (effective March 23, 2026), checked on 2026-11-14.
+Whether to use an AI connection in class is **up to the person who uses the tool (a teacher or an operator).** A book can be finished without any AI connection. The things to look at when deciding are below.
+
+This tool accepts keys from Google Gemini, Claude, and OpenAI. Each company has its own age rule. The person who got the key must follow that company's terms.
+
+**Google Gemini.** The text below comes from Google's Gemini API Additional Terms of Service (effective March 23, 2026), checked on 2026-11-14.
 
 - Age: "You must be 18 years of age or older to use the APIs." Only people 18 or older can get a key.
 - Services for people under 18: "You also will not use the Services as part of a website, application, or other service (collectively, "API Clients") that is directed towards or is likely to be accessed by individuals under the age of 18." This clause is still in the current version.
@@ -25,16 +29,23 @@ You can read this in the following way.
 
 - A student getting their own key does not fit the terms.
 - The terms do not allow connecting the AI to a service that people under 18 are likely to use.
-- So students using a device with AI turned on may be caught by this clause.
+- So using a Gemini connection on student devices may run into this clause.
 
-This tool was built so a book can be finished without AI. For classes with students, we recommend using it without connecting AI. The school must read the terms itself and decide whether to turn AI on for student devices. This guide is not legal advice.
+**Claude and OpenAI.** We did not check their age rules in the original terms this time. You need to check each company's terms.
+
+**Things that help you decide.**
+
+- If you use the tool without an AI connection, none of these conditions apply.
+- Before you turn AI on in a student class, read the terms of the company you want to use.
+- Claude writes words only. Add pictures yourself, or enter a separate picture key from another company.
+- This guide is not legal advice.
 
 ### 2. Choose one of three ways
 
 | Way | What happens on student devices | AI connection | Cost |
 |---|---|---|---|
-| A. No AI connection (recommended by default) | Students write the words and draw the pictures and add them. | None | Free |
-| B. Demo only, with the teacher's key | On the teacher's device, using the teacher's own key (the teacher must be 18 or older), show on screen how AI makes a book. Students do not follow along. | Teacher's device only | See the cost section below |
+| A. No AI connection | Students write the words and draw the pictures and add them. | None | Free |
+| B. Demo only, with the teacher's key | On the teacher's device, using the teacher's own key, show on screen how AI makes a book. Students do not follow along. | Teacher's device only | See the cost section below |
 | C. Copy picture note | Students press [Copy picture note] and paste it into another AI app. | Not in this tool | Follows the other app's terms |
 
 - In way C, check the age requirement of the other AI app yourself. This tool does not know that app's terms.
@@ -73,7 +84,15 @@ This example uses 40-minute lessons. Change it to fit your school.
 
 ## Cost
 
-Money is needed only when AI makes the pictures. Prices were checked in Google's official documents on 2026-11-14. The full record is in [PROVIDER_NOTES](PROVIDER_NOTES.md), which is written in Korean.
+Without an AI connection, it costs nothing. The price differs by company. Prices were checked in each company's official documents on 2026-11-14. The full record is in [PROVIDER_NOTES](PROVIDER_NOTES.md), which is written in Korean.
+
+| Company | Words | Pictures | Free limit |
+|---|---|---|---|
+| Google Gemini | Default `gemini-3.5-flash-lite`: input $0.30, output $2.50 (per 1 million tokens) | $0.0336 per picture | For words only |
+| Claude | Default `claude-opus-5-5`: input $4, output $20 (`claude-sonnet-5-5` $2 / $10, `claude-haiku-5-5` $0.10 / $0.50) | Does not make pictures | None |
+| OpenAI | Default `gpt-6-luna`: input $0.10, output $0.50 (`gpt-6.1-terra` $1 / $5, `gpt-6.1-sol` $2 / $10) | $30 per 1 million picture output tokens. The price per picture is not in the documents. | Not in the documents |
+
+The calculation below is for Google Gemini. We did not work out the cost of one book with Claude or OpenAI, because the price of one OpenAI picture is not in the documents.
 
 - One book = 9 pictures (1 cover and 8 pages) x $0.0336 = $0.3024
 - The writing is free within the free limit. Even when paid, it is about $0.011 per book.
@@ -86,8 +105,8 @@ Money is needed only when AI makes the pictures. Prices were checked in Google's
 | 25 students, one book each | 25 x 0.31 dollars | about 7.75 dollars |
 | 25 students, one book each, 2 pictures remade each | 25 x (0.31 + 2 x 0.0336) dollars | about 9.43 dollars |
 
-- These examples only multiply by the number of students. They do not mean AI is allowed on student devices. Check the age requirement above first.
-- If AI writes only the words and you add the pictures yourself, it costs nothing within the free limit.
+- These examples only multiply by the number of students. Whether to turn AI on for student devices is up to the person who uses the tool. Check the age requirement above first.
+- If Gemini writes only the words and you add the pictures yourself, it costs nothing within the free limit.
 - For the number of free uses, check Google AI Studio. This guide does not print numbers that were not found in the official documents.
 - Limits apply per project, not per key. Keys in the same project share the limit.
 - Prices can change. Price check date: 2026-11-14
@@ -96,9 +115,10 @@ Money is needed only when AI makes the pictures. Prices were checked in Google's
 
 - Tell students not to write real names, addresses, or phone numbers. The story seed screen also says "Don't write real names, addresses, or phone numbers." The main character's name should be made up.
 - The author's name can be a nickname.
-- **When AI is used within the free limit, what is typed in is used by the provider to improve its services, and people may review it.** The terms say: "Google uses the content you submit to the Services and any generated responses to provide, improve, and develop Google products and services and machine learning technologies..." / "human reviewers may read, annotate, and process your API input and output." / "Do not submit sensitive, confidential, or personal information to the Unpaid Services."
-- When AI is used on the paid plan, content is not used to improve products. Logs are still kept for a while to detect abuse.
-- Paying does not make it acceptable to turn AI on in a student class. The age requirement is separate.
+- **When Gemini is used within the free limit, what is typed in is used by the provider to improve its services, and people may review it.** The terms say: "Google uses the content you submit to the Services and any generated responses to provide, improve, and develop Google products and services and machine learning technologies..." / "human reviewers may read, annotate, and process your API input and output." / "Do not submit sensitive, confidential, or personal information to the Unpaid Services."
+- When Gemini is used on the paid plan, content is not used to improve products. Logs are still kept for a while to detect abuse.
+- We did not check how Claude and OpenAI use what is typed in this time. Read each company's terms before you use them.
+- Paying does not remove the age requirement. It is separate.
 - The book in progress is saved in the browser on that device. This tool has no server. To move a book to another device, save a work file with [Save work file] and move the file.
 - Keys are saved only in the browser on that device. On a shared device, press [Erase the key from this device] when you finish.
 - A work file contains the words and pictures the student made. Follow your school's rules for storing and sending the file.
@@ -125,7 +145,8 @@ For the rights to the book and the fonts, see [About your rights](rights.en.md).
 | A picture will not upload. | If you see "This file can't be opened as a picture.", pick a different picture file. It must be a photo or picture file. |
 | AI says "We can't make it with these words." | Change the story or the picture note. It was stopped for safety. |
 | "You've used all of today's turns." | This is the daily limit. Try again after the time on screen, or write the words yourself and add your own pictures. |
-| Writing works but pictures do not. | The AI that draws pictures needs a key with billing connected. The key check only sees that the key exists. |
+| Writing works but pictures do not. | Claude does not make pictures. Add your own, or enter a Gemini or OpenAI key for pictures in [More settings]. Gemini pictures need a key with billing connected. The key check only sees that the key is accepted. |
+| A Claude key says "That key doesn't match". | If the key is surely right, an organization setting may be blocking calls straight from the browser (the answer is 401, "CORS requests are not allowed for this Organization"). Ask the organization's administrator, or use a key from another company. |
 | The character looks different on each page. | Describe the character in more detail, and press [Remake only this picture] in Decorate for pictures you do not like. |
 | Text boxes are hard to use on a phone. | Use a bigger screen, or click the words and fix them directly. |
 

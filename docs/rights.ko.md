@@ -36,11 +36,12 @@ The rights to the book you make belong to you. This tool and DI Lab claim no rig
 
 ## AI 회사 약관
 
-이 도구가 연결하는 AI는 Google의 Gemini예요. 약관(Gemini API Additional Terms of Service, 2026-03-23 시행판)에는 이렇게 적혀 있어요. (확인한 날: 2026-11-14, 출처: https://aistudio.google.com/docs/terms)
+이 도구는 Google Gemini, Claude(Anthropic), OpenAI의 AI를 연결할 수 있어요. 이 중 Google Gemini의 약관(Gemini API Additional Terms of Service, 2026-03-23 시행판)에는 이렇게 적혀 있어요. (확인한 날: 2026-11-14, 출처: https://aistudio.google.com/docs/terms)
 
 > "Some of our Services allow you to generate original content. Google won't claim ownership over that content."
 
 - Google은 AI가 만든 글과 그림에 소유권을 주장하지 않아요.
+- Claude와 OpenAI가 결과물의 권리를 어떻게 정하는지는 이번에 약관 원문을 확인하지 못했어요. 쓰기 전에 각 회사 약관을 확인하세요.
 - 하지만 AI가 만든 그림을 저작권으로 보호할지는 나라마다 달라요. 법이 어떻게 볼지는 이 도구가 정해 줄 수 없어요.
 - 책을 팔거나 공모전에 내려면 그 나라와 그 공모전의 규칙을 확인하세요.
 - AI를 쓸 때의 나이 조건과 개인정보 관련 내용은 [키 받는 법](key-guide.ko.md)과 [선생님 안내서](teacher-guide.ko.md)에 있어요.
