@@ -1,4 +1,4 @@
-/* 6단계 그림 화면 모양 (design/Pictures.dc.html 기준) */
+/* 6단계 그림 화면 모양 (docs/how-it-was-built/design/Pictures.dc.html 기준) */
 .pic-layout {
   display: flex;
   flex-wrap: wrap;
