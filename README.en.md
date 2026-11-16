@@ -6,7 +6,7 @@ A tool for making a short picture book in your browser. Nothing to install, no s
 [![Tests](https://github.com/yhkim-data/my-ai-storybook/actions/workflows/e2e.yml/badge.svg)](https://github.com/yhkim-data/my-ai-storybook/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[한국어](README.md) | **English**
+[한국어](README.kr.md) | **English**
 
 ![A demo from making a new book to the finished book](docs/images/en/demo.gif)
 

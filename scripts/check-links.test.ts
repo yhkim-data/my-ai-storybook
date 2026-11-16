@@ -1,7 +1,7 @@
 // 링크 검사 스크립트의 검사: 상대 경로만 보고, 바깥 주소와 코드 안의 글은 건너뛴다.
 import { normalize } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { find_broken_links } from './check-links.mjs';
+import { find_broken_links, is_doc_path } from './check-links.mjs';
 
 /** 있다고 칠 파일들 */
 const FILES = new Set([normalize('docs/images/ko/start.png'), normalize('docs/key-guide.ko.md')]);
@@ -28,5 +28,19 @@ describe('find_broken_links', () => {
   it('바깥 주소, 쪽 안 이동, 코드 안의 글은 건너뛴다', () => {
     const text = '[a](https://di-lab.io/) [b](#위로) [c](mailto:x@example.com) `[d](no.md)`\n```\n[e](no.md)\n```';
     expect(find_broken_links('README.md', text, fake_exists)).toEqual([]);
+  });
+});
+
+describe('is_doc_path', () => {
+  it('checks all three READMEs and Markdown files under docs/', () => {
+    for (const path of ['README.md', 'README.kr.md', 'README.en.md', 'docs/rights.ko.md', 'docs/releases/v1.0.0.md']) {
+      expect(is_doc_path(path)).toBe(true);
+    }
+  });
+
+  it('skips non-Markdown files and Markdown files outside docs/', () => {
+    for (const path of ['index.html', 'src/notes.md', 'docs/images/ko/demo.gif']) {
+      expect(is_doc_path(path)).toBe(false);
+    }
   });
 });

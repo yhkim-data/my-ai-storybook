@@ -11,11 +11,18 @@ const LINK_PATTERNS = [/!?\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, /
 const EXTERNAL = /^([a-z][a-z0-9+.-]*:|#)/i;
 
 /**
+ * 검사할 문서인지 본다: 맨 위의 Markdown 파일(README.md, README.kr.md, README.en.md 등)과 docs/ 아래 Markdown 파일.
+ */
+export function is_doc_path(path) {
+  return DOC_PATTERN.test(path);
+}
+
+/**
  * git이 관리하거나 관리하게 될 문서 목록을 돌려준다 (.gitignore에 든 것은 뺀다).
  */
 function list_docs() {
   const output = execSync('git ls-files -co --exclude-standard', { encoding: 'utf8' });
-  return output.split('\n').filter((line) => DOC_PATTERN.test(line));
+  return output.split('\n').filter(is_doc_path);
 }
 
 /**
