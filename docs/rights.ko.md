@@ -1,20 +1,57 @@
-# 권리 안내
+# 권리와 이용 조건
 
 [English](rights.en.md) | **한국어**
 
-## 만든 책의 권리
+이 문서는 "나만의 AI 동화책"으로 만든 책의 권리와 이용 조건을 안내합니다. 법률 자문이 아니며, 아래 내용은 표시한 확인일 기준입니다.
+
+## 1. 기본 원칙
 
 만든 책의 권리는 만든 사람에게 있습니다. 이 도구와 DI Lab은 결과물에 어떤 권리도 주장하지 않습니다.
 
 The rights to the book you make belong to you. This tool and DI Lab claim no rights to anything you create.
 
-- 책 안에는 이 도구의 이름이나 DI Lab 표기가 들어가지 않아요.
-- 만든 책을 보여 주고, 나눠 주고, 인쇄해도 돼요.
-- 이 도구가 책에 대해 허락을 받으라고 하거나 돈을 받는 일은 없어요.
+- 책 안에는 이 도구의 이름이나 DI Lab 표기가 들어가지 않습니다. PDF 파일 정보에도 도구 이름을 남기지 않습니다.
+- 이 도구는 만든 책에 대해 허락을 요구하거나 이용료를 받지 않습니다.
+- 도구의 소스 코드는 MIT 라이선스로 공개되어 있습니다(저작권자 DI Lab · Data Insight Lab). 이 라이선스는 도구의 코드에만 적용되며, 사용자가 만든 책에는 적용되지 않습니다. 전문은 [LICENSE](../LICENSE)에 있습니다.
 
-## 글꼴 라이선스
+## 2. 구성 요소별 권리
 
-책에 쓰는 글꼴은 세 가지예요. 모두 SIL Open Font License 1.1(OFL)로 배포되는 글꼴이에요.
+### 직접 쓴 글
+
+직접 쓴 글은 작성자의 저작물입니다.
+
+### AI가 만든 글과 그림
+
+한국 저작권법은 저작물을 다음과 같이 정의합니다.
+
+> "“저작물”은 인간의 사상 또는 감정을 표현한 창작물을 말한다." (저작권법 제2조 제1호)
+
+- 출처: 국가법령정보센터 <https://www.law.go.kr/법령/저작권법> (법률 제21595호, 2026-10-29 시행, 2026-11-16 확인)
+
+문화체육관광부와 한국저작권위원회의 안내서는 이 정의에 따라 AI 산출물 자체의 저작물성을 인정하지 않고, 사람이 창작성을 더한 부분은 보호될 수 있다고 봅니다.
+
+- 「생성형 AI 저작권 안내서」(2023-12-27 발행): "현행법의 해석상 인간이 아닌 AI가 만들어낸 산출물 자체에 대해서는 저작물성 불인정", "AI 산출물에 수정·증감 또는 편집·배열 등의 작업을 통하여 인간의 창작성이 부가된 경우 해당 부분에 대해서는 저작물성 인정 가능"
+- 「생성형 인공지능 활용 저작물의 저작권 등록 안내서」(2025년 6월 발행): 인간의 창작적 기여가 인정될 수 있는 예로 "이용자가 GAI 산출물을 수정ㆍ증감 등 ‘추가 작업’한 부분에 창작성이 있는 경우"와 "GAI 산출물을 선택하고 배열 또는 구성한 것에 창작성이 있는 경우"를 듭니다.
+- 출처: 한국저작권위원회 「AI-저작권 안내서(4종) 모음」 <https://www.copyright.or.kr/notify/notice/view.do?brdctsno=55402> (2026-04-30 게시, 2026-11-16 확인)
+
+따라서 AI가 만든 글이나 그림을 그대로 쓴 부분은 저작권으로 보호되지 않을 수 있습니다. 사람이 고쳐 쓴 글, 직접 고르고 배열한 구성처럼 사람의 창작적 기여가 있는 부분은 보호될 수 있습니다.
+
+### 직접 올린 그림
+
+직접 그린 그림이나 직접 찍은 사진은 올린 사람의 저작물입니다. 다른 사람의 그림, 실존 인물, 기존 캐릭터, 상표를 쓰려면 권리자의 허락이 필요합니다.
+
+- 인터넷에서 찾은 그림을 허락 없이 쓸 수 없습니다.
+- 만화, 영화, 게임의 캐릭터와 상표가 들어간 그림은 올리지 않는 것이 좋습니다.
+- 다른 AI 서비스에서 만든 그림은 그 서비스의 이용 조건을 따릅니다.
+- 사진에 다른 사람의 얼굴이 나오면 그 사람의 허락을 받아야 합니다. 어린이 사진은 보호자의 허락이 필요합니다.
+
+### 기본 배치와 디자인
+
+도구가 제공하는 기본 배치, 글상자 모양, 색과 같은 기본 틀에 대해 DI Lab은 권리를 주장하지 않습니다.
+
+### 글꼴
+
+책에 쓰는 글꼴 세 가지는 모두 SIL Open Font License 1.1(OFL)로 배포됩니다. 이 글꼴을 쓴 책은 인쇄, 배포, 판매할 수 있습니다. 글꼴 파일만 따로 판매할 수는 없습니다.
 
 | 책의 글꼴 이름 | 글꼴 | 화면에서 쓰는 곳 |
 |---|---|---|
@@ -22,42 +59,45 @@ The rights to the book you make belong to you. This tool and DI Lab claim no rig
 | 또박또박 글씨 | Noto Sans KR | 화면 본문 |
 | 손글씨 | Gaegu | 없음 |
 
-- OFL 글꼴은 책에 써서 인쇄하고, 나눠 주고, 팔아도 돼요.
-- 하지만 글꼴 파일만 따로 팔 수는 없어요.
-- 라이선스 전문은 저장소의 `public/fonts/` 폴더에 글꼴마다 `*-OFL.txt`로 들어 있어요.
-- 글꼴은 Google Fonts 저장소(https://github.com/google/fonts)의 `ofl/` 아래에서 받았어요. 한자를 뺀 부분 글꼴(subset) woff2로 바꿔서 넣었어요.
-- 자세한 출처는 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)에 있어요.
+- 라이선스 전문은 저장소의 `public/fonts/` 폴더에 글꼴마다 `*-OFL.txt`로 들어 있습니다.
+- 글꼴은 Google Fonts 저장소(<https://github.com/google/fonts>)의 `ofl/` 아래에서 받아, 한자를 뺀 부분 글꼴(subset) woff2로 바꿔 넣었습니다.
+- 자세한 출처는 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)에 있습니다.
 
-## AI 그림 표시
+## 3. AI 회사 약관상 결과물의 권리
 
-- AI로 만든 그림이 한 장이라도 있으면, 책의 "만든 사람" 쪽에 "그림 일부는 AI(이름)로 만들었습니다"라는 글이 자동으로 들어가요. 괄호 안에는 그림을 만든 AI의 이름이 들어가요.
-- 내가 올린 그림만 있으면 이 글은 들어가지 않아요.
-- Google의 그림 AI가 만든 그림에는 눈에 보이지 않는 SynthID 워터마크가 들어가요. 공식 문서에 "All generated images include a SynthID watermark."라고 적혀 있어요. (확인한 날: 2026-11-14, 출처: https://aistudio.google.com/docs/image-generation)
+이 도구는 Google Gemini, Claude(Anthropic), OpenAI의 AI를 연결할 수 있습니다. 각 회사의 약관은 결과물에 대해 다음과 같이 정합니다.
 
-## AI 회사 약관
+| 회사 | 약관 | 결과물에 관한 조항 | 확인일 |
+|---|---|---|---|
+| OpenAI | 서비스 계약 한국어판 <https://openai.com/ko-KR/policies/services-agreement/> (업데이트 2025-12-01) | "고객이 모든 출력물을 소유합니다." OpenAI가 출력물에 대한 권리를 고객에게 양도한다고 적혀 있습니다. | 2026-11-16 |
+| Anthropic (Claude) | Commercial Terms of Service <https://www.anthropic.com/legal/commercial-terms> (Effective Jun 17, 2025). API 키에 적용됩니다. | "Anthropic agrees that Customer (a) retains all rights to its Inputs, and (b) owns its Outputs." / "Anthropic hereby assigns to Customer its right, title and interest (if any) in and to Outputs." | 2026-11-16 |
+| Google (Gemini) | Gemini API Additional Terms of Service <https://aistudio.google.com/docs/terms> (Effective March 23, 2026) | "Some of our Services allow you to generate original content. Google won't claim ownership over that content." | 2026-11-16 |
 
-이 도구는 Google Gemini, Claude(Anthropic), OpenAI의 AI를 연결할 수 있어요. 이 중 Google Gemini의 약관(Gemini API Additional Terms of Service, 2026-03-23 시행판)에는 이렇게 적혀 있어요. (확인한 날: 2026-11-14, 출처: https://aistudio.google.com/docs/terms)
+AI 회사가 결과물의 권리를 넘기거나 주장하지 않는다는 것과, 그 결과물을 법이 저작물로 보호하는지는 별개의 문제입니다. 회사가 권리를 넘겨도, 2장에서 본 것처럼 AI가 만든 부분 자체는 저작권으로 보호되지 않을 수 있습니다.
 
-> "Some of our Services allow you to generate original content. Google won't claim ownership over that content."
+Google의 그림 AI가 만든 그림에는 눈에 보이지 않는 SynthID 워터마크가 들어갑니다. 공식 문서에 "All generated images include a SynthID watermark."라고 적혀 있습니다(<https://aistudio.google.com/docs/image-generation>, 2026-11-14 확인).
 
-- Google은 AI가 만든 글과 그림에 소유권을 주장하지 않아요.
-- Claude와 OpenAI가 결과물의 권리를 어떻게 정하는지는 이번에 약관 원문을 확인하지 못했어요. 쓰기 전에 각 회사 약관을 확인하세요.
-- 하지만 AI가 만든 그림을 저작권으로 보호할지는 나라마다 달라요. 법이 어떻게 볼지는 이 도구가 정해 줄 수 없어요.
-- 책을 팔거나 공모전에 내려면 그 나라와 그 공모전의 규칙을 확인하세요.
-- AI를 쓸 때의 나이 조건과 개인정보 관련 내용은 [키 받는 법](key-guide.ko.md)과 [선생님 안내서](teacher-guide.ko.md)에 있어요.
+## 4. 공개, 인쇄, 판매
 
-## 다른 사람의 그림이나 캐릭터를 쓸 때
+- 이 도구 쪽에서 만든 책의 공개, 인쇄, 판매를 제한하지 않습니다.
+- 공모전, 출판사, 판매 플랫폼은 AI 사용 여부를 밝히도록 요구할 수 있습니다. 제출하거나 판매하기 전에 해당 규칙을 확인하십시오.
+- AI가 만든 그림이 한 장이라도 있으면, 책의 "만든 사람" 쪽에 "그림 일부는 AI(이름)로 만들었습니다"라는 문장이 자동으로 들어갑니다. 괄호 안에는 그림을 만든 AI의 이름이 들어갑니다. 읽는 사람이 AI 사용 여부를 알 수 있게 하고, 위와 같은 고지 요구에 대비하기 위해서입니다. 직접 올린 그림만 있으면 이 문장은 들어가지 않습니다.
 
-- 다른 사람이 만든 그림이나 캐릭터를 올릴 때는 그 사람의 허락이 필요해요.
-- 인터넷에서 찾은 그림은 마음대로 써도 되는 것이 아니에요.
-- 만화, 영화, 게임 속 캐릭터와 상표가 들어간 그림은 올리지 마세요.
-- 다른 AI 앱에서 만든 그림을 올릴 때는 그 앱의 이용 조건을 따라요.
-- 사진에 다른 사람의 얼굴이 나오면 그 사람의 허락을 받으세요. 특히 어린이 사진은 보호자의 허락이 필요해요.
+## 5. 학교와 기관에서 쓸 때
 
-## 이 도구의 라이선스
+- 학생이 만든 작품의 저작권은 학생에게 있습니다.
+- 기관이 학생 작품을 홈페이지, SNS, 문집 등에 공개하려면 학생과 보호자에게 저작물 이용 허락을 받아야 합니다. 작품과 함께 이름, 얼굴 같은 개인정보를 공개하려면 개인정보 수집·이용 동의도 받아야 합니다.
+- 만 14세 미만 아동의 개인정보는 법정대리인의 동의가 필요합니다.
 
-이 도구의 코드는 MIT 라이선스로 공개돼요. 저작권자는 DI Lab (Data Insight Lab)이에요. 코드를 쓰고 고치고 나눠도 돼요. 전문은 저장소의 [LICENSE](../LICENSE)에 있어요.
+> "개인정보처리자는 만 14세 미만 아동의 개인정보를 처리하기 위하여 이 법에 따른 동의를 받아야 할 때에는 그 법정대리인의 동의를 받아야 하며, 법정대리인이 동의하였는지를 확인하여야 한다." (개인정보 보호법 제22조의2 제1항)
 
-이 도구의 라이선스는 도구의 코드에만 해당해요. 사용자가 만든 책은 여기에 들어가지 않아요.
+- 출처: 국가법령정보센터 <https://www.law.go.kr/법령/개인정보보호법> (법률 제21445호, 2026-09-11 시행, 2026-11-16 확인)
+- 수업 전에 받는 동의서에 저작물 이용 허락, 개인정보 수집·이용 동의, 공개 범위를 함께 넣어 두는 것이 좋습니다.
+- AI 연결의 나이 조건은 [선생님 안내서](teacher-guide.ko.md)와 [키 발급 방법](key-guide.ko.md)에 있습니다.
 
-글꼴과 라이브러리의 라이선스는 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)를 보세요.
+## 6. 면책과 문의
+
+- 이 문서는 법률 자문이 아닙니다. 구체적인 사안은 전문가와 상담하십시오.
+- 저작권과 개인정보에 관한 법은 나라마다 다릅니다. 이 문서는 한국 법을 기준으로 합니다.
+- 법령, 정부 안내서, 각 회사의 약관은 확인일 이후 바뀔 수 있습니다.
+- 문의는 저장소의 [Issues](https://github.com/yhkim-data/my-ai-storybook/issues)에 남겨 주십시오.
