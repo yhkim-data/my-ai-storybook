@@ -30,6 +30,7 @@ npm run test
 npm run build
 npm run check:secrets
 npm run check:i18n
+npm run check:links
 ```
 
 화면 동작을 바꿨다면 `npm run e2e`도 돌려요. 자세한 내용은 [개발 문서](docs/DEVELOPMENT.ko.md)를 보세요.
@@ -86,6 +87,7 @@ npm run test
 npm run build
 npm run check:secrets
 npm run check:i18n
+npm run check:links
 ```
 
 If you changed how a screen behaves, also run `npm run e2e`. For more, see the [development guide](docs/DEVELOPMENT.ko.md) (Korean).
