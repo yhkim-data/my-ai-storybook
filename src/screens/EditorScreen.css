@@ -44,7 +44,7 @@
   color: var(--text-sub);
 }
 
-/* 쪽 순서 */
+/* Page order */
 .editor-pages {
   flex: 1 1 120px;
   max-width: 150px;
@@ -97,7 +97,7 @@
   gap: 8px;
 }
 
-/* 쪽 미리보기 */
+/* Page preview */
 .editor-canvas {
   flex: 999 1 480px;
   min-width: 0;
@@ -123,7 +123,7 @@
   overflow: visible;
 }
 
-/* 고치는 글상자 */
+/* Editable text box */
 .book-page .text-box.editor-box {
   overflow: visible;
   outline: 2px solid var(--primary);
@@ -167,7 +167,7 @@
   border-radius: 2px;
   touch-action: none;
 }
-/* 손가락으로도 잡기 쉽게 보이지 않는 넓은 잡는 자리를 둔다. */
+/* Invisible larger hit area so the handle is easy to grab with a finger. */
 .box-handle::after {
   content: '';
   position: absolute;
@@ -228,7 +228,7 @@
   height: 1px;
 }
 
-/* 글상자 설정 */
+/* Text box settings */
 .editor-settings {
   flex: 1 1 280px;
   max-width: 320px;
@@ -315,7 +315,7 @@
   background: #ffffff;
 }
 
-/* 작은 화면: 쪽 순서를 가로 줄로, 설정을 아래로 */
+/* Small screens: page order becomes a horizontal row, settings move below */
 @media (max-width: 720px) {
   .shell:has(.editor-layout) .shell-main {
     padding: 16px;

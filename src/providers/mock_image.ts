@@ -1,15 +1,16 @@
-// 가짜 그림 연결부. 키 없이 직접 만든 SVG 장면을 돌려준다. 자동 검사와 연습 모드에서 쓴다.
+// Mock image provider. Returns hand-made SVG scenes without a key; used by tests and practice mode.
 import { COVER_SCENE_INDEX, STORY_SCENE_COUNT, render_scene_svg } from '../art/scenes';
 import { find_sample_scene } from '../data/sample_story';
 import { maybe_fail } from './mock_failure';
 import { mock_wait } from './mock_text';
 import type { ImageProvider, ImageRequest } from './types';
 
-/** 가짜 그림 연결부의 이름. 책 마지막 쪽에는 "연습용 그림"으로 보인다. */
+/** Shown as "practice image" on the book's last page. */
 export const MOCK_IMAGE_MODEL = 'mock-image';
 
 /**
- * 요청에 맞는 장면 번호를 고른다. 표지는 표지 장면, 본문은 그림 설명이 예시와 같으면 그 장면을 쓴다.
+ * Picks a scene index. The cover gets the cover scene; a story page whose description
+ * matches the sample story gets that sample's scene.
  */
 export function pick_scene_index(req: Pick<ImageRequest, 'description' | 'page_index'>): number {
   if (req.page_index === 0) return COVER_SCENE_INDEX;
@@ -18,9 +19,6 @@ export function pick_scene_index(req: Pick<ImageRequest, 'description' | 'page_i
   return ((req.page_index - 1) % STORY_SCENE_COUNT) + 1;
 }
 
-/**
- * 가짜 그림 연결부를 만든다.
- */
 export function create_mock_image(): ImageProvider {
   return {
     id: 'mock-image',

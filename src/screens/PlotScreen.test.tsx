@@ -1,4 +1,4 @@
-// 3단계 줄거리 화면 검사: 자동 제안 1회, 저장된 줄거리 재사용, 고르기와 고치기, 직접 쓰기, 연결 없음, 실패와 다시 하기.
+// Step 3 plot screen tests.
 import { StrictMode } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -13,20 +13,18 @@ import type { Book } from '../types';
 import { PlotScreen } from './PlotScreen';
 
 const ko = (key: string) => translate('ko', key);
-/** 줄거리 카드를 찾는 이름 (줄거리 1: ...) */
+/** Matches the Korean plot card labels ("Plot 1: ..."). */
 const CARD_NAME = /^줄거리 \d/;
 const PLOT_COUNT = 3;
 
-/** 책과 설정을 준비한다. practice가 false면 연결이 없는 상태다. */
+/** practice = false means no connection. */
 function prepare_store(patch: Partial<Book> = {}, practice = true): void {
   useSettings.setState({ lang: 'ko', practice, text_key: '' });
   useBook.setState({ book: { ...create_book('ko'), ...patch }, screen: 'plot' });
 }
 
-/** 지금까지 센 연결부 호출 횟수 */
 const usage = () => useSettings.getState().usage_count;
 
-/** 지금 책을 읽는다. */
 function current_book(): Book {
   const book = useBook.getState().book;
   if (!book) throw new Error('책이 없어요');
@@ -44,7 +42,7 @@ describe('PlotScreen', () => {
     reset_mock_failures();
   });
 
-  it('연습 모드로 들어오면 줄거리 3개가 보이고 호출은 정확히 1회다 (StrictMode 포함)', async () => {
+  it('practice mode shows 3 plots with exactly one call, even under StrictMode', async () => {
     prepare_store();
     const before = usage();
     render(
@@ -57,7 +55,7 @@ describe('PlotScreen', () => {
     expect(current_book().plots).toHaveLength(PLOT_COUNT);
   });
 
-  it('이미 줄거리가 있는 책으로 다시 그리면 호출하지 않는다', () => {
+  it('does not call when the book already has plots', () => {
     prepare_store({ plots: get_sample_plots('ko', '토리'), plots_key: 'saved' });
     const before = usage();
     render(<PlotScreen />);
@@ -65,7 +63,7 @@ describe('PlotScreen', () => {
     expect(usage() - before).toBe(0);
   });
 
-  it('카드를 누르면 제목 칸에 값이 들어가고 고치면 chosen_plot.title이 바뀐다', async () => {
+  it('clicking a card fills the title and editing it updates chosen_plot.title', async () => {
     prepare_store({ plots: get_sample_plots('ko', '토리'), plots_key: 'saved' });
     const user = userEvent.setup();
     render(<PlotScreen />);
@@ -78,7 +76,7 @@ describe('PlotScreen', () => {
     expect(current_book().chosen_plot?.id).toBe(first?.id);
   });
 
-  it('"내가 직접 쓸게요"를 누르면 호출 없이 빈 칸이 보인다', async () => {
+  it('"write it myself" shows empty fields without a call', async () => {
     prepare_store({ plots: get_sample_plots('ko', '토리'), plots_key: 'saved' });
     const user = userEvent.setup();
     render(<PlotScreen />);
@@ -90,7 +88,7 @@ describe('PlotScreen', () => {
     expect(screen.getByText(ko('plot.self_hint'))).toBeInTheDocument();
   });
 
-  it('연결이 없으면 직접 쓰기 안내가 보이고 호출은 0회다', () => {
+  it('without a connection shows the self-writing hint and makes no call', () => {
     prepare_store({}, false);
     const before = usage();
     render(<PlotScreen />);
@@ -99,7 +97,7 @@ describe('PlotScreen', () => {
     expect(usage() - before).toBe(0);
   });
 
-  it('제목 없이 다음을 누르면 안내가 뜨고 화면이 그대로다', async () => {
+  it('next without a title shows a notice and stays on the screen', async () => {
     prepare_store({ write_mode: 'self' });
     const user = userEvent.setup();
     render(<PlotScreen />);
@@ -108,7 +106,7 @@ describe('PlotScreen', () => {
     expect(useBook.getState().screen).toBe('plot');
   });
 
-  it('직접 쓴 제목이 있으면 쪽 나누기 화면으로 간다', async () => {
+  it('goes to the page split screen with a self-written title', async () => {
     prepare_store({ write_mode: 'self' });
     const user = userEvent.setup();
     render(<PlotScreen />);
@@ -118,8 +116,8 @@ describe('PlotScreen', () => {
     expect(useBook.getState().screen).toBe('pages');
   });
 
-  it('차단 오류가 나면 안내가 뜨고, 다시 하기를 누르면 줄거리 3개가 보인다', async () => {
-    // 가짜 연결부는 주소 꼬리표로 처음 한 번만 실패를 흉내 낸다.
+  it('a blocked error shows a notice, and retry shows 3 plots', async () => {
+    // The mock provider fails only the first call when the URL has this query flag.
     window.history.pushState({}, '', '/?mockfail=blocked');
     prepare_store();
     const user = userEvent.setup();

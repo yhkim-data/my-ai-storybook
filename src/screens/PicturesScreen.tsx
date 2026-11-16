@@ -1,4 +1,4 @@
-// 6단계 그림 화면: 쪽마다 AI로 만들기, 내 그림 올리기, 그림 설명 복사 중 하나로 그림을 넣는다.
+// Step 6 pictures: each page gets an AI image, an uploaded image, or a copied image prompt.
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { StepShell } from '../components/Shell';
@@ -12,38 +12,27 @@ import { useSettings } from '../store/settings_store';
 import { prepare_upload_image } from '../utils/image';
 import './PicturesScreen.css';
 
-/** 그림 자리 표시 아이콘의 한 변(px) */
+/** Placeholder icon side in px. */
 const PLACEHOLDER_ICON_SIZE = 48;
-/** 그림 설명 입력 칸의 id */
 const DESC_INPUT_ID = 'pic-desc';
-/** 그림 설명 입력 칸의 줄 수 */
 const DESC_ROWS = 3;
 
-/** 쪽 아래에 보여 주는 안내 종류 */
 type NoticeKind = 'need_connect' | 'copied' | 'copy_manual' | 'upload_error';
 
-/** 보여 줄 AI 오류와 "다시 하기"가 할 일 */
 interface ErrorState {
   error: ProviderError;
   retry: () => void;
 }
 
-/** 모두 만들기 진행 상황 */
 interface BatchProgress {
   done: number;
   total: number;
 }
 
-/**
- * 주어진 시간(ms)만큼 쉰다.
- */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * 그림 자리 표시 아이콘.
- */
 function PictureIcon() {
   return (
     <svg
@@ -64,9 +53,7 @@ function PictureIcon() {
   );
 }
 
-/**
- * 6단계 그림 화면.
- */
+/** Step 6 pictures screen. */
 export function PicturesScreen() {
   const t = useT();
   const book = useBook((state) => state.book);
@@ -80,7 +67,7 @@ export function PicturesScreen() {
   const [notice, set_notice] = useState<NoticeKind | null>(null);
   const [copy_text, set_copy_text] = useState('');
   const [error_state, set_error_state] = useState<ErrorState | null>(null);
-  /** 지금 AI가 그림을 그리고 있는 쪽 */
+  /** Page the AI is currently drawing. */
   const [busy_index, set_busy_index] = useState<number | null>(null);
   const [batch, set_batch] = useState<BatchProgress | null>(null);
 
@@ -88,7 +75,7 @@ export function PicturesScreen() {
   const is_mounted_ref = useRef(false);
   const stop_batch_ref = useRef(false);
 
-  // 화면을 떠나면 모두 만들기를 멈춘다. (StrictMode에서 두 번 돌아도 맞도록 켤 때 true로 둔다)
+  // Leaving the screen stops the batch. The mount flag is set inside the effect so StrictMode's double run stays correct.
   useEffect(() => {
     is_mounted_ref.current = true;
     return () => {
@@ -108,20 +95,17 @@ export function PicturesScreen() {
   const current_name = page_name(t, index);
   const style_name = t(`style.name.${book.style_id}`);
 
-  /** 안내와 오류를 지운다. */
   const clear_messages = () => {
     set_notice(null);
     set_error_state(null);
     set_copy_text('');
   };
 
-  /** 보고 있는 쪽을 바꾼다. 안내와 오류는 지운다. */
   const choose_page = (next_index: number) => {
     clear_messages();
     set_current_page(next_index);
   };
 
-  /** 이 쪽의 그림을 AI로 한 번 만든다. */
   const make_one = async (target_index: number) => {
     clear_messages();
     if (!get_image_provider()) {
@@ -141,7 +125,7 @@ export function PicturesScreen() {
     }
   };
 
-  /** 그림이 없는 쪽을 앞에서부터 차례로 만든다. 이미 그림이 있는 쪽은 건너뛴다. */
+  /** Generates images in order for pages that have none; pages with images are skipped. */
   const make_all = async () => {
     clear_messages();
     if (!get_image_provider()) {
@@ -159,12 +143,12 @@ export function PicturesScreen() {
     try {
       for (const target_index of missing) {
         if (stop_batch_ref.current) break;
-        // 제공사 한도를 넘지 않게 쪽 사이에 쉰다. 연습 모드에서는 쉬지 않는다.
+        // Pause between pages to stay under provider rate limits; no pause in practice mode.
         if (has_generated && !useSettings.getState().practice) {
           await sleep(BATCH_IMAGE_GAP_MS);
           if (stop_batch_ref.current) break;
         }
-        // 참고 그림이 첫 AI 그림을 찾으므로 최신 책을 다시 읽어 넘긴다.
+        // Re-read the latest book: the reference image is taken from the first AI image made so far.
         const latest = useBook.getState().book;
         if (!latest) break;
         if (!latest.pages[target_index]?.image) {
@@ -186,10 +170,9 @@ export function PicturesScreen() {
     }
   };
 
-  /** 올린 그림 파일을 줄여서 이 쪽에 넣는다. */
   const handle_upload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    // 같은 파일을 다시 고를 수 있게 값을 비운다.
+    // Reset so the same file can be picked again.
     event.target.value = '';
     if (!file) return;
     clear_messages();
@@ -201,7 +184,7 @@ export function PicturesScreen() {
     }
   };
 
-  /** 이 쪽의 완성된 그림 설명을 복사한다. 복사하지 못하면 직접 복사할 수 있게 글을 보여 준다. */
+  /** Copies the full image prompt; if the clipboard fails, shows the text for manual copying. */
   const handle_copy = async () => {
     clear_messages();
     const text = full_image_prompt(book, index);

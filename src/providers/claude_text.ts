@@ -1,5 +1,5 @@
-// Claude 글 연결부. 공식 SDK로 브라우저에서 직접 부른다. Claude는 그림을 만들지 않으므로 글 연결부만 있다.
-// SDK는 Claude 키를 쓸 때만 내려받는다.
+// Claude text provider, called from the browser through the official SDK. Claude makes no images, so there is no image provider.
+// The SDK is downloaded only when a Claude key is used.
 import type Anthropic from '@anthropic-ai/sdk';
 import { RATE_LIMIT_WAIT_SECONDS } from '../constants';
 import type { Lang, PageDraft, Plot, StorySeed } from '../types';
@@ -16,38 +16,34 @@ import { to_strict_schema } from './strict_schema';
 import { ProviderError, type ConnectionResult, type TextProvider } from './types';
 
 const MS_PER_SECOND = 1000;
-/** 형식이 어긋났을 때를 포함해 요청을 보내는 최대 횟수 */
+/** Total attempts, including the one retry after a malformed response. */
 const MAX_FORMAT_ATTEMPTS = 2;
-/** 응답 글 길이 한도(토큰). 생각하는 데 쓰는 양도 여기에 들어간다. */
+/** Output token limit; thinking tokens count toward it too. */
 const MAX_OUTPUT_TOKENS = 16000;
-/** 일시적인 오류일 때 SDK가 스스로 다시 보내는 횟수 */
+/** Retries the SDK makes on its own for transient errors. */
 const SDK_MAX_RETRIES = 2;
-/** 키 확인 때 조회하는 목록 길이 */
 const KEY_CHECK_LIST_LIMIT = 1;
-/** 요청이 거절되면 다른 Claude가 이어받게 하는 기능의 꼬리표와, 그 기능을 받는 AI 종류 */
+/** Beta flag that lets another Claude model take over a refused request, and the models that accept it. */
 const FALLBACK_BETA = 'server-side-fallback-2026-07-01';
 const FALLBACK_MODELS = ['claude-opus-5-5', 'claude-sonnet-5-5'];
-/** 조직 설정에서 브라우저 사용이 꺼져 있을 때 401 응답에 들어 있는 문구 */
+/** Text in the 401 response when the organization has disabled browser access. */
 const BROWSER_BLOCKED_TEXT = 'CORS requests are not allowed';
-/** 돈 문제를 알리는 HTTP 상태 */
 const HTTP_PAYMENT_REQUIRED = 402;
-/** 서버가 붐빌 때의 HTTP 상태 */
+/** Anthropic's "overloaded" status. */
 const HTTP_OVERLOADED = 529;
 
 type AnthropicModule = typeof import('@anthropic-ai/sdk');
 
-/**
- * SDK를 내려받고, 주어진 키로 브라우저용 클라이언트를 만든다.
- */
+/** Lazily loads the SDK and creates a browser client for the key. */
 async function load_client(api_key: string): Promise<{ sdk: AnthropicModule['default']; client: Anthropic }> {
   const sdk = (await import('@anthropic-ai/sdk')).default;
-  // 서버가 없는 도구라서 각자의 키를 자기 브라우저에서 바로 쓴다.
+  // There is no backend: each user's own key is used directly in their own browser.
   const client = new sdk({ apiKey: api_key, dangerouslyAllowBrowser: true, maxRetries: SDK_MAX_RETRIES });
   return { sdk, client };
 }
 
 /**
- * 다시 해 볼 수 있는 시각(ms)을 응답 머리글에서 읽는다. 없으면 기본 기다림 시간을 쓴다.
+ * Reads the retry time (epoch ms) from the retry-after header, or uses the default wait.
  */
 function read_retry_at(headers: Headers | undefined): number {
   const seconds = Number(headers?.get('retry-after'));
@@ -56,12 +52,12 @@ function read_retry_at(headers: Headers | undefined): number {
 }
 
 /**
- * SDK 오류를 쉬운 오류 종류로 바꾼다.
+ * Maps an SDK error to a simple error kind.
  */
 export function to_claude_error(sdk: AnthropicModule['default'], cause: unknown): ProviderError {
   if (cause instanceof ProviderError) return cause;
   if (cause instanceof sdk.AuthenticationError) {
-    // 같은 401이라도 이 문구면 키가 틀린 것이 아니라 조직 설정에서 브라우저 사용이 꺼진 것이다.
+    // A 401 with this text means the organization disabled browser access, not a wrong key.
     const kind = cause.message.includes(BROWSER_BLOCKED_TEXT) ? 'browser_blocked' : 'bad_key';
     return new ProviderError(kind, null, cause.message);
   }
@@ -76,9 +72,7 @@ export function to_claude_error(sdk: AnthropicModule['default'], cause: unknown)
   return new ProviderError('unknown', null, String(cause));
 }
 
-/**
- * JSON 글을 요청하고 읽는다. 읽지 못하면 한 번만 다시 요청한다.
- */
+/** Requests and parses JSON text; retries once if it cannot be parsed. */
 async function request_json<T>(
   api_key: string,
   model: string,
@@ -97,7 +91,7 @@ async function request_json<T>(
         max_tokens: MAX_OUTPUT_TOKENS,
         system: text_system_instruction(lang),
         messages: [{ role: 'user', content: prompt }],
-        // Claude는 배열 길이 제한을 받지 않는다. 개수는 지시문에 적혀 있고 읽을 때 다시 확인한다.
+        // Claude rejects array length limits. The count is stated in the prompt and checked again when parsing.
         output_config: { format: { type: 'json_schema', schema: to_strict_schema(schema, false) } },
         ...(use_fallback ? { betas: [FALLBACK_BETA], fallbacks: 'default' as const } : {}),
       });
@@ -112,9 +106,7 @@ async function request_json<T>(
   throw new ProviderError('unknown', null, 'bad format');
 }
 
-/**
- * 키가 맞는지 확인한다. 글을 만들지 않고 목록만 조회한다.
- */
+/** Checks the key by listing models, so no text is generated. */
 async function check_claude_key(api_key: string): Promise<ConnectionResult> {
   const { sdk, client } = await load_client(api_key);
   try {
@@ -125,9 +117,7 @@ async function check_claude_key(api_key: string): Promise<ConnectionResult> {
   }
 }
 
-/**
- * 주어진 키와 AI 종류로 Claude 글 연결부를 만든다.
- */
+/** Creates a Claude text provider for the given key and model. */
 export function create_claude_text(api_key: string, model: string): TextProvider {
   return {
     id: 'claude-text',

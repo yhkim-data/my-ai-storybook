@@ -1,4 +1,4 @@
-/* 2단계(이야기 씨앗) 화면에서만 쓰는 모양 */
+/* Story seed screen styles */
 .seed-chips {
   display: flex;
   flex-wrap: wrap;

@@ -1,4 +1,4 @@
-// 지금 화면 이름에 맞는 화면을 보여 준다. 주소 이동 없이 저장소의 screen 값으로 바꾼다.
+// Screen switching is driven by the store's `screen` value, not by URL routing.
 import { useEffect } from 'react';
 import { useT } from './i18n';
 import { ConnectScreen } from './screens/ConnectScreen';
@@ -14,12 +14,9 @@ import { StyleScreen } from './screens/StyleScreen';
 import { useBook } from './store/book_store';
 import type { Screen } from './types';
 
-/** 책이 없어도 볼 수 있는 화면 */
+/** Screens that work without a book loaded. */
 const SCREENS_WITHOUT_BOOK: Screen[] = ['start', 'connect', 'rights'];
 
-/**
- * 화면 이름에 맞는 화면 부품을 고른다.
- */
 function pick_screen(screen: Screen) {
   switch (screen) {
     case 'start':
@@ -45,14 +42,12 @@ function pick_screen(screen: Screen) {
   }
 }
 
-/**
- * 앱의 뿌리 부품.
- */
+/** Root component. */
 export function App() {
   const t = useT();
   const screen = useBook((state) => state.screen);
   const has_book = useBook((state) => state.book !== null);
-  // 책 없이 단계 화면에 있으면 시작 화면으로 돌려보낸다.
+  // A step screen without a book falls back to the start screen.
   const shown_screen = !has_book && !SCREENS_WITHOUT_BOOK.includes(screen) ? 'start' : screen;
 
   useEffect(() => {

@@ -1,6 +1,6 @@
-# 끝까지 가보기 검사(Playwright)를 돌린다. 가짜 AI 연결부를 쓰므로 키가 필요 없다.
-# 키 없이 도는 브라우저 호출 검사(e2e/live-cors.spec.ts)도 함께 돈다. 키 값을 비운 요청을 세 회사의 실제 서버로 보내
-# 브라우저의 사전 확인(CORS)을 통과하는지 본다. 키가 없어 돈이 들지 않는다.
+# Playwright e2e tests. They use a fake AI provider, so no API key is needed.
+# e2e/live-cors.spec.ts also runs: it sends keyless requests to the three real APIs
+# to check the CORS preflight passes. No key means no cost.
 name: End-to-end tests
 
 on:

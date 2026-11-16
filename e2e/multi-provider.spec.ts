@@ -1,5 +1,5 @@
-// 여러 AI 회사 연결 검사: Claude·OpenAI 모양의 가짜 키로 연결 확인부터 줄거리·쪽 나누기·그림까지 가짜 네트워크로 본다.
-// 검사용 가짜 키만 쓴다. 실제 키가 아니다.
+// Claude and OpenAI providers over a fake network: key check, plots, page split and pictures.
+// Uses fake test keys only.
 import { expect, test, type Page, type Route } from '@playwright/test';
 import {
   SETTINGS_KEY,
@@ -15,7 +15,7 @@ import {
 } from './helpers';
 
 const LANG: Lang = 'ko';
-/** 검사용 가짜 키. 끝 4자리는 A1b2 */
+/** Fake keys ending in A1b2, split so the secret scanner does not flag them. */
 const CLAUDE_KEY = 'sk-ant-' + 'test-fake-A1b2';
 const OPENAI_KEY = 'sk-' + 'test-fake-A1b2';
 const KEY_TAIL = 'A1b2';
@@ -25,14 +25,13 @@ const FAKE_PLOT_COUNT = 3;
 const PAGE_COUNT = 4;
 const FALLBACK_PAGE_COUNT = 8;
 const OPENAI_IMAGE_MODEL = 'gpt-image-2.6-flare';
-/** 가짜 응답에 붙이는 CORS 머리글. Authorization 은 '*' 에 들지 않으므로 따로 적는다. */
+/** Authorization is not covered by the '*' wildcard, so it is listed explicitly. */
 const CORS_HEADERS = {
   'access-control-allow-origin': '*',
   'access-control-allow-headers': 'authorization, content-type, x-api-key, anthropic-version, anthropic-beta, *',
   'access-control-allow-methods': 'GET, POST, OPTIONS',
 };
 
-/** 가로챈 요청 기록 */
 interface RecordedRequest {
   method: string;
   path: string;
@@ -40,9 +39,7 @@ interface RecordedRequest {
   body: Record<string, unknown> | null;
 }
 
-/**
- * 요청 본문에서 쪽 나누기라면 본문 쪽수를, 줄거리 요청이면 null을 돌려준다.
- */
+/** Returns the requested page count for a page-split request, or null for a plot request. */
 function read_requested_page_count(body: Record<string, unknown>): number | null {
   const output_format = (body.output_config as { format?: { schema?: unknown } } | undefined)?.format;
   const text_format = (body.text as { format?: { schema?: unknown } } | undefined)?.format;
@@ -52,9 +49,6 @@ function read_requested_page_count(body: Record<string, unknown>): number | null
   return match ? Number(match[1]) : FALLBACK_PAGE_COUNT;
 }
 
-/**
- * 가짜 글(JSON 글)을 만든다.
- */
 function fake_text_json(page_count: number | null): string {
   if (page_count === null) {
     const plots = Array.from({ length: FAKE_PLOT_COUNT }, (_, index) => ({
@@ -70,9 +64,7 @@ function fake_text_json(page_count: number | null): string {
   return JSON.stringify({ pages });
 }
 
-/**
- * 요청을 기록하고 OPTIONS 사전 요청은 바로 답한다. 사전 요청이면 null을 돌려준다.
- */
+/** Records the request. Answers OPTIONS preflights directly and returns null for them. */
 async function record_request(route: Route, requests: RecordedRequest[]): Promise<RecordedRequest | null> {
   const request = route.request();
   if (request.method() === 'OPTIONS') {
@@ -90,16 +82,10 @@ async function record_request(route: Route, requests: RecordedRequest[]): Promis
   return recorded;
 }
 
-/**
- * JSON 응답을 보낸다.
- */
 function reply_json(route: Route, status: number, data: unknown) {
   return route.fulfill({ status, headers: CORS_HEADERS, contentType: 'application/json', body: JSON.stringify(data) });
 }
 
-/**
- * Claude 주소로 가는 요청을 가로채는 가짜 네트워크를 켠다.
- */
 async function install_fake_claude(page: Page): Promise<RecordedRequest[]> {
   const requests: RecordedRequest[] = [];
   await page.route(`${CLAUDE_ORIGIN}/**`, async (route) => {
@@ -127,9 +113,6 @@ async function install_fake_claude(page: Page): Promise<RecordedRequest[]> {
   return requests;
 }
 
-/**
- * OpenAI 주소로 가는 요청을 가로채는 가짜 네트워크를 켠다.
- */
 async function install_fake_openai(page: Page): Promise<RecordedRequest[]> {
   const requests: RecordedRequest[] = [];
   await page.route(`${OPENAI_ORIGIN}/**`, async (route) => {
@@ -153,9 +136,7 @@ async function install_fake_openai(page: Page): Promise<RecordedRequest[]> {
   return requests;
 }
 
-/**
- * 연결 화면에서 키를 넣고 확인해 "○○에 연결됐어요" 안내가 뜨는지 본다.
- */
+/** Enters and checks the key on the connect screen, expecting the "connected to <name>" message. */
 async function connect_with_key(page: Page, key: string, name: string): Promise<void> {
   await page.getByRole('button', { name: tr(LANG, 'start.connect') }).click();
   await page.locator('#key-input').fill(key);
@@ -165,9 +146,6 @@ async function connect_with_key(page: Page, key: string, name: string): Promise<
   await page.getByRole('button', { name: tr(LANG, 'common.home') }).click();
 }
 
-/**
- * 저장된 글용 키를 읽는다.
- */
 async function read_saved_text_key(page: Page): Promise<string> {
   return page.evaluate((settings_key) => {
     try {
@@ -178,9 +156,7 @@ async function read_saved_text_key(page: Page): Promise<string> {
   }, SETTINGS_KEY);
 }
 
-/**
- * 새 책을 시작해 줄거리 3개를 보고 하나를 골라 쪽 나누기 글이 오기까지 간다.
- */
+/** Starts a new book, checks the 3 plots, picks one, and goes past the page-split screen. */
 async function walk_to_pages(page: Page): Promise<void> {
   await start_new_book(page, LANG);
   await fill_seed(page, LANG, { page_count: PAGE_COUNT });
@@ -194,9 +170,7 @@ async function walk_to_pages(page: Page): Promise<void> {
   await pass_style(page, LANG);
 }
 
-/**
- * 모든 요청이 키를 주소나 본문에 싣지 않았는지 본다.
- */
+/** No request may carry the key in its path or body. */
 function expect_key_not_leaked(requests: RecordedRequest[], key: string): void {
   expect(requests.length).toBeGreaterThan(0);
   for (const request of requests) {
@@ -205,15 +179,15 @@ function expect_key_not_leaked(requests: RecordedRequest[], key: string): void {
   }
 }
 
-test.describe('여러 AI 회사 연결(가짜 네트워크)', () => {
-  test('Claude 키: 연결 확인, 줄거리, 쪽 나누기까지 되고 그림은 연결 안내가 뜬다', async ({ page }) => {
+test.describe('Multiple AI providers (fake network)', () => {
+  test('Claude key: key check, plots and page split work; pictures show the connect prompt', async ({ page }) => {
     test.slow();
     const requests = await install_fake_claude(page);
     await open_start(page, LANG);
     await connect_with_key(page, CLAUDE_KEY, 'Claude');
     await walk_to_pages(page);
 
-    // 키는 머리글에만 있다 (이 SDK 판은 Authorization, 옛 판은 x-api-key).
+    // The key is only in a header: Authorization in this SDK version, x-api-key in older ones.
     const messages = requests.filter((request) => request.method === 'POST' && request.path === '/v1/messages');
     expect(messages).toHaveLength(2);
     for (const request of messages) {
@@ -222,12 +196,12 @@ test.describe('여러 AI 회사 연결(가짜 네트워크)', () => {
     }
     expect_key_not_leaked(requests, CLAUDE_KEY);
 
-    // 그림: Claude는 그림을 못 만들므로 연결 안내가 뜬다.
+    // Claude cannot make images, so the connect prompt appears.
     await page.getByRole('button', { name: tr(LANG, 'pictures.ai.title') }).dispatchEvent('click');
     await expect(page.getByText(tr(LANG, 'pictures.need_connect'))).toBeVisible();
   });
 
-  test('OpenAI 키: 연결 확인, 줄거리, 쪽 나누기, 그림 한 장이 된다', async ({ page }) => {
+  test('OpenAI key: key check, plots, page split and one picture work', async ({ page }) => {
     test.slow();
     const requests = await install_fake_openai(page);
     await open_start(page, LANG);

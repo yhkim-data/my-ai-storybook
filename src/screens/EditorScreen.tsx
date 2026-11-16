@@ -1,4 +1,4 @@
-// 7단계 꾸미기 화면. AI를 다시 부르지 않고 글, 글상자, 배치, 쪽 순서를 화면에서 바로 고친다.
+// Step 7 editor: text, text box, layout and page order are edited locally without calling the AI.
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { PageView } from '../components/PageView';
@@ -15,16 +15,14 @@ import { prepare_upload_image } from '../utils/image';
 import { useElementWidth } from '../utils/use_element_width';
 import './EditorScreen.css';
 
-/** 쪽 미리보기의 최대 너비(px). 시안의 값이다. */
+/** Max page preview width in px. */
 const PREVIEW_MAX_WIDTH = 560;
 const BACKGROUNDS: BoxBackground[] = ['none', 'white', 'bubble'];
 const ALIGNS: TextAlign[] = ['left', 'center', 'right'];
-/** 본문이 이 쪽수(표지 포함)보다 많아야 쪽을 뺄 수 있다 */
+/** A page can be removed only when the book (cover included) has more pages than this. */
 const MIN_PAGES_WITH_COVER = 2;
 
-/**
- * 되돌리기 화살표 아이콘. flipped면 다시 하기 모양이다.
- */
+/** Undo arrow; `flipped` draws the redo arrow. */
 function UndoIcon({ flipped = false }: { flipped?: boolean }) {
   return (
     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -43,9 +41,7 @@ function UndoIcon({ flipped = false }: { flipped?: boolean }) {
   );
 }
 
-/**
- * 배치 단추 안의 작은 그림. 파란 칸이 그림, 회색 칸이 글이다.
- */
+/** Layout button icon: the blue part is the image, the gray part is the text. */
 function LayoutIcon({ layout }: { layout: LayoutId }) {
   if (layout === 'full') {
     return (
@@ -64,9 +60,7 @@ function LayoutIcon({ layout }: { layout: LayoutId }) {
   );
 }
 
-/**
- * 꾸미기 화면.
- */
+/** Step 7 page editor screen. */
 export function EditorScreen() {
   const t = useT();
   const book = useBook((state) => state.book);
@@ -81,9 +75,8 @@ export function EditorScreen() {
   const [ai_error, set_ai_error] = useState<ProviderError | null>(null);
   const [message, set_message] = useState<string | null>(null);
 
-  // Ctrl+Z로 되돌리고 Ctrl+Shift+Z 또는 Ctrl+Y로 다시 한다.
+  // Ctrl+Z undoes; Ctrl+Shift+Z or Ctrl+Y redoes.
   useEffect(() => {
-    /** 되돌리기 단축키를 처리한다. */
     const handle_key = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey)) return;
       const key = event.key.toLowerCase();
@@ -105,29 +98,25 @@ export function EditorScreen() {
   const name = page_name(t, current_page);
   const box = page.text_box;
 
-  /** 지금 쪽을 바꾼다. change_key가 같으면 되돌리기 한 단계로 묶인다. */
+  /** Edits the current page; edits sharing a change_key merge into one undo step. */
   const change_page = (mutator: (target: BookPage) => BookPage, change_key?: string) => {
     edit_pages((pages) => pages.map((item, index) => (index === current_page ? mutator(item) : item)), change_key);
   };
-  /** 지금 쪽의 글상자 모양을 바꾼다. */
   const change_box = (patch: Partial<TextBox>, change_key?: string) => {
     change_page((target) => ({ ...target, text_box: { ...target.text_box, ...patch } }), change_key);
   };
-  /** 지금 쪽의 그림을 바꾼다. */
   const change_image = (image: PageImage) => change_page((target) => ({ ...target, image }));
-  /** 안내와 오류를 지운다. */
   const clear_notices = () => {
     set_ai_error(null);
     set_message(null);
   };
 
-  /** 다른 쪽을 고른다. */
   const select_page = (index: number) => {
     clear_notices();
     set_current_page(index);
   };
 
-  /** 이 쪽의 그림만 AI로 다시 만든다. 다른 쪽은 건드리지 않는다. */
+  /** Redraws only this page's image; other pages are untouched. */
   const handle_regenerate = async () => {
     clear_notices();
     set_is_drawing(true);
@@ -143,7 +132,6 @@ export function EditorScreen() {
     }
   };
 
-  /** 올린 그림으로 이 쪽의 그림을 바꾼다. */
   const handle_upload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -156,7 +144,6 @@ export function EditorScreen() {
     }
   };
 
-  /** 쪽을 끌어다 놓아 순서를 바꾼다. */
   const handle_drop = (event: DragEvent, to_index: number) => {
     event.preventDefault();
     const from_index = drag_from_ref.current;
@@ -165,13 +152,11 @@ export function EditorScreen() {
     edit_pages((pages) => move_page(pages, from_index, to_index));
     set_current_page(to_index);
   };
-  /** 지금 쪽을 한 칸 옮긴다. */
   const shift_page = (step: number) => {
     const to_index = current_page + step;
     edit_pages((pages) => move_page(pages, current_page, to_index));
     if (to_index >= 1 && to_index < book.pages.length) set_current_page(to_index);
   };
-  /** 지금 쪽 뒤에 빈 쪽을 더한다. */
   const handle_add_page = () => {
     edit_pages((pages) => insert_blank_page(pages, current_page));
     set_current_page(Math.max(1, current_page + 1));

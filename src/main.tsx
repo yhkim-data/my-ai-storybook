@@ -1,4 +1,4 @@
-// 앱을 시작하는 곳. 글꼴과 공통 모양을 불러오고 자동 저장을 켠다.
+// Entry point: loads global styles and fonts, then starts autosave.
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';

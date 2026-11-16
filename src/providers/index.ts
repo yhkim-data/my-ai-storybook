@@ -1,4 +1,4 @@
-// 지금 설정에 맞는 AI 연결부를 골라 주는 곳. 연결부를 더하려면 여기에 한 갈래를 더한다.
+// Picks the AI provider for the current settings. To add a provider, add a branch here.
 import { effective_image_key, useSettings } from '../store/settings_store';
 import { create_claude_text } from './claude_text';
 import { create_gemini_image } from './gemini_image';
@@ -10,16 +10,12 @@ import { create_openai_text } from './openai_text';
 import { detect_provider, resolve_image_model, resolve_text_model } from './provider_kinds';
 import type { ImageProvider, TextProvider } from './types';
 
-/**
- * 호출할 때마다 "오늘 쓴 횟수"를 하나 올린다.
- */
+/** Bumps today's usage count. */
 function count_usage(): void {
   useSettings.getState().add_usage();
 }
 
-/**
- * 글 연결부의 모든 호출에 횟수 세기를 붙인다.
- */
+/** Wraps every text provider call so it counts toward usage. */
 function with_text_usage(provider: TextProvider): TextProvider {
   return {
     id: provider.id,
@@ -38,9 +34,7 @@ function with_text_usage(provider: TextProvider): TextProvider {
   };
 }
 
-/**
- * 그림 연결부의 모든 호출에 횟수 세기를 붙인다.
- */
+/** Wraps every image provider call so it counts toward usage. */
 function with_image_usage(provider: ImageProvider): ImageProvider {
   return {
     id: provider.id,
@@ -58,7 +52,8 @@ function with_image_usage(provider: ImageProvider): ImageProvider {
 }
 
 /**
- * 키 모양에 맞는 회사의 글 연결부를 만든다. 저장된 AI 종류가 그 회사 것이 아니면 회사 기본값을 쓴다.
+ * Creates the text provider that matches the key's prefix. Falls back to that provider's
+ * default model if the saved model belongs to another provider.
  */
 function create_text_for_key(api_key: string, saved_model: string): TextProvider {
   const kind = detect_provider(api_key);
@@ -69,7 +64,7 @@ function create_text_for_key(api_key: string, saved_model: string): TextProvider
 }
 
 /**
- * 키 모양에 맞는 회사의 그림 연결부를 만든다. 그림을 만들지 못하는 회사의 키면 null이다.
+ * Creates the image provider that matches the key's prefix, or null if that provider cannot make images.
  */
 function create_image_for_key(api_key: string, saved_model: string): ImageProvider | null {
   const kind = detect_provider(api_key);
@@ -79,9 +74,7 @@ function create_image_for_key(api_key: string, saved_model: string): ImageProvid
   return create_gemini_image(api_key, model);
 }
 
-/**
- * 지금 쓸 글 연결부를 돌려준다. 연결되어 있지 않으면 null이다.
- */
+/** Returns the current text provider, or null if none is connected. */
 export function get_text_provider(): TextProvider | null {
   const settings = useSettings.getState();
   if (settings.practice) return with_text_usage(create_mock_text());
@@ -90,7 +83,7 @@ export function get_text_provider(): TextProvider | null {
 }
 
 /**
- * 지금 쓸 그림 연결부를 돌려준다. 연결되어 있지 않거나 그림을 만들지 못하는 회사의 키면 null이다.
+ * Returns the current image provider, or null if none is connected or the key's provider cannot make images.
  */
 export function get_image_provider(): ImageProvider | null {
   const settings = useSettings.getState();
@@ -101,9 +94,7 @@ export function get_image_provider(): ImageProvider | null {
   return provider ? with_image_usage(provider) : null;
 }
 
-/**
- * 주어진 키로 연결 확인용 글 연결부를 만든다. "AI 연결하기" 화면에서 쓴다.
- */
+/** Creates a text provider for checking a key on the "Connect AI" screen. */
 export function create_text_provider_for_key(api_key: string): TextProvider {
   const settings = useSettings.getState();
   if (settings.practice) return with_text_usage(create_mock_text());

@@ -1,27 +1,21 @@
-// 번역 빠짐 검사와 쉬운 말 검사. ko.json과 en.json의 항목이 정확히 같은지, 코드가 쓰는 키가 모두 있는지,
-// 화면 문구에 어려운 말이 없는지 본다. (npm run check:i18n)
+// Checks that ko.json and en.json have the same keys and placeholders, that every key used in code
+// exists, and that UI text avoids jargon. (npm run check:i18n)
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const I18N_DIR = 'src/i18n';
 const SOURCE_DIR = 'src';
-/** 학생이 보는 화면 문구에 쓰지 않는 말 */
+/** Jargon that must not appear in text shown to students. */
 const BANNED_WORDS = ['프롬프트', 'API', '토큰', '모델', 'prompt', 'token', 'model'];
-/** 코드에서 번역 키를 쓰는 모양: t('키') 또는 translate(언어, '키') */
+/** Matches t('key') or translate(lang, 'key'). */
 const KEY_USAGE_PATTERN = /\bt\(\s*'([a-z0-9_.-]+)'|translate\([^,]+,\s*'([a-z0-9_.-]+)'/gi;
-/** 문구 안의 {이름} 자리 */
 const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 
-/**
- * 번역 파일을 읽는다.
- */
 function read_table(lang) {
   return JSON.parse(readFileSync(join(I18N_DIR, `${lang}.json`), 'utf8'));
 }
 
-/**
- * 폴더 아래의 소스 파일을 모두 찾는다 (검사 파일은 뺀다).
- */
+/** Lists .ts/.tsx source files under dir, skipping test files. */
 function list_source_files(dir) {
   const files = [];
   for (const name of readdirSync(dir)) {
@@ -32,16 +26,12 @@ function list_source_files(dir) {
   return files;
 }
 
-/**
- * 문구 안의 {이름} 자리를 정렬된 목록으로 돌려준다.
- */
+/** Returns the {name} placeholders as a sorted, comma-joined string for comparison. */
 function placeholders_of(text) {
   return [...text.matchAll(PLACEHOLDER_PATTERN)].map((match) => match[1]).sort().join(',');
 }
 
-/**
- * 모든 검사를 돌리고 문제 목록을 돌려준다.
- */
+/** Runs all checks and returns the list of problems (empty means pass). */
 export function find_i18n_problems() {
   const ko = read_table('ko');
   const en = read_table('en');
@@ -69,9 +59,6 @@ export function find_i18n_problems() {
   return problems;
 }
 
-/**
- * 명령줄에서 불렸을 때 결과를 알리고 끝낸다.
- */
 function main() {
   const problems = find_i18n_problems();
   if (problems.length > 0) {

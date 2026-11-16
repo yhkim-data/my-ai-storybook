@@ -1,6 +1,6 @@
-// 키 없이 도는 브라우저 호출 검사: 세 회사 연결부가 실제로 보내는 주소와 머리글 그대로, 키 값만 빈 문자열로 해서
-// 실제 서버에 보낸다. HTTP 상태를 읽으면 통과이고, 요청 자체가 실패하면(브라우저의 사전 확인에서 막히면) 실패다.
-// 가짜 네트워크 검사는 사전 확인(CORS)을 거치지 않으므로 이 검사가 따로 필요하다. 키가 없어서 돈이 들지 않는다.
+// Keyless live CORS check: sends each provider's real URL and headers, with an empty key, to the real servers.
+// Any HTTP status passes; a failed request (blocked at the CORS preflight) fails.
+// Fake-network tests skip the preflight, so this test is needed. With no key it costs nothing.
 import { expect, test, type Page } from '@playwright/test';
 import { create_claude_text } from '../src/providers/claude_text';
 import { create_gemini_image } from '../src/providers/gemini_image';
@@ -12,21 +12,18 @@ import type { ImageRequest } from '../src/providers/types';
 import type { StorySeed } from '../src/types';
 import { open_start } from './helpers';
 
-/** 이 검사를 돌리는 화면 크기 (실제 서버를 부르므로 한 번만 돈다) */
+/** Runs in one project only, since it calls real servers. */
 const LIVE_PROJECT = 'tablet';
-/** 요청을 기록할 때만 쓰는 자리 표시 글자. 실제 서버로 보내기 전에 빈 문자열로 바꾼다. */
+/** Used only while capturing; replaced with an empty string before sending to the real server. */
 const KEY_PLACEHOLDER = 'KEYLESS-PLACEHOLDER';
-/** 브라우저가 스스로 정하므로 넘기지 않는 머리글 */
+/** The browser sets these itself, so they are not forwarded. */
 const BROWSER_OWNED_HEADERS = ['content-length', 'user-agent', 'host', 'connection', 'accept-encoding'];
-/** 실제 서버의 응답을 기다리는 시간(ms) */
 const LIVE_WAIT_MS = 60_000;
-/** 인터넷이 잠깐 끊긴 경우를 위해 다시 해 보는 횟수. 사전 확인에서 막힌 요청은 다시 해도 똑같이 실패한다. */
+/** Retries cover brief network drops; a request blocked at preflight fails every time anyway. */
 const LIVE_RETRIES = 2;
-/** HTTP 상태 범위 */
 const MIN_HTTP_STATUS = 100;
 const MAX_HTTP_STATUS = 599;
 
-/** 기록한 요청 하나 */
 interface CapturedRequest {
   url: string;
   method: string;
@@ -34,7 +31,6 @@ interface CapturedRequest {
   body: string | null;
 }
 
-/** 브라우저에서 보낸 결과 */
 interface LiveResult {
   status: number | null;
   error: string;
@@ -57,9 +53,7 @@ const IMAGE_REQUEST: ImageRequest = {
   lang: 'ko',
 };
 
-/**
- * 연결부 호출 하나가 보내려는 첫 요청을 기록한다. 실제로 보내지는 않는다.
- */
+/** Captures the first request a provider call would send, without sending it. */
 async function capture_request(run: () => Promise<unknown>): Promise<CapturedRequest> {
   const captured: CapturedRequest[] = [];
   const original_fetch = globalThis.fetch;
@@ -75,7 +69,7 @@ async function capture_request(run: () => Promise<unknown>): Promise<CapturedReq
   try {
     await run();
   } catch {
-    // 기록만 하고 요청은 끊었으므로 연결부가 오류를 던지는 것이 맞다.
+    // Expected: fetch was cut off after capture, so the provider throws.
   } finally {
     globalThis.fetch = original_fetch;
   }
@@ -84,9 +78,7 @@ async function capture_request(run: () => Promise<unknown>): Promise<CapturedReq
   return first;
 }
 
-/**
- * 기록한 요청을 브라우저에서 실제 서버로 보내고 HTTP 상태를 돌려준다.
- */
+/** Sends the captured request from the browser to the real server and returns the HTTP status. */
 async function send_from_browser(page: Page, request: CapturedRequest): Promise<LiveResult> {
   return page.evaluate(async ({ url, method, headers, body }) => {
     try {
@@ -98,26 +90,25 @@ async function send_from_browser(page: Page, request: CapturedRequest): Promise<
   }, request);
 }
 
-/** 검사할 호출: 이름과, 연결부를 부르는 함수 */
 const LIVE_CALLS: { name: string; run: () => Promise<unknown> }[] = [
-  { name: 'Gemini 키 확인', run: () => create_gemini_text(KEY_PLACEHOLDER, PROVIDER_INFO.gemini.text_model).testConnection() },
-  { name: 'Gemini 글', run: () => create_gemini_text(KEY_PLACEHOLDER, PROVIDER_INFO.gemini.text_model).suggestPlots(SEED, 'ko') },
-  { name: 'Gemini 그림', run: () => create_gemini_image(KEY_PLACEHOLDER, PROVIDER_INFO.gemini.image_model ?? '').generate(IMAGE_REQUEST) },
-  { name: 'Claude 키 확인', run: () => create_claude_text(KEY_PLACEHOLDER, PROVIDER_INFO.claude.text_model).testConnection() },
-  { name: 'Claude 글', run: () => create_claude_text(KEY_PLACEHOLDER, PROVIDER_INFO.claude.text_model).suggestPlots(SEED, 'ko') },
-  { name: 'Claude 글 (이어받기 켠 종류)', run: () => create_claude_text(KEY_PLACEHOLDER, 'claude-opus-5-5').suggestPlots(SEED, 'ko') },
-  { name: 'OpenAI 키 확인', run: () => create_openai_text(KEY_PLACEHOLDER, PROVIDER_INFO.openai.text_model).testConnection() },
-  { name: 'OpenAI 글', run: () => create_openai_text(KEY_PLACEHOLDER, PROVIDER_INFO.openai.text_model).suggestPlots(SEED, 'ko') },
-  { name: 'OpenAI 그림', run: () => create_openai_image(KEY_PLACEHOLDER, PROVIDER_INFO.openai.image_model ?? '').generate(IMAGE_REQUEST) },
+  { name: 'Gemini key check', run: () => create_gemini_text(KEY_PLACEHOLDER, PROVIDER_INFO.gemini.text_model).testConnection() },
+  { name: 'Gemini text', run: () => create_gemini_text(KEY_PLACEHOLDER, PROVIDER_INFO.gemini.text_model).suggestPlots(SEED, 'ko') },
+  { name: 'Gemini image', run: () => create_gemini_image(KEY_PLACEHOLDER, PROVIDER_INFO.gemini.image_model ?? '').generate(IMAGE_REQUEST) },
+  { name: 'Claude key check', run: () => create_claude_text(KEY_PLACEHOLDER, PROVIDER_INFO.claude.text_model).testConnection() },
+  { name: 'Claude text', run: () => create_claude_text(KEY_PLACEHOLDER, PROVIDER_INFO.claude.text_model).suggestPlots(SEED, 'ko') },
+  { name: 'Claude text (model with fallbacks)', run: () => create_claude_text(KEY_PLACEHOLDER, 'claude-opus-5-5').suggestPlots(SEED, 'ko') },
+  { name: 'OpenAI key check', run: () => create_openai_text(KEY_PLACEHOLDER, PROVIDER_INFO.openai.text_model).testConnection() },
+  { name: 'OpenAI text', run: () => create_openai_text(KEY_PLACEHOLDER, PROVIDER_INFO.openai.text_model).suggestPlots(SEED, 'ko') },
+  { name: 'OpenAI image', run: () => create_openai_image(KEY_PLACEHOLDER, PROVIDER_INFO.openai.image_model ?? '').generate(IMAGE_REQUEST) },
 ];
 
-test.describe('키 없이 실제 서버로 보내는 브라우저 호출', () => {
-  // 한 작업자 안에서 전역 fetch를 잠깐 바꾸므로 차례로 돈다.
+test.describe('Keyless browser calls to the real servers', () => {
+  // Serial because each test temporarily replaces the global fetch in the worker.
   test.describe.configure({ mode: 'serial', retries: LIVE_RETRIES });
 
   for (const call of LIVE_CALLS) {
-    test(`${call.name}: 브라우저에서 요청이 서버까지 가고 HTTP 상태가 온다`, async ({ page }, test_info) => {
-      test.skip(test_info.project.name !== LIVE_PROJECT, '실제 서버를 부르는 검사는 한 화면 크기에서만 돕니다');
+    test(`${call.name}: the browser request reaches the server and gets an HTTP status`, async ({ page }, test_info) => {
+      test.skip(test_info.project.name !== LIVE_PROJECT, 'Live server tests run in one viewport only');
       test.setTimeout(LIVE_WAIT_MS * 2);
       const request = await capture_request(call.run);
       expect(JSON.stringify(request.headers)).not.toContain(KEY_PLACEHOLDER);

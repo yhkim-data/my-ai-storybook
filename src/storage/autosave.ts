@@ -1,25 +1,20 @@
-// 자동 저장. 책이 바뀌면 잠깐 뒤에 IndexedDB에 쓴다. 체험판은 저장하지 않는다.
+// Autosave: writes the book to IndexedDB shortly after each change. The demo book is never saved.
 import { AUTOSAVE_DELAY_MS } from '../constants';
 import { useBook } from '../store/book_store';
 import type { Book } from '../types';
 import { load_current_book, save_current_book } from './db';
 
-/** 저장 상태를 body의 data-save-state에 적는다. 자동 검사가 저장이 끝났는지 볼 때 쓴다. */
+/** Mirrored to body[data-save-state] so e2e tests can wait for saves to finish. */
 type SaveState = 'idle' | 'saving' | 'saved';
 
 let save_timer: ReturnType<typeof setTimeout> | null = null;
 let pending_book: Book | null = null;
 
-/**
- * 저장 상태를 문서에 적는다.
- */
 function mark_save_state(state: SaveState): void {
   if (typeof document !== 'undefined') document.body.dataset.saveState = state;
 }
 
-/**
- * 미뤄 둔 책을 지금 저장한다.
- */
+/** Saves any pending book immediately. */
 export async function flush_autosave(): Promise<void> {
   if (save_timer) clearTimeout(save_timer);
   save_timer = null;
@@ -30,14 +25,11 @@ export async function flush_autosave(): Promise<void> {
     await save_current_book(book);
     useBook.getState().set_has_saved_book(true);
   } catch {
-    // 저장 공간이 꽉 찼거나 막혀 있으면 이번 저장은 건너뛴다. 작업 파일 받기로 남길 수 있다.
+    // Storage full or blocked: skip this save. The user can still download the work file.
   }
   if (!pending_book) mark_save_state('saved');
 }
 
-/**
- * 책을 저장 대기열에 올린다.
- */
 function schedule_save(book: Book): void {
   pending_book = book;
   mark_save_state('saving');
@@ -45,9 +37,7 @@ function schedule_save(book: Book): void {
   save_timer = setTimeout(() => void flush_autosave(), AUTOSAVE_DELAY_MS);
 }
 
-/**
- * 자동 저장을 켠다. 앱이 시작할 때 한 번 부른다. 저장된 책이 있는지도 알아 둔다.
- */
+/** Starts autosave; call once at startup. Also records whether a saved book exists. */
 export function start_autosave(): void {
   mark_save_state('idle');
   void load_current_book()
@@ -56,7 +46,7 @@ export function start_autosave(): void {
   useBook.subscribe((state, previous) => {
     if (state.book && !state.is_demo && state.book !== previous.book) schedule_save(state.book);
   });
-  // 창을 닫거나 다른 앱으로 갈 때 미뤄 둔 저장을 마친다.
+  // Flush pending saves when the tab closes or goes to the background.
   window.addEventListener('pagehide', () => void flush_autosave());
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') void flush_autosave();

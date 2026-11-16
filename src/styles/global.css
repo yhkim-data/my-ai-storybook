@@ -89,7 +89,7 @@ button:disabled {
   white-space: nowrap;
 }
 
-/* 화면 틀 */
+/* Screen frame */
 .shell {
   min-height: 100%;
   display: flex;
@@ -141,7 +141,7 @@ button:disabled {
   color: var(--text);
 }
 
-/* 머리글 부품 */
+/* Header parts */
 .brand {
   display: flex;
   align-items: center;
@@ -208,7 +208,7 @@ button:disabled {
   font-weight: 500;
 }
 
-/* 제목과 글 */
+/* Headings and text */
 .title-xl {
   margin: 0;
   font-family: var(--font-title);
@@ -276,7 +276,7 @@ button:disabled {
   gap: 20px;
 }
 
-/* 단추 */
+/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -367,7 +367,7 @@ button:disabled {
   border-width: 2px;
 }
 
-/* 큰 고르기 카드 (시작 화면, 그림 넣는 방법) */
+/* Large choice cards (start screen, image source picker) */
 .choice {
   min-height: 220px;
   padding: 28px;
@@ -417,7 +417,7 @@ button:disabled {
   color: var(--primary-dark);
 }
 
-/* 입력 */
+/* Inputs */
 fieldset {
   margin: 0;
   padding: 0;
@@ -465,7 +465,7 @@ legend {
   font-size: 16px;
 }
 
-/* 안내 띠 */
+/* Notice banners */
 .notice {
   display: flex;
   flex-wrap: wrap;
@@ -526,7 +526,7 @@ legend {
   background: var(--selected-bg);
 }
 
-/* 기다리는 표시 */
+/* Busy indicator */
 .spinner {
   width: 28px;
   height: 28px;
@@ -557,7 +557,7 @@ legend {
   font-weight: 500;
 }
 
-/* 겹쳐 뜨는 창 */
+/* Dialogs */
 .dialog-back {
   position: fixed;
   inset: 0;
@@ -579,7 +579,7 @@ legend {
   gap: 16px;
 }
 
-/* 책 쪽 */
+/* Book pages */
 .book-page {
   position: relative;
   overflow: hidden;
@@ -639,7 +639,7 @@ legend {
   box-shadow: 0 6px 24px rgba(23, 35, 58, 0.16);
 }
 
-/* 작은 화면 */
+/* Small screens */
 @media (max-width: 720px) {
   :root {
     --pad-x: 16px;
@@ -684,7 +684,7 @@ legend {
   .brand.big {
     font-size: 19px;
   }
-  /* 단계 점은 둘째 줄로 내려서 DI Lab 표시가 첫 줄 오른쪽에 남게 한다. */
+  /* Step dots wrap to a second row so the DI Lab badge stays at the right of the first row. */
   .shell-header .step-dots {
     order: 3;
     flex-basis: 100%;

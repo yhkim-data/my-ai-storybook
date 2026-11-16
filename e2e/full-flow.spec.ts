@@ -1,4 +1,4 @@
-// 끝까지 가보기: 연습 모드로 새 책을 만들어 PDF, 인쇄용 PDF, 그림 묶음, 작업 파일까지 받아 본다.
+// Full flow: make a book in mock mode and download the PDF, print PDF, image zip and project file.
 import { expect, test, type Page } from '@playwright/test';
 import { unzipSync } from 'fflate';
 import { PDFDocument } from 'pdf-lib';
@@ -25,19 +25,15 @@ import {
   type PageCount,
 } from './helpers';
 
-/** 검사할 언어와 화면에 쓰는 이름 */
 const LANG_CASES: { lang: Lang; label: string }[] = [
-  { lang: 'ko', label: '한국어' },
-  { lang: 'en', label: '영어' },
+  { lang: 'ko', label: 'Korean' },
+  { lang: 'en', label: 'English' },
 ];
-/** 글 호출 횟수: 줄거리 1회 + 쪽 나누기 1회 */
+/** One plot call plus one page-split call. */
 const TEXT_CALLS = 2;
-/** 작업 파일의 형식 번호 */
 const BOOK_FILE_FORMAT_VERSION = 1;
 
-/**
- * 연습 모드로 처음부터 완성 화면까지 간다. 화면마다 가로 스크롤이 없는지 본다.
- */
+/** Goes from start to finish in mock mode, checking every screen for horizontal scroll. */
 async function run_flow(page: Page, lang: Lang, page_count: PageCount): Promise<void> {
   await open_start(page, lang, { mock: true });
   await expect_no_h_scroll(page);
@@ -61,13 +57,13 @@ async function run_flow(page: Page, lang: Lang, page_count: PageCount): Promise<
 }
 
 for (const { lang, label } of LANG_CASES) {
-  test(`끝까지 가보기 (${label}): 기본 8쪽 책을 PDF·인쇄용 PDF·그림 묶음·작업 파일로 받는다`, async ({ page }) => {
+  test(`full flow (${label}): downloads the default 8-page book as PDF, print PDF, image zip and project file`, async ({ page }) => {
     test.slow();
     const page_count = DEFAULT_PAGE_COUNT;
     const total_pages = page_count + EXTRA_PAGES;
     await run_flow(page, lang, page_count);
 
-    // 글 호출은 줄거리 1 + 쪽 나누기 1, 그림 호출은 표지와 본문 쪽당 1회다.
+    // Text calls plus one picture call for the cover and each story page.
     expect(await read_usage_count(page)).toBe(TEXT_CALLS + (page_count + 1));
 
     const screen_pdf = await read_download(page, 'download-pdf');
@@ -91,15 +87,15 @@ for (const { lang, label } of LANG_CASES) {
     const work_file = await read_download(page, 'download-file');
     const saved_book = JSON.parse(work_file.bytes.toString('utf-8')) as { format_version: number; pages: unknown[] };
     expect(saved_book.format_version).toBe(BOOK_FILE_FORMAT_VERSION);
-    // 작업 파일의 pages에는 표지와 본문이 들어 있다 (만든 사람 쪽은 내보낼 때 더해진다).
+    // The project file holds the cover and story pages; the credits page is added only on export.
     expect(saved_book.pages).toHaveLength(page_count + 1);
 
-    // 받는 동안에도 AI를 다시 부르지 않는다.
+    // Downloads must not call the AI again.
     expect(await read_usage_count(page)).toBe(TEXT_CALLS + (page_count + 1));
   });
 }
 
-test('끝까지 가보기: 4쪽을 고르면 PDF가 6쪽이다', async ({ page }) => {
+test('full flow: choosing 4 pages gives a 6-page PDF', async ({ page }) => {
   test.slow();
   const page_count: PageCount = 4;
   await run_flow(page, 'ko', page_count);

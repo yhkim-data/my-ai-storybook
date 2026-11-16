@@ -1,4 +1,4 @@
-/* 8단계(완성) 화면에서만 쓰는 모양 */
+/* Finish screen styles */
 .finish-body {
   display: flex;
   flex-wrap: wrap;

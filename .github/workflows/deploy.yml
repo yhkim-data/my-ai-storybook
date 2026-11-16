@@ -1,4 +1,4 @@
-# main에 올라오면 검사하고 빌드해서 GitHub Pages에 올린다.
+# On push to main: run checks, build, and deploy to GitHub Pages.
 name: Deploy to GitHub Pages
 
 on:

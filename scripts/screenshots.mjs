@@ -1,7 +1,7 @@
-// README와 안내서에 넣을 화면 사진을 찍는다. 연습 모드(가짜 AI 연결부)로 책 한 권을 끝까지 만들면서 찍는다.
-// 쓰는 법: 먼저 `npm run build` 후 `npx vite preview --port 4173`을 띄워 두고 `npm run screenshots`.
-// 환경 변수: SHOT_LANG(ko 또는 en), SHOT_DIR(저장 폴더, 기본 docs/images/언어), SHOT_WIDTH·SHOT_HEIGHT(화면 크기).
-// 마지막에 휴대폰 크기(390×844)로 완성 화면을 한 장 더 찍는다(phone.png).
+// Takes the README and guide screenshots by making one book in mock mode (fake AI provider).
+// Usage: `npm run build`, start `npx vite preview --port 4173`, then `npm run screenshots`.
+// Env: SHOT_LANG (ko or en), SHOT_DIR (default docs/images/<lang>), SHOT_WIDTH / SHOT_HEIGHT (viewport).
+// Ends with one extra phone-size shot of the finish screen (phone.png).
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -11,11 +11,10 @@ const LANG = process.env.SHOT_LANG ?? 'ko';
 const OUT_DIR = process.env.SHOT_DIR ?? `docs/images/${LANG}`;
 const WIDTH = Number(process.env.SHOT_WIDTH ?? 1280);
 const HEIGHT = Number(process.env.SHOT_HEIGHT ?? 820);
-/** 휴대폰 사진 크기 */
 const PHONE_WIDTH = 390;
 const PHONE_HEIGHT = 844;
 
-/** 언어별로 누를 단추 이름과 넣을 글 */
+/** Button names to click and text to type, per language. */
 const WORDS = {
   ko: {
     locale: 'ko-KR',
@@ -49,18 +48,12 @@ const WORDS = {
   },
 };
 
-/**
- * 화면 사진 한 장을 찍어 저장한다.
- */
 async function shoot(page, name) {
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: join(OUT_DIR, `${name}.png`), fullPage: false });
   console.log(`찍음: ${name}.png`);
 }
 
-/**
- * 연습 모드로 책 한 권을 끝까지 만들면서 화면마다 사진을 찍는다.
- */
 async function main() {
   const words = WORDS[LANG] ?? WORDS.ko;
   mkdirSync(OUT_DIR, { recursive: true });

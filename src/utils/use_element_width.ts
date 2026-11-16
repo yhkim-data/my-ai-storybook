@@ -1,9 +1,7 @@
-// 요소의 너비를 재는 훅. 쪽 미리보기를 화면에 맞는 크기로 그릴 때 쓴다.
+// Hook that tracks an element's width, used to size page previews to the screen.
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
-/**
- * 요소에 붙일 ref와 그 요소의 지금 너비(px)를 돌려준다.
- */
+/** Returns a ref to attach and the element's current width (px). */
 export function useElementWidth<T extends HTMLElement>(initial_width: number): [RefObject<T | null>, number] {
   const ref = useRef<T | null>(null);
   const [width, set_width] = useState(initial_width);

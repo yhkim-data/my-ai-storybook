@@ -1,4 +1,4 @@
-// 연결 화면 실패 검사: 연결부가 틀린 키나 브라우저 사용 꺼짐이라고 답하면 맞는 안내를 보이고 키를 저장하지 않는다.
+// Connect screen failure tests with a mocked provider.
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -7,7 +7,7 @@ import { useBook } from '../store/book_store';
 import { useSettings } from '../store/settings_store';
 import { ConnectScreen } from './ConnectScreen';
 
-/** 가짜 연결부가 답할 실패 이유. 검사마다 바꾼다. */
+/** Failure reason the fake provider returns; tests change it per case. */
 const fake = vi.hoisted(() => ({ reason: 'bad_key' }));
 
 vi.mock('../providers/index', () => ({
@@ -26,8 +26,8 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 
-describe('ConnectScreen 실패', () => {
-  it('틀린 키면 안내가 뜨고 저장하지 않는다', async () => {
+describe('ConnectScreen failures', () => {
+  it('shows a notice and does not save a wrong key', async () => {
     render(<ConnectScreen />);
     await userEvent.type(screen.getByLabelText(ko('connect.key_label')), 'FAKE-BAD-KEY');
     await userEvent.click(screen.getByRole('button', { name: ko('connect.check') }));
@@ -35,7 +35,7 @@ describe('ConnectScreen 실패', () => {
     expect(useSettings.getState().text_key).toBe('');
   });
 
-  it('조직 설정에서 브라우저 사용이 꺼져 있으면 "키가 맞지 않아요" 대신 그 안내가 뜬다', async () => {
+  it('shows the browser-blocked notice instead of the wrong-key notice when the org disables browser use', async () => {
     fake.reason = 'browser_blocked';
     render(<ConnectScreen />);
     await userEvent.type(screen.getByLabelText(ko('connect.key_label')), 'FAKE-ORG-KEY');

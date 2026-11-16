@@ -1,41 +1,39 @@
-// 가짜 AI 연결부와 체험판이 쓰는 예시 이야기(줄거리 3개, 장면 8개). 직접 지은 이야기다.
+// Original sample story (3 plots, 8 scenes) used by the mock AI provider and the demo book.
 import type { Lang, PageCount, PageDraft, Plot } from '../types';
 
-/** 체험판 책의 주인공 */
+/** Hero of the demo book. */
 export const SAMPLE_HERO: Record<Lang, { name: string; look: string }> = {
   ko: { name: '토리', look: '빨간 목도리를 한 작은 여우, 꼬리 끝이 하얘요' },
   en: { name: 'Tori', look: 'A small fox with a red scarf and a white tail tip' },
 };
 
-/** 본문 장면 수 */
 const SCENE_COUNT = 8;
-/** 쪽 수별로 쓰는 장면 번호(1부터). 줄여도 이야기가 이어지는 장면만 고른다. */
+/** 1-based scenes used per page count, chosen so shorter books still read as one story. */
 const SCENES_BY_PAGE_COUNT: Record<PageCount, number[]> = {
   4: [1, 3, 5, 8],
   6: [1, 2, 4, 5, 7, 8],
   8: [1, 2, 3, 4, 5, 6, 7, 8],
 };
-/** 글 안에서 주인공 이름이 들어갈 자리표시 */
+/** Placeholder for the hero's name in text. */
 const HERO_MARK = '{hero}';
-/** 한글 음절의 시작과 끝 코드 */
+/** Unicode range of precomposed Hangul syllables. */
 const HANGUL_START = 0xac00;
 const HANGUL_END = 0xd7a3;
-/** 한글 음절 하나가 가진 받침 종류 수(없음 포함) */
+/** Number of final-consonant variants per Hangul syllable, including none. */
 const FINAL_CONSONANT_COUNT = 28;
-/** 줄거리 id 앞부분 */
 const PLOT_ID_PREFIX = 'sample-';
-/** 모르는 줄거리일 때 쓰는 것 */
+/** Fallback for unknown plot ids. */
 const DEFAULT_PLOT_ID = 'sample-1';
 
-/** 줄거리 하나의 글 (한 언어) */
+/** Text of one plot in one language. */
 interface PlotText {
   title: string;
   summary: string;
-  /** 장면 1~8의 쪽 글 */
+  /** Page text for scenes 1-8. */
   pages: string[];
 }
 
-/** 장면마다 하나인 그림 설명 틀 ({hero} 자리에 이름이 들어간다) */
+/** One image description template per scene; {hero} is replaced by the name. */
 const IMAGE_TEMPLATES: Record<Lang, string[]> = {
   ko: [
     '아침 햇살이 비치는 작은 집 앞에 서 있는 {hero}의 모습',
@@ -59,7 +57,7 @@ const IMAGE_TEMPLATES: Record<Lang, string[]> = {
   ],
 };
 
-/** 줄거리 3개의 글. 모두 같은 여덟 장면 뼈대를 따른다. */
+/** Three plots that all follow the same eight-scene outline. */
 const PLOT_TEXTS: Record<Lang, PlotText[]> = {
   ko: [
     {
@@ -158,7 +156,8 @@ const PLOT_TEXTS: Record<Lang, PlotText[]> = {
 };
 
 /**
- * 받침 여부로 조사를 고른다. 'A/B'에서 A는 받침 있을 때, B는 없을 때다.
+ * Picks a Korean particle by whether the name ends in a final consonant.
+ * In 'A/B', A follows a final consonant; B is used otherwise and for non-Hangul names.
  */
 function pick_josa(name: string, pair: string): string {
   const [with_final = '', without_final = ''] = pair.split('/');
@@ -169,26 +168,20 @@ function pick_josa(name: string, pair: string): string {
   return has_final ? with_final : without_final;
 }
 
-/**
- * 글 속 {hero} 자리표시를 이름으로 바꾼다. {hero:은/는}처럼 조사 표시가 붙으면 받침에 맞게 고른다.
- */
+/** Replaces {hero} with the name; {hero:A/B} also appends the matching Korean particle. */
 function fill_hero(text: string, name: string): string {
   return text.replace(/\{hero(?::([^}]+))?\}/g, (_m, pair: string | undefined) =>
     pair === undefined ? name : name + pick_josa(name, pair),
   );
 }
 
-/**
- * 주인공 이름이 비어 있으면 예시 이름을 돌려준다.
- */
+/** Falls back to the sample hero name when the name is blank. */
 function resolve_hero_name(lang: Lang, hero_name: string): string {
   const trimmed = hero_name.trim();
   return trimmed === '' ? SAMPLE_HERO[lang].name : trimmed;
 }
 
-/**
- * 줄거리 3개를 돌려준다. 제목과 줄거리 안의 주인공 이름은 hero_name으로 바꿔 넣는다.
- */
+/** Returns the three sample plots with hero_name filled into title and summary. */
 export function get_sample_plots(lang: Lang, hero_name: string): Plot[] {
   const name = resolve_hero_name(lang, hero_name);
   return PLOT_TEXTS[lang].map((plot, index) => ({
@@ -198,9 +191,7 @@ export function get_sample_plots(lang: Lang, hero_name: string): Plot[] {
   }));
 }
 
-/**
- * plot_id에 맞는 쪽 초안을 정확히 page_count개 돌려준다. 모르는 plot_id면 첫 줄거리를 쓴다.
- */
+/** Returns exactly page_count drafts for plot_id; unknown ids fall back to the first plot. */
 export function get_sample_pages(
   plot_id: string,
   lang: Lang,
@@ -222,8 +213,8 @@ export function get_sample_pages(
 }
 
 /**
- * 그림 설명이 예시 이야기의 것과 같으면 장면 번호(1~8)를, 아니면 null을 돌려준다.
- * 이름 자리 앞뒤의 고정 글로 비교하므로 어떤 이름이 들어가도 찾는다.
+ * Returns the scene number (1-8) if image_prompt matches a sample template, else null.
+ * Matches on the fixed text around the name, so any hero name works.
  */
 export function find_sample_scene(image_prompt: string): number | null {
   let best_scene: number | null = null;

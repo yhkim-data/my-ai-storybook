@@ -1,4 +1,4 @@
-// 책의 쪽 하나를 그린다. 꾸미기 화면, 넘겨보기, PDF 내보내기가 모두 이 부품을 쓴다.
+// Renders one book page; shared by the editor, the flip-through preview and PDF export.
 import type { CSSProperties, ReactNode } from 'react';
 import { BLEED_MM, FONTS, LAYOUT_IMAGE_RECT, PAGE_MM, PAGE_REF_SIZE } from '../constants';
 import { translate } from '../i18n';
@@ -7,34 +7,30 @@ import { get_ai_model_names, get_book_title } from '../store/book_model';
 import type { Book, BookPage, Rect, TextBox } from '../types';
 
 const PERCENT = 100;
-/** 글상자 안쪽 여백 (쪽 너비에 대한 비율) */
+/** Text box padding as a fraction of page width. */
 const BOX_PADDING_RATIO = 0.025;
-/** 글상자와 그림의 둥근 모서리 (쪽 너비에 대한 비율) */
+/** Corner radii as a fraction of page width. */
 const BOX_RADIUS_RATIO = 0.02;
 const BUBBLE_RADIUS_RATIO = 0.05;
 const IMAGE_RADIUS_RATIO = 0.015;
-/** 만든 사람 쪽의 글자 크기 (기준 쪽 너비에서의 px) */
+/** Credits page font sizes, in px at PAGE_REF_SIZE. */
 const CREDITS_HEADING_SIZE = 30;
 const CREDITS_TITLE_SIZE = 24;
 const CREDITS_BODY_SIZE = 18;
 const CREDITS_NOTICE_SIZE = 15;
 const CREDITS_GAP_RATIO = 0.035;
 const CREDITS_PADDING_RATIO = 0.12;
-/** 그림 자리 표시 글자 크기 (기준 쪽 너비에서의 px) */
+/** Placeholder font size, in px at PAGE_REF_SIZE. */
 const PLACEHOLDER_FONT_SIZE = 16;
 
-/**
- * 재단 여백을 넣었을 때 바깥 틀의 크기와 안쪽 쪽의 시작 위치를 계산한다.
- */
+/** Outer frame size and inner page offset when a print bleed is added. */
 export function page_frame(size: number, bleed: boolean): { outer: number; offset: number } {
   if (!bleed) return { outer: size, offset: 0 };
   const offset = (size * BLEED_MM) / PAGE_MM;
   return { outer: size + offset * 2, offset };
 }
 
-/**
- * 퍼센트 사각형을 px 위치 모양으로 바꾼다.
- */
+/** Converts a percent rect to absolute px position styles. */
 export function rect_style(rect: Rect, size: number): CSSProperties {
   return {
     left: (rect.x * size) / PERCENT,
@@ -44,13 +40,11 @@ export function rect_style(rect: Rect, size: number): CSSProperties {
   };
 }
 
-/**
- * 글상자의 글꼴, 크기, 색, 정렬, 여백 모양을 만든다. 꾸미기 화면의 고치는 글상자도 같은 모양을 쓴다.
- */
+/** Text box typography and padding; the editor's editable box uses the same styles. */
 export function text_box_style(box: TextBox, size: number): CSSProperties {
   const font = FONTS[box.font_id];
   return {
-    // 손글씨 글꼴에 없는 글자는 또박또박 글씨로 대신 보인다.
+    // Glyphs missing from the handwriting font fall back to the plain font.
     fontFamily: `'${font.css_family}', '${FONTS.plain.css_family}', sans-serif`,
     fontSize: (box.font_size * size) / PAGE_REF_SIZE,
     color: box.color,
@@ -60,38 +54,32 @@ export function text_box_style(box: TextBox, size: number): CSSProperties {
   };
 }
 
-/**
- * 글상자 바탕에 맞는 클래스 이름을 돌려준다.
- */
 export function text_box_class(box: TextBox): string {
   return box.background === 'none' ? 'text-box' : `text-box bg-${box.background}`;
 }
 
 interface PageViewProps {
   page: BookPage;
-  /** 쪽 한 변의 길이(px). 재단 여백은 여기에 더해진다. */
+  /** Page side length (px); the bleed is added on top. */
   size: number;
-  /** 인쇄용 재단 여백을 넣을지 */
+  /** Add the print bleed. */
   bleed?: boolean;
-  /** 그림이 없을 때 자리 표시를 보여 줄지 (꾸미기 화면에서만) */
+  /** Placeholder text shown when there is no image (editor only). */
   placeholder?: string;
-  /** 그림의 대체 문구 */
   image_alt?: string;
-  /** 글상자를 그리지 않는다 (꾸미기 화면이 직접 그린다) */
+  /** Skip the text box; the editor draws its own. */
   hide_text?: boolean;
-  /** 쪽 위에 얹을 것 (꾸미기 화면의 고치는 글상자) */
+  /** Overlay content, e.g. the editor's editable text box. */
   children?: ReactNode;
   class_name?: string;
 }
 
-/**
- * 쪽 하나를 그린다. 그림 자리는 배치에 따라, 글상자는 쪽에 저장된 자리에 놓인다.
- */
+/** Renders a page: the image follows the layout, the text box uses its saved position. */
 export function PageView({ page, size, bleed = false, placeholder, image_alt = '', hide_text = false, children, class_name = '' }: PageViewProps) {
   const { outer, offset } = page_frame(size, bleed);
   const image_rect = LAYOUT_IMAGE_RECT[page.layout];
   const is_full = page.layout === 'full';
-  // 그림 가득 배치는 재단 여백까지 그림을 채운다.
+  // The full layout extends the image into the bleed.
   const image_style: CSSProperties = is_full
     ? { left: -offset, top: -offset, width: outer, height: outer }
     : { ...rect_style(image_rect, size), borderRadius: size * IMAGE_RADIUS_RATIO };
@@ -130,8 +118,8 @@ interface CreditsPageViewProps {
 }
 
 /**
- * 책 마지막의 "만든 사람" 쪽을 그린다. AI로 만든 그림이 있을 때만 AI 표시가 들어간다.
- * 도구 이름과 DI Lab 표기는 넣지 않는다. 책은 만든 사람의 것이다.
+ * Closing credits page. The AI notice appears only if some image is AI-generated.
+ * No app name or DI Lab branding: the book belongs to its author.
  */
 export function CreditsPageView({ book, size, bleed = false, class_name = '' }: CreditsPageViewProps) {
   const { outer, offset } = page_frame(size, bleed);

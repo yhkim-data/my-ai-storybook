@@ -1,4 +1,4 @@
-// 완성 화면 검사: 넘겨보기, AI 표시, 지은이, 받기, 체험판.
+// Finish screen tests: viewer, AI notice, author, downloads, demo.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { build_demo_book } from '../data/demo_book';
@@ -19,21 +19,17 @@ vi.mock('../storage/book_file', async (orig) => ({
   download_blob: vi.fn(),
 }));
 
-/** 한국어 문구를 찾는다. */
 const t = (key: string, params?: Record<string, string | number>) => translate('ko', key, params);
-/** 체험판 책의 전체 쪽 수(표지 + 8쪽 + 만든 사람) */
+/** Demo book pages: cover + 8 story pages + credits. */
 const TOTAL_PAGES = 10;
-/** 진행 검사에서 쓰는 끝낸 쪽 수 */
 const PROGRESS_DONE = 3;
 
-/** 책과 체험판 여부를 저장소에 넣고 화면을 그린다. */
 function setup(book: Book, is_demo = false) {
   useSettings.setState({ lang: 'ko' });
   useBook.setState({ book, is_demo, screen: 'finish' });
   return render(<FinishScreen />);
 }
 
-/** 다음 쪽 단추를 n번 누른다. */
 function click_next(times: number) {
   for (let i = 0; i < times; i += 1) fireEvent.click(screen.getByRole('button', { name: t('finish.next_page') }));
 }
@@ -46,7 +42,7 @@ describe('FinishScreen', () => {
   });
   afterEach(() => cleanup());
 
-  it('넘겨보기: 1 / 10에서 시작해 마지막에 만든 사람 쪽이 보인다', () => {
+  it('viewer starts at 1 / 10 and ends on the credits page', () => {
     setup(build_demo_book('ko'));
     expect(screen.getByText(`1 / ${TOTAL_PAGES}`)).toBeInTheDocument();
     click_next(TOTAL_PAGES - 1);
@@ -56,7 +52,7 @@ describe('FinishScreen', () => {
     expect(screen.getByRole('button', { name: t('finish.prev_page') })).toBeEnabled();
   });
 
-  it('화살표 키로 넘어간다', () => {
+  it('arrow keys turn pages', () => {
     setup(build_demo_book('ko'));
     const viewer = screen.getByRole('region', { name: t('finish.viewer_aria') });
     fireEvent.keyDown(viewer, { key: 'ArrowRight' });
@@ -65,7 +61,7 @@ describe('FinishScreen', () => {
     expect(screen.getByText(`1 / ${TOTAL_PAGES}`)).toBeInTheDocument();
   });
 
-  it('AI 표시: 직접 올린 그림만 있으면 없고, AI 그림이 있으면 보인다', () => {
+  it('AI notice is hidden with only uploaded images and shown when an AI image exists', () => {
     const book = build_demo_book('ko');
     const { unmount } = setup(book);
     click_next(TOTAL_PAGES - 1);
@@ -82,7 +78,7 @@ describe('FinishScreen', () => {
     expect(screen.getByTestId('ai-notice')).toHaveTextContent(t('credits.ai_notice', { name: t('credits.practice_name') }));
   });
 
-  it('책 쪽 안에 DI Lab과 도구 이름이 없다', () => {
+  it('book pages contain neither DI Lab nor the app name', () => {
     setup(build_demo_book('ko'));
     for (let i = 0; i < TOTAL_PAGES; i += 1) {
       const text = document.querySelector('.book-page')?.textContent ?? '';
@@ -92,7 +88,7 @@ describe('FinishScreen', () => {
     }
   });
 
-  it('지은이를 쓰면 책이 바뀌고 만든 사람 쪽에 보인다. 체험판에는 칸이 없다', () => {
+  it('author updates the book and appears on the credits page; the demo has no author field', () => {
     const { unmount } = setup(build_demo_book('ko'));
     fireEvent.change(screen.getByLabelText(t('finish.author_label')), { target: { value: '토리' } });
     expect(useBook.getState().book?.author).toBe('토리');
@@ -103,7 +99,7 @@ describe('FinishScreen', () => {
     expect(screen.queryByLabelText(t('finish.author_label'))).toBeNull();
   });
 
-  it('PDF 받기: 이름이 .pdf로 끝나고 완료 문구가 보인다', async () => {
+  it('PDF download: name ends in .pdf and the done notice shows', async () => {
     vi.mocked(export_pdf).mockResolvedValue(new Blob(['x']));
     setup(build_demo_book('ko'));
     fireEvent.click(screen.getByTestId('download-pdf'));
@@ -112,7 +108,7 @@ describe('FinishScreen', () => {
     expect(vi.mocked(download_blob).mock.calls[0]?.[1]).toMatch(/\.pdf$/);
   });
 
-  it('인쇄용은 print=true로 부르고, 그림 묶음은 zip 이름이다', async () => {
+  it('print PDF uses print=true and the image bundle gets a zip name', async () => {
     vi.mocked(export_pdf).mockResolvedValue(new Blob(['x']));
     vi.mocked(export_image_zip).mockResolvedValue(new Blob(['x']));
     setup(build_demo_book('ko'));
@@ -125,7 +121,7 @@ describe('FinishScreen', () => {
     expect(vi.mocked(download_blob).mock.calls[1]?.[1]).toMatch(/-pages\.zip$/);
   });
 
-  it('만드는 동안 단추가 잠기고 진행이 보인다', async () => {
+  it('disables buttons and shows progress while exporting', async () => {
     let finish: (blob: Blob) => void = () => undefined;
     vi.mocked(export_pdf).mockImplementation((_book, _print, on_progress) => {
       on_progress?.(PROGRESS_DONE, TOTAL_PAGES);
@@ -141,7 +137,7 @@ describe('FinishScreen', () => {
     expect(screen.getByTestId('download-zip')).toBeEnabled();
   });
 
-  it('만들다 실패하면 오류 문구를 보여 준다', async () => {
+  it('shows an error when export fails', async () => {
     vi.mocked(export_pdf).mockRejectedValue(new Error('fail'));
     setup(build_demo_book('ko'));
     fireEvent.click(screen.getByTestId('download-pdf'));
@@ -149,14 +145,14 @@ describe('FinishScreen', () => {
     expect(download_blob).not.toHaveBeenCalled();
   });
 
-  it('작업 파일은 .storybook.json 이름으로 받는다', async () => {
+  it('downloads the project file as .storybook.json', async () => {
     setup(build_demo_book('ko'));
     fireEvent.click(screen.getByTestId('download-file'));
     expect(await screen.findByText(t('finish.done'))).toBeInTheDocument();
     expect(vi.mocked(download_blob).mock.calls[0]?.[1]).toMatch(/\.storybook\.json$/);
   });
 
-  it('체험판: 안내가 보이고 시작 단추로 시작 화면에 돌아간다', () => {
+  it('demo shows a notice and its start button returns to the start screen', () => {
     setup(build_demo_book('ko'), true);
     const notice = screen.getByText(t('finish.demo_badge')).closest('.notice') as HTMLElement;
     fireEvent.click(within(notice).getByRole('button', { name: t('finish.demo_start') }));

@@ -1,20 +1,16 @@
-// 권리 안내 화면: 만든 책의 권리는 만든 사람에게 있다는 안내를 한국어와 영어로 함께 보여 준다.
+// Rights screen: states in both Korean and English that the maker owns the book.
 import { DiLabBadge, MadeByLine, Shell } from '../components/Shell';
 import { useT } from '../i18n';
 import { useBook } from '../store/book_store';
 import { useSettings } from '../store/settings_store';
 import './RightsScreen.css';
 
-/** 자세한 안내 문서 주소 (화면 언어에 맞는 쪽을 연다) */
+/** Detailed rights docs; the one matching the UI language is opened. */
 const RIGHTS_DOC_URL_KO = 'https://github.com/yhkim-data/my-ai-storybook/blob/main/docs/rights.ko.md';
 const RIGHTS_DOC_URL_EN = 'https://github.com/yhkim-data/my-ai-storybook/blob/main/docs/rights.en.md';
 
-/** 아래 문단들의 문구 키 */
 const PARAGRAPH_KEYS = ['rights.fonts', 'rights.ai', 'rights.provider', 'rights.others'];
 
-/**
- * 머리글: 처음으로, 가운데 이름, DI Lab 표시.
- */
 function SideHeader({ title }: { title: string }) {
   const t = useT();
   const close_side = useBook((state) => state.close_side);
@@ -32,9 +28,7 @@ function SideHeader({ title }: { title: string }) {
   );
 }
 
-/**
- * 권리 안내 화면.
- */
+/** Rights and licensing notice screen. */
 export function RightsScreen() {
   const t = useT();
   const lang = useSettings((state) => state.lang);

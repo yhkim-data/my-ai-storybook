@@ -1,4 +1,4 @@
-// Gemini 글 연결부. 구조화된 JSON으로 받고, 형식이 어긋나면 한 번만 다시 요청한다.
+// Gemini text provider. Asks for structured JSON and retries once if the format is wrong.
 import type { Lang, PageDraft, Plot, StorySeed } from '../types';
 import { call_interactions, check_api_key } from './gemini_client';
 import { SAFETY_SETTINGS } from './gemini_config';
@@ -13,12 +13,10 @@ import {
 } from './prompts';
 import { ProviderError, type TextProvider } from './types';
 
-/** 형식이 어긋났을 때를 포함해 요청을 보내는 최대 횟수 */
+/** Total attempts, including the one retry after a malformed response. */
 const MAX_FORMAT_ATTEMPTS = 2;
 
-/**
- * JSON 글을 요청하고 읽는다. 읽지 못하면 한 번만 다시 요청한다.
- */
+/** Requests and parses JSON text; retries once if it cannot be parsed. */
 async function request_json<T>(
   api_key: string,
   model: string,
@@ -46,9 +44,7 @@ async function request_json<T>(
   throw new ProviderError('unknown', null, 'bad format');
 }
 
-/**
- * 주어진 키와 AI 종류로 Gemini 글 연결부를 만든다.
- */
+/** Creates a Gemini text provider for the given key and model. */
 export function create_gemini_text(api_key: string, model: string): TextProvider {
   return {
     id: 'gemini-text',

@@ -1,4 +1,4 @@
-// Gemini 연결부 검사: 가짜 fetch로 요청 모양, 키 위치, 다시 요청, 오류 바꾸기, 키 확인, 한도 풀리는 시각을 본다.
+// Gemini provider tests with a fake fetch: request shape, key placement, retries, error mapping, key check, quota reset time.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RATE_LIMIT_WAIT_SECONDS } from '../constants';
 import { check_api_key, next_quota_reset, to_provider_error } from './gemini_client';
@@ -8,7 +8,7 @@ import { create_gemini_text } from './gemini_text';
 import { ProviderError, type ImageRequest, type ProviderErrorKind } from './types';
 import type { StorySeed } from '../types';
 
-/** 가짜 키. 실제 키가 아니다. */
+/** Fake key, not a real one. */
 const TEST_KEY = 'test-key-0000';
 const MS_PER_SECOND = 1000;
 const HOURS_24_MS = 24 * 60 * 60 * 1000;
@@ -36,7 +36,7 @@ const IMAGE_BODY = {
   steps: [{ type: 'model_output', content: [{ type: 'image', data: 'AAAA', mime_type: 'image/png' }] }],
 };
 
-/** 요청 본문에서 검사하는 부분 */
+/** The request body fields these tests check. */
 interface RequestBody {
   model?: string;
   store?: boolean;
@@ -49,17 +49,15 @@ interface RequestBody {
 type FetchMock = ReturnType<typeof vi.fn>;
 type FetchCall = [string, RequestInit & { headers: Record<string, string>; body?: string }];
 
-/** JSON 응답을 만든다. */
 function json_response(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 }
 
-/** 오류 응답 본문을 만든다. */
 function error_body(code: string, message = 'error'): unknown {
   return { error: { code, message } };
 }
 
-/** 가짜 fetch를 전역에 둔다. 응답은 차례대로 나온다. */
+/** Installs a global fake fetch that returns the given responses in order. */
 function stub_fetch(...responses: (Response | Error)[]): FetchMock {
   const mock = vi.fn();
   for (const item of responses) {
@@ -70,13 +68,12 @@ function stub_fetch(...responses: (Response | Error)[]): FetchMock {
   return mock;
 }
 
-/** n번째 요청의 본문을 읽는다. */
 function body_of(mock: FetchMock, index: number): RequestBody {
   const call = mock.mock.calls[index] as FetchCall;
   return JSON.parse(call[1].body ?? '{}');
 }
 
-/** 모든 요청이 제공사 주소로만 가고, 키가 머리글에만 있는지 본다. */
+/** Asserts every request goes only to the provider origin and carries the key only in a header. */
 function expect_safe_calls(mock: FetchMock) {
   expect(mock.mock.calls.length).toBeGreaterThan(0);
   for (const call of mock.mock.calls as FetchCall[]) {
@@ -96,8 +93,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('글 연결부', () => {
-  it('요청 모양: JSON 응답 지정, 안전 설정 4개, store false, system_instruction, 제공사 주소와 키 머리글', async () => {
+describe('text provider', () => {
+  it('request shape: JSON response, 4 safety settings, store false, system_instruction, provider URL and key header', async () => {
     const mock = stub_fetch(json_response(PLOTS_BODY));
     const plots = await create_gemini_text(TEST_KEY, DEFAULT_TEXT_MODEL).suggestPlots(SEED, 'ko');
     expect(plots).toHaveLength(3);
@@ -114,7 +111,7 @@ describe('글 연결부', () => {
     expect(body.model).toBe(DEFAULT_TEXT_MODEL);
   });
 
-  it('쪽 나누기도 같은 안전 규칙으로 요청한다', async () => {
+  it('page split uses the same safety rules', async () => {
     const pages = Array.from({ length: SEED.page_count }, (_, n) => ({ text: `글${n}`, image_prompt: `그림${n}` }));
     const body = { status: 'completed', steps: [{ type: 'model_output', content: [{ type: 'text', text: JSON.stringify({ pages }) }] }] };
     const mock = stub_fetch(json_response(body));
@@ -124,7 +121,7 @@ describe('글 연결부', () => {
     expect(body_of(mock, 0).store).toBe(false);
   });
 
-  it('형식이 깨지면 정확히 한 번 더 요청하고 두 번째가 맞으면 성공한다', async () => {
+  it('retries exactly once on a malformed response and succeeds if the second is valid', async () => {
     const broken = { status: 'completed', steps: [{ type: 'model_output', content: [{ type: 'text', text: '깨진 글' }] }] };
     const mock = stub_fetch(json_response(broken), json_response(PLOTS_BODY));
     const plots = await create_gemini_text(TEST_KEY, DEFAULT_TEXT_MODEL).suggestPlots(SEED, 'ko');
@@ -132,7 +129,7 @@ describe('글 연결부', () => {
     expect(mock).toHaveBeenCalledTimes(2);
   });
 
-  it('두 번 다 깨지면 ProviderError(unknown)이고 요청은 총 2회다', async () => {
+  it('throws ProviderError(unknown) after two malformed responses, with 2 requests total', async () => {
     const broken = { status: 'completed', steps: [{ type: 'model_output', content: [{ type: 'text', text: '깨진 글' }] }] };
     const mock = stub_fetch(json_response(broken), json_response(broken), json_response(PLOTS_BODY));
     const error = await create_gemini_text(TEST_KEY, DEFAULT_TEXT_MODEL)
@@ -144,8 +141,8 @@ describe('글 연결부', () => {
   });
 });
 
-describe('그림 연결부', () => {
-  it('요청 모양과 응답 Blob', async () => {
+describe('image provider', () => {
+  it('request shape and response Blob', async () => {
     const mock = stub_fetch(json_response(IMAGE_BODY));
     const blob = await create_gemini_image(TEST_KEY, DEFAULT_IMAGE_MODEL).generate(IMAGE_REQ);
     expect(blob).toBeInstanceOf(Blob);
@@ -156,11 +153,11 @@ describe('그림 연결부', () => {
     expect(body.response_format.aspect_ratio).toBe('1:1');
     expect(body.store).toBe(false);
     const call = mock.mock.calls[0] as FetchCall;
-    // Google이 브라우저 사전 확인(CORS)에서 거절하는 머리글은 붙이지 않는다.
+    // No headers that Google rejects in the browser's CORS preflight.
     expect(Object.keys(call[1].headers).map((name) => name.toLowerCase()).sort()).toEqual(['content-type', 'x-goog-api-key']);
   });
 
-  it('기본 그림 AI는 참고 그림을 지원하지 않고 보내도 input에 image가 없다', async () => {
+  it('the default image model does not support reference images and leaves them out of input', async () => {
     const mock = stub_fetch(json_response(IMAGE_BODY));
     const provider = create_gemini_image(TEST_KEY, DEFAULT_IMAGE_MODEL);
     expect(provider.supportsReferenceImage).toBe(false);
@@ -169,7 +166,7 @@ describe('그림 연결부', () => {
     expect(input.some((part) => part.type === 'image')).toBe(false);
   });
 
-  it('gemini-nano-banana-2.1은 참고 그림을 input에 넣는다', async () => {
+  it('gemini-nano-banana-2.1 puts the reference image in input', async () => {
     const mock = stub_fetch(json_response(IMAGE_BODY));
     const provider = create_gemini_image(TEST_KEY, 'gemini-nano-banana-2.1');
     expect(provider.supportsReferenceImage).toBe(true);
@@ -178,7 +175,7 @@ describe('그림 연결부', () => {
     expect(input).toContainEqual({ type: 'image', mime_type: 'image/png', data: 'AAAA' });
   });
 
-  it('안전 설정 값을 거절하는 400이면 그 값을 빼고 한 번 다시 보낸다', async () => {
+  it('on a 400 rejecting safety_settings, retries once without it', async () => {
     const mock = stub_fetch(json_response(error_body('invalid_request', 'Unknown field: safety_settings'), 400), json_response(IMAGE_BODY));
     const blob = await create_gemini_image(TEST_KEY, DEFAULT_IMAGE_MODEL).generate(IMAGE_REQ);
     expect(blob.type).toBe('image/png');
@@ -188,19 +185,19 @@ describe('그림 연결부', () => {
     expect_safe_calls(mock);
   });
 
-  it('안전 설정과 관계없는 400은 다시 보내지 않는다', async () => {
+  it('does not retry a 400 unrelated to safety settings', async () => {
     const mock = stub_fetch(json_response(error_body('invalid_request', 'bad size'), 400), json_response(IMAGE_BODY));
     await expect(create_gemini_image(TEST_KEY, DEFAULT_IMAGE_MODEL).generate(IMAGE_REQ)).rejects.toBeInstanceOf(ProviderError);
     expect(mock).toHaveBeenCalledTimes(1);
   });
 
-  it('응답에 그림이 없으면 오류다', async () => {
+  it('throws when the response has no image', async () => {
     stub_fetch(json_response({ status: 'completed', steps: [{ type: 'model_output', content: [{ type: 'text', text: '말뿐' }] }] }));
     await expect(create_gemini_image(TEST_KEY, DEFAULT_IMAGE_MODEL).generate(IMAGE_REQ)).rejects.toBeInstanceOf(ProviderError);
   });
 });
 
-/** 오류 바꾸기 표: [상태, 코드, 기대 종류] */
+/** [HTTP status, error code, expected kind] */
 const ERROR_CASES: [number, string, ProviderErrorKind][] = [
   [401, '', 'bad_key'],
   [400, 'authentication', 'bad_key'],
@@ -215,7 +212,7 @@ const ERROR_CASES: [number, string, ProviderErrorKind][] = [
 ];
 
 describe('to_provider_error', () => {
-  it.each(ERROR_CASES)('상태 %i, 코드 "%s" → %s', (status, code, kind) => {
+  it.each(ERROR_CASES)('status %i, code "%s" -> %s', (status, code, kind) => {
     const before = Date.now();
     const error = to_provider_error(status, code, 'message');
     expect(error.kind).toBe(kind);
@@ -227,8 +224,8 @@ describe('to_provider_error', () => {
   });
 });
 
-describe('실제 호출에서 오류 바꾸기', () => {
-  it.each(ERROR_CASES)('글: 상태 %i, 코드 "%s" → %s', async (status, code, kind) => {
+describe('error mapping through real calls', () => {
+  it.each(ERROR_CASES)('text: status %i, code "%s" -> %s', async (status, code, kind) => {
     const mock = stub_fetch(json_response(code ? error_body(code) : {}, status));
     const error = await create_gemini_text(TEST_KEY, DEFAULT_TEXT_MODEL)
       .suggestPlots(SEED, 'ko')
@@ -238,7 +235,7 @@ describe('실제 호출에서 오류 바꾸기', () => {
     expect(mock).toHaveBeenCalledTimes(1);
   });
 
-  it.each(ERROR_CASES)('그림: 상태 %i, 코드 "%s" → %s', async (status, code, kind) => {
+  it.each(ERROR_CASES)('image: status %i, code "%s" -> %s', async (status, code, kind) => {
     stub_fetch(json_response(code ? error_body(code) : {}, status));
     const error = await create_gemini_image(TEST_KEY, DEFAULT_IMAGE_MODEL)
       .generate(IMAGE_REQ)
@@ -246,7 +243,7 @@ describe('실제 호출에서 오류 바꾸기', () => {
     expect((error as ProviderError).kind).toBe(kind);
   });
 
-  it('하루 한도는 retry_at이 미래이고 분당 한도는 지금+60초쯤이다', async () => {
+  it('daily quota has a future retry_at; rate limit is about now + 60s', async () => {
     stub_fetch(json_response(error_body('quota_exceeded'), 429));
     const quota = (await create_gemini_text(TEST_KEY, DEFAULT_TEXT_MODEL)
       .suggestPlots(SEED, 'ko')
@@ -259,7 +256,7 @@ describe('실제 호출에서 오류 바꾸기', () => {
     expect(Math.abs((rate.retry_at ?? 0) - (Date.now() + RATE_LIMIT_WAIT_SECONDS * MS_PER_SECOND))).toBeLessThan(RATE_TOLERANCE_MS);
   });
 
-  it('fetch가 TypeError로 실패하면 network이다', async () => {
+  it('a fetch TypeError is network', async () => {
     stub_fetch(new TypeError('Failed to fetch'));
     const error = await create_gemini_text(TEST_KEY, DEFAULT_TEXT_MODEL)
       .suggestPlots(SEED, 'ko')
@@ -274,7 +271,7 @@ describe('실제 호출에서 오류 바꾸기', () => {
 });
 
 describe('check_api_key', () => {
-  it('200이면 ok이고 요청 주소가 /v1beta/models이며 키는 머리글에만 있다', async () => {
+  it('200 is ok, the URL is /v1beta/models, and the key is only in a header', async () => {
     const mock = stub_fetch(json_response({ models: [] }));
     expect(await check_api_key(TEST_KEY)).toEqual({ ok: true });
     const call = mock.mock.calls[0] as FetchCall;
@@ -283,17 +280,17 @@ describe('check_api_key', () => {
     expect_safe_calls(mock);
   });
 
-  it('401이면 bad_key이다', async () => {
+  it('401 is bad_key', async () => {
     stub_fetch(json_response(error_body('authentication'), 401));
     expect(await check_api_key(TEST_KEY)).toEqual({ ok: false, reason: 'bad_key' });
   });
 
-  it('fetch가 실패하면 network이다', async () => {
+  it('a failed fetch is network', async () => {
     stub_fetch(new TypeError('Failed to fetch'));
     expect(await check_api_key(TEST_KEY)).toEqual({ ok: false, reason: 'network' });
   });
 
-  it('연결부의 testConnection도 같은 주소로만 요청한다', async () => {
+  it('provider testConnection also calls only that URL', async () => {
     const mock = stub_fetch(json_response({}), json_response({}));
     expect(await create_gemini_text(TEST_KEY, DEFAULT_TEXT_MODEL).testConnection()).toEqual({ ok: true });
     expect(await create_gemini_image(TEST_KEY, DEFAULT_IMAGE_MODEL).testConnection()).toEqual({ ok: true });
@@ -302,7 +299,7 @@ describe('check_api_key', () => {
 });
 
 describe('next_quota_reset', () => {
-  it('지금보다 뒤이고 24시간 이내이며 태평양 시간으로 0시 0분이다', () => {
+  it('is later than now, within 24 hours, and at 00:00 Pacific time', () => {
     const now = new Date('2026-11-14T12:00:00Z');
     const reset = next_quota_reset(now);
     expect(reset).toBeGreaterThan(now.getTime());

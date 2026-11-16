@@ -1,4 +1,4 @@
-// 권리 안내 화면 검사: 한국어·영어 문장이 함께 보인다.
+// Rights screen tests: Korean and English statements are both shown.
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -14,20 +14,20 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('RightsScreen', () => {
-  it('한국어와 영어 권리 문장이 둘 다 보인다', () => {
+  it('shows both the Korean and English rights statements', () => {
     render(<RightsScreen />);
     expect(screen.getByText(translate('ko', 'rights.statement.ko'))).toBeInTheDocument();
     expect(screen.getByText(translate('en', 'rights.statement.en'))).toBeInTheDocument();
   });
 
-  it('화면 언어가 영어여도 두 문장이 보이고 안내 문서 주소가 영어판이다', () => {
+  it('in English UI both statements show and the doc link is the English one', () => {
     useSettings.setState({ lang: 'en' });
     render(<RightsScreen />);
     expect(screen.getByText(translate('ko', 'rights.statement.ko'))).toBeInTheDocument();
     expect(screen.getByRole('link', { name: translate('en', 'rights.more') })).toHaveAttribute('href', expect.stringContaining('rights.en.md'));
   });
 
-  it('처음으로를 누르면 돌아간다', async () => {
+  it('home button goes back', async () => {
     render(<RightsScreen />);
     await userEvent.click(screen.getByRole('button', { name: translate('ko', 'common.home') }));
     expect(useBook.getState().screen).toBe('start');

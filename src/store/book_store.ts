@@ -1,23 +1,23 @@
-// 책 저장소. 지금 화면, 만들고 있는 책, 되돌리기 기록을 쥔다.
+// Book store: current screen, the book being made, and undo history.
 import { create } from 'zustand';
 import { HISTORY_LIMIT, STEP_SCREENS } from '../constants';
 import { build_cover_description } from '../providers/prompts';
 import type { Book, BookPage, Lang, PageDraft, PageImage, Plot, Screen, StorySeed, StyleId, WriteMode } from '../types';
 import { build_pages, create_book, make_story_page, resize_pages } from './book_model';
 
-/** 단계에 들지 않는 곁 화면 */
+/** Side screens that are not wizard steps. */
 export type SideScreen = 'connect' | 'rights';
 
 export interface BookState {
   screen: Screen;
-  /** 곁 화면에서 돌아갈 화면 */
+  /** Screen to return to when a side screen closes. */
   return_screen: Screen;
   book: Book | null;
-  /** 체험판을 보고 있는가. 체험판은 저장하지 않는다. */
+  /** Viewing the demo book; it is never saved. */
   is_demo: boolean;
-  /** 이 기기에 만들던 책이 저장되어 있는가 */
+  /** Whether a book in progress is saved on this device. */
   has_saved_book: boolean;
-  /** 그림·꾸미기·완성 화면에서 보고 있는 쪽 */
+  /** Page shown on the pictures, editor and finish screens. */
   current_page: number;
   undo_stack: BookPage[][];
   redo_stack: BookPage[][];
@@ -46,22 +46,16 @@ export interface BookState {
   redo: () => void;
 }
 
-/**
- * 쪽 번호를 책의 범위 안으로 맞춘다.
- */
 function clamp_page_index(index: number, pages: BookPage[]): number {
   return Math.max(0, Math.min(index, pages.length - 1));
 }
 
-/**
- * 책의 표지 그림 설명을 제목과 줄거리로 만든다.
- */
 function cover_description_of(book: Book): string {
   return build_cover_description(book.chosen_plot?.title ?? '', book.chosen_plot?.summary ?? '', book.lang);
 }
 
 export const useBook = create<BookState>((set, get) => {
-  /** 책이 있을 때만 책을 바꾼다. 바꾼 시각도 함께 남긴다. */
+  /** Updates the book (if any) and stamps updated_at. */
   const change_book = (mutator: (book: Book) => Book) => {
     const book = get().book;
     if (!book) return;
@@ -115,7 +109,7 @@ export const useBook = create<BookState>((set, get) => {
     set_plots: (plots, key) => change_book((book) => ({ ...book, plots, plots_key: key })),
     choose_plot: (plot) =>
       change_book((book) => {
-        // 쪽이 이미 있으면 표지 제목도 함께 바꾼다.
+        // If pages already exist, update the cover title too.
         const pages = book.pages.map((page, index) => (index === 0 ? { ...page, text: plot.title } : page));
         return { ...book, chosen_plot: plot, pages };
       }),
@@ -149,7 +143,7 @@ export const useBook = create<BookState>((set, get) => {
       if (!book) return;
       const next_pages = mutator(book.pages);
       if (next_pages === book.pages) return;
-      // 같은 종류의 연속된 바꿈(글자 입력, 끌기)은 되돌리기 한 단계로 묶는다.
+      // Consecutive changes with the same key (typing, dragging) form one undo step.
       const is_same_change = change_key !== undefined && change_key === last_change_key;
       const next_undo = is_same_change ? undo_stack : [...undo_stack, book.pages].slice(-HISTORY_LIMIT);
       set({
@@ -187,17 +181,13 @@ export const useBook = create<BookState>((set, get) => {
   };
 });
 
-/**
- * 쪽 목록에 빈 쪽을 하나 끼워 넣는다. 꾸미기 화면의 "쪽 더하기"에서 쓴다.
- */
+/** Inserts a blank page after after_index, never before the cover. */
 export function insert_blank_page(pages: BookPage[], after_index: number): BookPage[] {
   const position = Math.max(1, after_index + 1);
   return [...pages.slice(0, position), make_story_page(), ...pages.slice(position)];
 }
 
-/**
- * 쪽을 다른 자리로 옮긴다. 표지(0번)는 옮기지 않고, 표지 앞으로도 못 간다.
- */
+/** Moves a story page; the cover (index 0) cannot move and nothing can go before it. */
 export function move_page(pages: BookPage[], from_index: number, to_index: number): BookPage[] {
   const last = pages.length - 1;
   if (from_index < 1 || from_index > last || to_index < 1 || to_index > last || from_index === to_index) return pages;
@@ -208,9 +198,7 @@ export function move_page(pages: BookPage[], from_index: number, to_index: numbe
   return next;
 }
 
-/**
- * 본문 쪽 하나를 뺀다. 표지는 뺄 수 없고, 본문은 한 쪽 이상 남긴다.
- */
+/** Removes a story page; the cover and the last story page cannot be removed. */
 export function remove_page(pages: BookPage[], index: number): BookPage[] {
   const MIN_PAGES_WITH_COVER = 2;
   if (index < 1 || pages.length <= MIN_PAGES_WITH_COVER) return pages;

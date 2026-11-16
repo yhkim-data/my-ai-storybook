@@ -1,15 +1,13 @@
-// IndexedDB에 만들던 책(그림 포함)을 저장하고 읽는다. 책은 이 기기 밖으로 나가지 않는다.
+// Stores the book in progress (with images) in IndexedDB. The book never leaves this device.
 import type { Book } from '../types';
 
 const DB_NAME = 'storybook';
 const DB_VERSION = 1;
 const STORE_NAME = 'books';
-/** 만들던 책 한 권을 두는 자리 */
+/** Only one book in progress is kept, under this key. */
 const CURRENT_BOOK_KEY = 'current';
 
-/**
- * 데이터베이스를 연다. 처음이면 저장 칸을 만든다.
- */
+/** Opens the database, creating the object store on first use. */
 function open_db(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -21,9 +19,7 @@ function open_db(): Promise<IDBDatabase> {
   });
 }
 
-/**
- * 저장 칸에서 한 가지 일을 하고 결과를 돌려준다.
- */
+/** Runs one request in its own transaction and resolves when the transaction completes. */
 async function run_request<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
   const db = await open_db();
   try {
@@ -39,24 +35,16 @@ async function run_request<T>(mode: IDBTransactionMode, action: (store: IDBObjec
   }
 }
 
-/**
- * 만들던 책을 저장한다.
- */
 export async function save_current_book(book: Book): Promise<void> {
   await run_request('readwrite', (store) => store.put(book, CURRENT_BOOK_KEY));
 }
 
-/**
- * 만들던 책을 읽는다. 없으면 null이다.
- */
+/** Loads the book in progress, or null if there is none. */
 export async function load_current_book(): Promise<Book | null> {
   const book = await run_request<Book | undefined>('readonly', (store) => store.get(CURRENT_BOOK_KEY));
   return book ?? null;
 }
 
-/**
- * 만들던 책을 지운다.
- */
 export async function delete_current_book(): Promise<void> {
   await run_request('readwrite', (store) => store.delete(CURRENT_BOOK_KEY));
 }

@@ -1,4 +1,4 @@
-// AI 연결하기 화면: 키를 받아 붙여넣고 연결을 확인한다. 키는 이 기기에만 저장하고 끝 4자리만 보여 준다.
+// Connect screen. The key is stored only on this device and only its last 4 characters are shown.
 import { useState, type KeyboardEvent } from 'react';
 import { DiLabBadge, Shell } from '../components/Shell';
 import { Notice } from '../components/Notice';
@@ -17,19 +17,15 @@ import { useBook } from '../store/book_store';
 import { effective_image_key, key_tail, useSettings } from '../store/settings_store';
 import './ConnectScreen.css';
 
-/** 그림 상자 안 그림의 좌표 크기 */
+/** SVG viewBox size of the step illustrations. */
 const ART_WIDTH = 240;
 const ART_HEIGHT = 96;
 
-/** 안내 띠에 보여 줄 결과 */
 interface Message {
   kind: 'ok' | 'warn';
   text: string;
 }
 
-/**
- * 실패 이유를 안내 문구 키로 바꾼다.
- */
 function failure_key(reason: ProviderErrorKind): string {
   if (reason === 'browser_blocked') return 'connect.browser_blocked';
   if (reason === 'bad_key' || reason === 'no_permission') return 'connect.bad_key';
@@ -37,9 +33,7 @@ function failure_key(reason: ProviderErrorKind): string {
   return 'connect.failed';
 }
 
-/**
- * 1번 그림: 창 모양 위에 새 창이 겹쳐 열리는 모습.
- */
+/** Step 1 art: a new window opening over another. */
 function StepArtOpen({ label }: { label: string }) {
   return (
     <svg className="connect-step-art" role="img" aria-label={label} viewBox={`0 0 ${ART_WIDTH} ${ART_HEIGHT}`}>
@@ -53,9 +47,7 @@ function StepArtOpen({ label }: { label: string }) {
   );
 }
 
-/**
- * 2번 그림: 단추, 긴 글자 줄, 복사 표시.
- */
+/** Step 2 art: a button, a long key string and a copy icon. */
 function StepArtCopy({ label }: { label: string }) {
   return (
     <svg className="connect-step-art" role="img" aria-label={label} viewBox={`0 0 ${ART_WIDTH} ${ART_HEIGHT}`}>
@@ -69,9 +61,7 @@ function StepArtCopy({ label }: { label: string }) {
   );
 }
 
-/**
- * 3번 그림: 복사한 글자가 칸으로 들어가는 모습.
- */
+/** Step 3 art: the copied key going into the input. */
 function StepArtPaste({ label }: { label: string }) {
   return (
     <svg className="connect-step-art" role="img" aria-label={label} viewBox={`0 0 ${ART_WIDTH} ${ART_HEIGHT}`}>
@@ -84,9 +74,6 @@ function StepArtPaste({ label }: { label: string }) {
   );
 }
 
-/**
- * 연결 화면 머리글: 처음으로, 가운데 이름, DI Lab 표시.
- */
 function SideHeader({ title }: { title: string }) {
   const t = useT();
   const close_side = useBook((state) => state.close_side);
@@ -104,9 +91,7 @@ function SideHeader({ title }: { title: string }) {
   );
 }
 
-/**
- * AI 연결하기 화면.
- */
+/** Screen for pasting and checking an AI provider key. */
 export function ConnectScreen() {
   const t = useT();
   const close_side = useBook((state) => state.close_side);
@@ -127,9 +112,7 @@ export function ConnectScreen() {
   const [message, set_message] = useState<Message | null>(null);
   const [image_message, set_image_message] = useState<Message | null>(null);
 
-  /**
-   * 키를 확인한다. 맞으면 on_ok로 저장하고 입력 칸을 비운 뒤 결과를 알린다. 틀리면 저장하지 않는다.
-   */
+  /** Tests the key; it is saved through on_ok only when the connection succeeds. */
   const check_key = async (
     raw_key: string,
     for_image: boolean,
@@ -164,12 +147,9 @@ export function ConnectScreen() {
     }
   };
 
-  /** 글용 키 확인 */
   const handle_check = () => check_key(key_input, false, set_text_key, () => set_key_input(''), set_message);
-  /** 그림용 키 확인 */
   const handle_check_image = () => check_key(image_key_input, true, set_image_key, () => set_image_key_input(''), set_image_message);
 
-  /** Enter를 누르면 확인한다. */
   const handle_enter = (event: KeyboardEvent<HTMLInputElement>, action: () => Promise<void>) => {
     if (event.key === 'Enter' && !is_checking) {
       event.preventDefault();
@@ -177,27 +157,25 @@ export function ConnectScreen() {
     }
   };
 
-  /** 키를 모두 지운다. */
   const handle_clear = () => {
     clear_keys();
     set_message({ kind: 'ok', text: t('connect.cleared') });
     set_image_message(null);
   };
 
-  /** AI 종류를 처음 값으로 되돌린다. */
   const handle_reset_kinds = () => {
     set_text_model(DEFAULT_TEXT_MODEL);
     set_image_model(DEFAULT_IMAGE_MODEL);
   };
 
-  /** 저장된 키를 "회사 이름과 끝자리"로 알리는 안내를 만든다. */
+  /** Describes a saved key by provider name and last characters only. */
   const saved_message = (key: string): Message | null =>
     key ? { kind: 'ok', text: t('connect.saved_tail', { name: PROVIDER_INFO[detect_provider(key)].label, tail: key_tail(key) }) } : null;
 
   const shown_message: Message | null = message ?? saved_message(text_key);
   const shown_image_message: Message | null = image_message ?? saved_message(image_key);
 
-  // AI 종류 목록은 저장된 키의 회사에 맞춘다. 키가 없으면 Gemini 목록을 보여 준다.
+  // Model lists follow the saved key's provider; with no key, the Gemini lists are shown.
   const text_info = PROVIDER_INFO[detect_provider(text_key)];
   const image_info = PROVIDER_INFO[detect_provider(effective_image_key({ text_key, image_key }))];
   const shown_text_model = resolve_text_model(text_info.kind, text_model);

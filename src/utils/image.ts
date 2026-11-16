@@ -1,15 +1,11 @@
-// 그림 자료를 바꾸는 도우미: Blob, data URL, SVG 글, 올린 파일 줄이기.
+// Image helpers: Blob/data URL/base64 conversion and upload downscaling.
 import { UPLOAD_JPEG_QUALITY, UPLOAD_MAX_PX } from '../constants';
 
-/** data URL을 나눈 결과 */
 export interface DataUrlParts {
   mime_type: string;
   base64: string;
 }
 
-/**
- * Blob을 data URL로 바꾼다.
- */
 export function blob_to_data_url(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -19,18 +15,13 @@ export function blob_to_data_url(blob: Blob): Promise<string> {
   });
 }
 
-/**
- * base64 data URL을 종류와 내용으로 나눈다. base64가 아니면 null이다.
- */
+/** Splits a base64 data URL into MIME type and payload; null if not base64. */
 export function split_data_url(data_url: string): DataUrlParts | null {
   const match = /^data:([^;,]+);base64,(.*)$/s.exec(data_url);
   if (!match) return null;
   return { mime_type: match[1] ?? '', base64: match[2] ?? '' };
 }
 
-/**
- * base64 글을 바이트 배열로 바꾼다.
- */
 export function base64_to_bytes(base64: string): Uint8Array<ArrayBuffer> {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -38,16 +29,11 @@ export function base64_to_bytes(base64: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
-/**
- * base64 글을 Blob으로 바꾼다.
- */
 export function base64_to_blob(base64: string, mime_type: string): Blob {
   return new Blob([base64_to_bytes(base64)], { type: mime_type });
 }
 
-/**
- * SVG 글을 data URL로 바꾼다. 한글이 들어 있어도 깨지지 않게 UTF-8로 싼다.
- */
+/** Encodes SVG as a base64 data URL via UTF-8, so non-ASCII text survives btoa. */
 export function svg_to_data_url(svg: string): string {
   const bytes = new TextEncoder().encode(svg);
   let binary = '';
@@ -55,9 +41,7 @@ export function svg_to_data_url(svg: string): string {
   return `data:image/svg+xml;base64,${btoa(binary)}`;
 }
 
-/**
- * 그림 주소를 읽어 img 요소로 만든다. 그림이 아니면 실패한다.
- */
+/** Loads src into an img element; rejects if it is not an image. */
 export function load_image(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -67,15 +51,13 @@ export function load_image(src: string): Promise<HTMLImageElement> {
   });
 }
 
-/**
- * 올린 그림 파일을 책에 넣기 좋게 줄여 data URL로 돌려준다. 그림이 아니면 실패한다.
- */
+/** Downscales an uploaded image to UPLOAD_MAX_PX and returns a data URL; rejects non-images. */
 export async function prepare_upload_image(file: Blob): Promise<string> {
   const original_url = await blob_to_data_url(file);
   const image = await load_image(original_url);
   const longest = Math.max(image.naturalWidth, image.naturalHeight);
   if (longest === 0) throw new Error('not an image');
-  // 작은 그림과 SVG는 그대로 쓴다.
+  // Small images and SVGs are kept as-is.
   if (longest <= UPLOAD_MAX_PX || file.type === 'image/svg+xml') return original_url;
   const scale = UPLOAD_MAX_PX / longest;
   const canvas = document.createElement('canvas');

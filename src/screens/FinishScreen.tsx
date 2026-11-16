@@ -1,4 +1,4 @@
-// 8단계 완성 화면: 책 넘겨보기, 지은이 이름, PDF·그림 묶음·작업 파일 받기.
+// Step 8 finish screen: book viewer, author name, and PDF / image zip / project file downloads.
 import { useState, type KeyboardEvent } from 'react';
 import { Brand, DiLabBadge, Shell, StepDots } from '../components/Shell';
 import { Busy, Notice } from '../components/Notice';
@@ -11,18 +11,15 @@ import type { Book } from '../types';
 import { useElementWidth } from '../utils/use_element_width';
 import './FinishScreen.css';
 
-/** 넘겨보기 쪽 그림의 가장 큰 너비(px) */
+/** Max viewer page width in px. */
 const VIEWER_MAX_SIZE = 560;
-/** 너비를 재기 전에 쓰는 처음 너비(px) */
+/** Width in px used before the container is measured. */
 const VIEWER_INITIAL_SIZE = 420;
-/** 지은이 이름의 가장 긴 글자 수 */
+/** In characters. */
 const AUTHOR_MAX_LENGTH = 30;
-/** 작업 파일의 형식 */
 const BOOK_FILE_MIME = 'application/json';
 
-/** 받기 종류 */
 type ExportKind = 'pdf' | 'print' | 'zip' | 'file';
-/** 진행 상태 */
 interface Progress {
   done: number;
   total: number;
@@ -37,9 +34,6 @@ interface DownloadChoiceProps {
   on_click: () => void;
 }
 
-/**
- * 받기 단추 하나. 제목과 설명이 들어 있다.
- */
 function DownloadChoice({ test_id, title, desc, is_primary = false, disabled, on_click }: DownloadChoiceProps) {
   return (
     <button
@@ -55,9 +49,7 @@ function DownloadChoice({ test_id, title, desc, is_primary = false, disabled, on
   );
 }
 
-/**
- * 책 넘겨보기: 표지, 본문, 만든 사람 쪽을 한 쪽씩 보여 준다.
- */
+/** Shows the cover, story pages and the credits page one at a time. */
 function BookViewer({ book }: { book: Book }) {
   const t = useT();
   const [index, set_index] = useState(0);
@@ -67,7 +59,6 @@ function BookViewer({ book }: { book: Book }) {
   const last = total - 1;
   const page = index < book.pages.length ? book.pages[index] : undefined;
 
-  /** 화살표 키로 쪽을 넘긴다. */
   const handle_key = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === 'ArrowLeft') set_index((now) => Math.max(0, now - 1));
     if (event.key === 'ArrowRight') set_index((now) => Math.min(last, now + 1));
@@ -97,9 +88,7 @@ function BookViewer({ book }: { book: Book }) {
   );
 }
 
-/**
- * 8단계 완성 화면.
- */
+/** Step 8 finish screen. */
 export function FinishScreen() {
   const t = useT();
   const book = useBook((s) => s.book);
@@ -115,7 +104,7 @@ export function FinishScreen() {
   const total_pages = book.pages.length + 1;
   const is_busy = progress !== null;
 
-  /** 파일을 만들어 내려받는다. 만드는 동안 단추를 잠근다. */
+  /** Builds and downloads the file; buttons stay disabled while it runs. */
   const run_export = async (kind: ExportKind) => {
     set_is_done(false);
     set_has_error(false);
@@ -126,7 +115,7 @@ export function FinishScreen() {
       if (kind === 'file') {
         download_blob(new Blob([serialize_book(book)], { type: BOOK_FILE_MIME }), book_file_name(book));
       } else {
-        // 내보내기 코드는 크기가 커서 처음 쓸 때 불러온다. 첫 화면이 빨리 뜨게 하기 위해서다.
+        // The export code is large, so it is loaded on first use to keep the initial load fast.
         const { export_image_zip, export_pdf } = await import('../export/export_book');
         if (kind === 'pdf') download_blob(await export_pdf(book, false, on_progress), `${stem}.pdf`);
         else if (kind === 'print') download_blob(await export_pdf(book, true, on_progress), `${stem}-print.pdf`);

@@ -1,22 +1,16 @@
-// 모든 화면이 함께 쓰는 틀: 머리글, 단계 점, DI Lab 표시, 바닥글 단추.
+// Shared screen frame: header, step dots, DI Lab badge, footer buttons.
 import type { ReactNode } from 'react';
 import { STEP_SCREENS } from '../constants';
 import { useT } from '../i18n';
 import type { Screen } from '../types';
 
-/** 책 모양 아이콘의 한 변 길이(px) */
+/** Book icon size (px). */
 const BOOK_ICON_SIZE = 32;
 
-/**
- * 머리글 오른쪽에 들어가는 DI Lab 글자 표시.
- */
 export function DiLabBadge() {
   return <span className="dilab-badge">DI Lab</span>;
 }
 
-/**
- * 바닥글에 들어가는 "만든 곳 DI Lab · Data Insight Lab".
- */
 export function MadeByLine() {
   const t = useT();
   return (
@@ -26,9 +20,7 @@ export function MadeByLine() {
   );
 }
 
-/**
- * 앱 이름. with_icon이면 책 아이콘을 함께 보여 준다.
- */
+/** App name, optionally with the book icon. */
 export function Brand({ with_icon = false }: { with_icon?: boolean }) {
   const t = useT();
   return (
@@ -54,16 +46,12 @@ export function Brand({ with_icon = false }: { with_icon?: boolean }) {
   );
 }
 
-/**
- * 단계 화면의 번호(1~8)를 돌려준다.
- */
+/** Step number (1-8) of a step screen. */
 export function step_number(screen: Screen): number {
   return STEP_SCREENS.indexOf(screen) + 1;
 }
 
-/**
- * 진행 단계를 점으로 보여 준다. 지금 단계는 길쭉한 점이다.
- */
+/** Progress dots; the current step is drawn as an elongated dot. */
 export function StepDots({ screen }: { screen: Screen }) {
   const t = useT();
   const now = step_number(screen);
@@ -82,15 +70,13 @@ export function StepDots({ screen }: { screen: Screen }) {
 interface ShellProps {
   header: ReactNode;
   footer?: ReactNode;
-  /** 본문 너비: 기본 960, wide 1120, wider 1200 */
+  /** Content max width (px): normal 960, wide 1120, wider 1200. */
   width?: 'normal' | 'wide' | 'wider';
   compact_header?: boolean;
   children: ReactNode;
 }
 
-/**
- * 화면 틀: 머리글, 본문, 바닥글.
- */
+/** Screen frame with header, main and optional footer. */
 export function Shell({ header, footer, width = 'normal', compact_header = false, children }: ShellProps) {
   const main_class = width === 'normal' ? 'shell-main' : `shell-main ${width}`;
   return (
@@ -106,18 +92,16 @@ interface StepShellProps {
   screen: Screen;
   on_prev: () => void;
   on_next: () => void;
-  /** 다음 단추 글. 없으면 "다음" */
+  /** Next button label; defaults to the common "next" text. */
   next_label?: string;
   next_disabled?: boolean;
-  /** 바닥글 가운데 안내. 없으면 자동 저장 안내 */
+  /** Footer center hint; defaults to the autosave hint. */
   footer_hint?: ReactNode;
   width?: 'normal' | 'wide' | 'wider';
   children: ReactNode;
 }
 
-/**
- * 2~6단계가 함께 쓰는 틀: 앱 이름, 단계 점, DI Lab 표시, 이전·다음 단추.
- */
+/** Frame for steps 2-6: brand, step dots, DI Lab badge, prev/next buttons. */
 export function StepShell({ screen, on_prev, on_next, next_label, next_disabled, footer_hint, width, children }: StepShellProps) {
   const t = useT();
   return (
