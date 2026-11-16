@@ -55,7 +55,6 @@ npm run dev
 | `npm run screenshots` | 화면 사진을 찍어요. 먼저 `npm run build` 후 `npx vite preview --port 4173`을 띄워 두고, `SHOT_LANG=ko`와 `SHOT_LANG=en`으로 한 번씩 돌려요. `docs/images/ko/`, `docs/images/en/`에 같은 이름으로 들어가고, 휴대폰 크기(390x844) 사진 `phone.png`도 찍어요. |
 | `npm run demo-gif` | 연습 모드로 책 한 권을 만들며 움직이는 시연 `docs/images/ko/demo.gif`, `docs/images/en/demo.gif`를 만들어요. 빌드하고 미리보기 서버(포트 4174)를 스스로 띄워요. Playwright로 장면을 찍고 순수 JS 인코더(`gifenc`)로 묶어요. 길이 12~20초, 5MB 이하가 아니면 실패해요. |
 | `npm run social-card` | 저장소 소개 카드 `docs/images/social-preview.png`(1280x640)를 HTML로 그려 찍고, 같은 그림을 링크 미리보기용 `public/og-image.png`로도 넣어요. 글자가 가장자리 80px 안쪽에 있는지 확인해요. |
-| `CLAUDE_BRIDGE=1 npx playwright test e2e/claude-subscription.spec.ts` | 앱이 `api.anthropic.com`으로 보내는 요청을 가로채서, 이 컴퓨터의 Claude Code(`claude -p`, 구독)로 실제 Claude가 답을 만들게 해요. 요청 모양과 실제 Claude가 만든 글을 앱이 읽을 수 있는지 확인해요. 진짜 서버가 요청을 받아 주는지는 알 수 없어요(그것은 `real-api.spec.ts`가 봐요). `CLAUDE_BRIDGE=1`이 없으면 건너뛰어요. |
 | `npx playwright test e2e/live-cors.spec.ts` | 키 없이 실제 서버로 보내는 브라우저 검사. 세 회사 연결부가 실제로 보내는 주소, 머리글, 본문 그대로 키 값만 빈 문자열로 바꿔 Playwright Chromium에서 보내요. HTTP 상태(예: 401)를 읽으면 통과이고, 요청 자체가 실패("Failed to fetch")하면 실패예요. 9가지 호출을 봐요. Gemini 키 확인·글·그림, Claude 키 확인·글·글(이어받기를 켠 종류), OpenAI 키 확인·글·그림이에요. 키가 없어서 돈이 들지 않아요. 인터넷이 있어야 하고, tablet 크기에서만 한 번 돌아요. `npm run e2e`에 들어 있어서 GitHub의 "End-to-end tests" 워크플로에서도 돌아요. |
 | `npx playwright test e2e/real-api.spec.ts` | 실제 키로 호출하는 검사. `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` 중 환경 변수에 있는 회사만 돌고, 없는 것은 건너뛰어요. |
 

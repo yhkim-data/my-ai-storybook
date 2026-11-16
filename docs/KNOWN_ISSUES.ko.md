@@ -4,7 +4,7 @@
 
 ## 확인하지 못한 것
 
-- **세 회사 모두 실제 키로 글이나 그림을 받아 보지 못했다.** 만들 때 키가 없었다. 2026-11-16 v1.0.0 공개 때도 환경 변수에 키(`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`)가 없어 실제 키 검사(`e2e/real-api.spec.ts`)를 돌리지 못했다. 그래서 v1.0.0은 사전 릴리스로 냈다. 연결부는 각 회사 공식 문서(2026-11-14)의 요청·응답 모양대로 만들었고, 가짜 네트워크로 검사했다. 2026-11-14에 키 없는 실제 서버 호출 검사(`e2e/live-cors.spec.ts`)가 더해졌다. 이 검사는 요청이 브라우저의 사전 확인(CORS preflight)을 통과하고 서버가 HTTP 상태를 돌려주는 것까지만 본다.
+- **세 회사 모두 실제 키로 글이나 그림을 받아 보지 못했다.** 2026-11-16 v1.0.0 공개 때 환경 변수에 키(`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`)가 없어 실제 키 검사(`e2e/real-api.spec.ts`)를 돌리지 못했다. 그래서 v1.0.0은 사전 릴리스로 냈다. 연결부는 각 회사 공식 문서(2026-11-14)의 요청·응답 모양대로 만들었고, 가짜 네트워크로 검사했다. 2026-11-14에 키 없는 실제 서버 호출 검사(`e2e/live-cors.spec.ts`)가 더해졌다. 이 검사는 요청이 브라우저의 사전 확인(CORS preflight)을 통과하고 서버가 HTTP 상태를 돌려주는 것까지만 본다.
 - **Google Gemini에서 실제 키로 확인이 필요한 것:**
   - 그림 AI가 `safety_settings`를 받는지. 받지 않으면 그 값을 빼고 한 번 다시 보내게 해 두었다.
   - 그림이 막혔을 때 응답이 문서의 오류 코드대로 오는지.
@@ -14,15 +14,12 @@
   - 진짜 서버가 요청 모양(`output_config.format`, 이어받기 `fallbacks`와 beta 꼬리표)을 받아 주는지.
   - 브라우저에서 직접 부르는 것이 허용되는지. 조직 설정에 따라 막힌 조직이 있다고 문서에 있다(응답 401, "CORS requests are not allowed for this Organization"). 이 문구가 있으면 앱은 "키가 맞지 않아요" 대신 "브라우저 사용이 꺼져 있어요"라고 따로 안내한다(`browser_blocked`).
   - 배열 길이 제한 없이도 쪽 수가 맞게 오는지. 어긋나면 한 번 다시 요청한다.
-- `CLAUDE_BRIDGE=1 npx playwright test e2e/claude-subscription.spec.ts`는 요청 모양과 실제 Claude가 만든 글이 앱에서 읽히는지만 확인한다. 진짜 서버가 요청을 받아 주는지는 확인하지 못한다. 이 검사의 결과는 아래에 적는다.
-  - 2026-11-14 결과: 통과. 가짜 Claude 키로 연결 확인, 줄거리 3개, 본문 4쪽 글이 실제 Claude(`claude-opus-5-5`, Claude Code 구독)의 답으로 채워졌다. 앱이 보낸 요청의 머리글과 본문 모양, 스키마 제한(배열 길이 제한 없음, `additionalProperties: false`)에도 문제가 없었다.
-  - 그 뒤 기본 글 AI가 `claude-haiku-5-5`로 바뀌었다. 바뀐 기본값으로는 실제 답을 받아 보지 않았다.
 - **OpenAI에서 실제 키로 확인이 필요한 것:**
   - 글 요청(`/v1/responses`)과 그림 요청(`/v1/images/generations`)이 문서의 모양대로 받아들여지는지, 오류 코드가 문서대로 오는지.
 - 키가 있으면 `e2e/real-api.spec.ts`로 실제 호출 검사를 돌릴 수 있다. `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` 중 있는 것만 돈다. 예: `ANTHROPIC_API_KEY=... npx playwright test e2e/real-api.spec.ts`
 - 무료 한도의 분당·하루 횟수는 공식 문서에 숫자가 없어서 적지 못했다. Gemini는 Google AI Studio에서 확인해야 한다. OpenAI는 무료 한도가 문서에 없다. Claude는 무료 한도가 없다.
 - OpenAI 그림 값은 장당이 아니라 토큰당(그림 출력 100만 토큰당 $30)이고 장당 값은 문서에 없어서, OpenAI로 책 한 권을 만드는 비용은 계산하지 못했다. Claude는 글만이라 책 한 권에 약 0.002달러다(기본 종류, `PROVIDER_NOTES.md` 8장).
-- Claude는 기관용 안내와 약관을 읽었다(2026-11-14). 키에 적용되는 상업 서비스 약관에는 나이 조항이 없고, 18세 이상 조건은 개인용 서비스 약관에 있다(`PROVIDER_NOTES.md` 8장). OpenAI는 18세 미만 API 안내를 읽었고, 약관은 자동 도구로는 HTTP 403이 나서 사람이 브라우저로 한국어판을 읽었다(2026-11-14). API에 적용되는 서비스 계약은 부모나 법정대리인의 동의 없이 미성년자가 쓰게 하는 것을 금지한다(`PROVIDER_NOTES.md` 9장). 영어 원문은 확인하지 못했다.
+- Claude는 기관용 안내와 약관을 읽었다(2026-11-14). 키에 적용되는 상업 서비스 약관에는 나이 조항이 없고, 18세 이상 조건은 개인용 서비스 약관에 있다(`PROVIDER_NOTES.md` 8장). OpenAI는 18세 미만 API 안내와 약관 한국어판을 확인했다(2026-11-14). API에 적용되는 서비스 계약은 부모나 법정대리인의 동의 없이 미성년자가 쓰게 하는 것을 금지한다(`PROVIDER_NOTES.md` 9장). 영어 원문은 확인하지 못했다.
 - Claude와 OpenAI가 입력한 내용을 어떻게 쓰는지, 결과물의 권리는 약관 원문을 확인하지 못했다.
 - 자동 검사는 Chromium에서만 돌렸다. Safari와 Firefox는 직접 써 보지 않았다. Safari에서는 쪽을 그림으로 바꿀 때 처음 한 번 그림이 빠지는 일이 있다고 알려져 있다. 그럴 때는 받기 단추를 한 번 더 누른다.
 

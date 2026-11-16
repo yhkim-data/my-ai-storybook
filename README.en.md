@@ -114,10 +114,6 @@ For fonts, the AI notice, and what to watch for when you use someone else's pict
 
 We test it at tablet and phone screen sizes. Moving and resizing text boxes is easier on a bigger screen.
 
-## How it was built
-
-Claude Code built this tool from one instruction file. The instruction file, the screen mockups, the helper-agent definitions, and what a person did and what Claude Code did are in [How it was built](docs/how-it-was-built/README.en.md).
-
 ## For developers
 
 You need Node 20 or newer.
