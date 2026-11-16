@@ -1,11 +1,11 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
-/** GitHub Pages serves the app under the repository name. */
-const REPO_BASE = '/my-ai-storybook/';
+/** Relative base so one build works at any path (a custom domain root or a /my-ai-storybook/ subpath). */
+const RELATIVE_BASE = './';
 
 export default defineConfig({
-  base: REPO_BASE,
+  base: RELATIVE_BASE,
   plugins: [react()],
   test: {
     environment: 'jsdom',

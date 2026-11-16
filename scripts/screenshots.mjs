@@ -6,7 +6,7 @@ import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const BASE_URL = process.env.SHOT_URL ?? 'http://localhost:4173/my-ai-storybook/';
+const BASE_URL = process.env.SHOT_URL ?? 'http://localhost:4173/';
 const LANG = process.env.SHOT_LANG ?? 'ko';
 const OUT_DIR = process.env.SHOT_DIR ?? `docs/images/${LANG}`;
 const WIDTH = Number(process.env.SHOT_WIDTH ?? 1280);
