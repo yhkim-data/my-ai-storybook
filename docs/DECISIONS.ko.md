@@ -74,5 +74,7 @@
 
 ## 배포
 
-- 이 GitHub 계정에는 사용자 도메인(di-lab.io)이 걸려 있어서, 바로 써보기 주소는 `https://di-lab.io/my-ai-storybook/`다. `https://yhkim-data.github.io/my-ai-storybook/`로 열어도 그 주소로 넘어간다.
+- 바로 써보기 주소는 전용 주소 `https://storybook.di-lab.io/`다(2026-11-16부터). 전에는 `di-lab.io` 아래 `/my-ai-storybook/` 경로였는데, 그 경로는 `di-lab.io`의 다른 페이지와 브라우저 저장 공간을 함께 써서, 홈페이지나 다른 프로젝트에 외부 코드가 들어오면 이 도구에 저장된 키를 읽을 수 있었다. 전용 주소로 옮겨 저장 공간을 분리했다.
+- 옛 경로와 `yhkim-data.github.io` 아래 경로는 GitHub Pages가 새 주소로 넘긴다(301, 물음표 뒤의 값 유지).
+- 같은 빌드가 어느 경로에서든 열리도록 Vite `base`를 상대 경로(`./`)로 둔다.
 - 2026-11-14에 이 저장소의 GitHub Pages "HTTPS 강제"를 켰다(`gh api -X PUT repos/yhkim-data/my-ai-storybook/pages -F https_enforced=true`, 조회 결과 `https_enforced: true`). 사용자 도메인 `di-lab.io`가 걸린 `yhkim-data/yhkim-data.github.io` 저장소는 이미 켜져 있었다.

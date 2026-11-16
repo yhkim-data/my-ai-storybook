@@ -12,7 +12,7 @@ A browser-based tool for making short picture books. No installation or sign-up 
 
 ## Try it now
 
-https://di-lab.io/my-ai-storybook/
+https://storybook.di-lab.io/
 
 Open the address in your browser to start. If this is your first visit, press [See a sample] on the start screen to flip through a finished book.
 

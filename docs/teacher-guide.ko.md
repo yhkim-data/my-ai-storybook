@@ -2,7 +2,7 @@
 
 [English](teacher-guide.en.md) | **한국어**
 
-이 안내서는 "나만의 AI 동화책"을 수업에 활용하려는 선생님을 위한 문서입니다. 바로 써보기: https://di-lab.io/my-ai-storybook/
+이 안내서는 "나만의 AI 동화책"을 수업에 활용하려는 선생님을 위한 문서입니다. 바로 써보기: https://storybook.di-lab.io/
 
 ## 수업 준비물
 

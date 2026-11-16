@@ -6,7 +6,7 @@ A free tool for making short picture books in your browser. No installation or s
 
 ![새 책 만들기부터 완성까지 보여 주는 시연 / A demo from a new book to the finished book](docs/images/ko/demo.gif)
 
-**바로 써보기 · Try it now:** https://di-lab.io/my-ai-storybook/
+**바로 써보기 · Try it now:** https://storybook.di-lab.io/
 
 ## [한국어 안내 → README.kr.md](README.kr.md)
 
