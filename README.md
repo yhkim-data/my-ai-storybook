@@ -6,7 +6,7 @@
 
 | 시작 | 꾸미기 | 완성 |
 |---|---|---|
-| ![시작 화면](docs/images/start.png) | ![꾸미기 화면](docs/images/editor.png) | ![완성 화면](docs/images/finish.png) |
+| ![시작 화면](docs/images/ko/start.png) | ![꾸미기 화면](docs/images/ko/editor.png) | ![완성 화면](docs/images/ko/finish.png) |
 
 ## 바로 써보기
 
@@ -22,7 +22,7 @@ https://di-lab.io/my-ai-storybook/
 
 화면 위쪽에 8단계가 점으로 보여요. 언제든 앞 단계로 돌아갈 수 있어요. 만드는 동안 자동으로 저장돼요.
 
-![그림 단계](docs/images/pictures.png)
+![그림 단계](docs/images/ko/pictures.png)
 
 ## 키 없이도 되는 것
 
@@ -39,7 +39,7 @@ AI를 연결하고 싶다면 [키 받는 법](docs/key-guide.ko.md)을 읽어 �
 - 잘 모르겠으면 Google Gemini로 시작하세요.
 - Claude는 글만 만들어요. 그림은 만들지 않아요. Claude 키만 있으면 그림은 직접 올리거나, [자세한 설정]에서 그림용 키(Gemini나 OpenAI)를 따로 넣어요.
 
-![AI 연결하기 화면](docs/images/connect.png)
+![AI 연결하기 화면](docs/images/ko/connect.png)
 
 ## 권리 안내
 

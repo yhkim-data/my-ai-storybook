@@ -18,7 +18,9 @@
     "e2e": "playwright test",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
-    "screenshots": "node scripts/screenshots.mjs"
+    "screenshots": "node scripts/screenshots.mjs",
+    "demo-gif": "vite build && node scripts/demo-gif.mjs",
+    "social-card": "node scripts/social-card.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
@@ -42,8 +44,10 @@
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "fake-indexeddb": "^6.2.8",
+    "gifenc": "^1.0.3",
     "globals": "^17.14.0",
     "jsdom": "^29.1.1",
+    "pngjs": "^7.0.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.2",
     "vite": "^8.3.8",

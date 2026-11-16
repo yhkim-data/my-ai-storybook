@@ -1,15 +1,19 @@
 // README와 안내서에 넣을 화면 사진을 찍는다. 연습 모드(가짜 AI 연결부)로 책 한 권을 끝까지 만들면서 찍는다.
 // 쓰는 법: 먼저 `npm run build` 후 `npx vite preview --port 4173`을 띄워 두고 `npm run screenshots`.
-// 환경 변수: SHOT_DIR(저장 폴더, 기본 docs/images), SHOT_WIDTH·SHOT_HEIGHT(화면 크기), SHOT_LANG(ko 또는 en).
+// 환경 변수: SHOT_LANG(ko 또는 en), SHOT_DIR(저장 폴더, 기본 docs/images/언어), SHOT_WIDTH·SHOT_HEIGHT(화면 크기).
+// 마지막에 휴대폰 크기(390×844)로 완성 화면을 한 장 더 찍는다(phone.png).
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const BASE_URL = process.env.SHOT_URL ?? 'http://localhost:4173/my-ai-storybook/';
-const OUT_DIR = process.env.SHOT_DIR ?? 'docs/images';
+const LANG = process.env.SHOT_LANG ?? 'ko';
+const OUT_DIR = process.env.SHOT_DIR ?? `docs/images/${LANG}`;
 const WIDTH = Number(process.env.SHOT_WIDTH ?? 1280);
 const HEIGHT = Number(process.env.SHOT_HEIGHT ?? 820);
-const LANG = process.env.SHOT_LANG ?? 'ko';
+/** 휴대폰 사진 크기 */
+const PHONE_WIDTH = 390;
+const PHONE_HEIGHT = 844;
 
 /** 언어별로 누를 단추 이름과 넣을 글 */
 const WORDS = {
@@ -106,6 +110,10 @@ async function main() {
 
   await page.locator('#author-input').fill(words.author);
   await shoot(page, 'finish');
+
+  await page.setViewportSize({ width: PHONE_WIDTH, height: PHONE_HEIGHT });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await shoot(page, 'phone');
 
   await browser.close();
 }

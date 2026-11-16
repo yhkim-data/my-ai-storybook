@@ -6,7 +6,7 @@ A tool for making a short picture book in your web browser. No install and no si
 
 | Start | Decorate | Finish |
 |---|---|---|
-| ![Start screen](docs/images/start.png) | ![Editor screen](docs/images/editor.png) | ![Finish screen](docs/images/finish.png) |
+| ![Start screen](docs/images/en/start.png) | ![Editor screen](docs/images/en/editor.png) | ![Finish screen](docs/images/en/finish.png) |
 
 ## Try it now
 
@@ -22,7 +22,7 @@ If this is your first time, press [See a sample] on the start screen to flip thr
 
 Eight steps show as dots at the top of the screen. You can go back to an earlier step at any time. Your work saves automatically.
 
-![Pictures step](docs/images/pictures.png)
+![Pictures step](docs/images/en/pictures.png)
 
 ## What works without a key
 
@@ -39,7 +39,7 @@ If you want to connect AI, read [how to get a key](docs/key-guide.en.md).
 - If you are not sure, start with Google Gemini.
 - Claude writes words only. It does not make pictures. With only a Claude key, add your own pictures, or enter a separate key for pictures (Gemini or OpenAI) in [More settings].
 
-![Connect AI screen](docs/images/connect.png)
+![Connect AI screen](docs/images/en/connect.png)
 
 ## Your rights
 
