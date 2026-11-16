@@ -1,4 +1,4 @@
-// 연결 화면 검사 (연습 모드): 빈 칸, 성공, 키 가림, 지우기, 건너뛰기.
+// Connect screen tests in practice mode.
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -9,13 +9,12 @@ import { useSettings } from '../store/settings_store';
 import { ConnectScreen } from './ConnectScreen';
 
 const ko = (key: string, params?: Record<string, string | number>) => translate('ko', key, params);
-/** 검사용 가짜 키. 실제 키가 아니다. */
+/** Fake key for tests, not a real key. */
 const FAKE_KEY = 'FAKE-KEY-for-test-ABCD1234';
-/** 가짜 키의 끝 4자리 */
 const FAKE_TAIL = '1234';
-/** 가짜 키의 회사 이름 (회사 모를 때 Gemini로 본다) */
+/** Keys of unknown shape are treated as Gemini. */
 const FAKE_NAME = 'Google Gemini';
-/** 다른 회사 모양의 가짜 키. 실제 키가 아니다. */
+/** Fake keys shaped like other providers' keys, not real keys. */
 const CLAUDE_FAKE_KEY = 'sk-ant-' + 'test-fake-A1b2';
 const OPENAI_FAKE_KEY = 'sk-' + 'test-fake-A1b2';
 
@@ -26,14 +25,14 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('ConnectScreen', () => {
-  it('빈 칸으로 확인하면 비었다는 안내가 뜬다', async () => {
+  it('shows an empty-input notice when checking an empty field', async () => {
     render(<ConnectScreen />);
     await userEvent.click(screen.getByRole('button', { name: ko('connect.check') }));
     expect(screen.getByRole('alert')).toHaveTextContent(ko('connect.empty'));
     expect(useSettings.getState().text_key).toBe('');
   });
 
-  it('키를 넣고 확인하면 끝 4자리만 보이고 키 전체는 어디에도 없다', async () => {
+  it('shows only the last 4 characters after a check and never the full key', async () => {
     render(<ConnectScreen />);
     await userEvent.type(screen.getByLabelText(ko('connect.key_label')), FAKE_KEY);
     await userEvent.click(screen.getByRole('button', { name: ko('connect.check') }));
@@ -43,20 +42,20 @@ describe('ConnectScreen', () => {
     document.querySelectorAll('input').forEach((input) => expect(input.value).not.toContain(FAKE_KEY));
   });
 
-  it('Enter를 눌러도 확인한다', async () => {
+  it('checks the key on Enter', async () => {
     render(<ConnectScreen />);
     await userEvent.type(screen.getByLabelText(ko('connect.key_label')), `${FAKE_KEY}{Enter}`);
     await waitFor(() => expect(useSettings.getState().text_key).toBe(FAKE_KEY));
   });
 
-  it('저장된 키가 있으면 끝자리만 보여 준다', () => {
+  it('shows only the tail of a saved key', () => {
     useSettings.setState({ text_key: FAKE_KEY });
     render(<ConnectScreen />);
     expect(screen.getByText(ko('connect.saved_tail', { name: FAKE_NAME, tail: FAKE_TAIL }))).toBeInTheDocument();
     expect(document.body.textContent).not.toContain(FAKE_KEY);
   });
 
-  it('키 지우기를 누르면 키가 지워지고 안내가 뜬다', async () => {
+  it('clears the keys and shows a notice', async () => {
     useSettings.setState({ text_key: FAKE_KEY, image_key: FAKE_KEY });
     render(<ConnectScreen />);
     await userEvent.click(screen.getByRole('button', { name: ko('connect.clear') }));
@@ -66,20 +65,20 @@ describe('ConnectScreen', () => {
     expect(screen.queryByText(ko('connect.saved_tail', { name: FAKE_NAME, tail: FAKE_TAIL }))).toBeNull();
   });
 
-  it('건너뛰기를 누르면 돌아갈 화면으로 간다', async () => {
+  it('skip returns to the previous screen', async () => {
     render(<ConnectScreen />);
     await userEvent.click(screen.getByRole('button', { name: ko('connect.skip') }));
     expect(useBook.getState().screen).toBe('seed');
   });
 
-  it('나이 조건 안내와 오늘 쓴 횟수가 보인다', () => {
+  it('shows the age notice and today\'s usage count', () => {
     useSettings.setState({ usage_count: 3 });
     render(<ConnectScreen />);
     expect(screen.getByText(ko('connect.age_line'))).toBeInTheDocument();
     expect(screen.getByTestId('usage-line')).toHaveTextContent(ko('connect.usage', { n: 3 }));
   });
 
-  it('자세한 설정에서 AI 종류를 바꾸고 되돌린다', async () => {
+  it('changes and resets the model in advanced settings', async () => {
     render(<ConnectScreen />);
     await userEvent.click(screen.getByText(ko('connect.details')));
     await userEvent.selectOptions(screen.getByLabelText(ko('connect.text_kind_label')), 'gemini-3.8-flash');
@@ -88,7 +87,7 @@ describe('ConnectScreen', () => {
     expect(useSettings.getState().text_model).toBe('gemini-3.5-flash-lite');
   });
 
-  it('Claude 모양 키를 저장하면 그림 없음 안내가 뜨고 글 AI 종류가 Claude 것이다', async () => {
+  it('a Claude key shows the no-image notice and Claude text models', async () => {
     render(<ConnectScreen />);
     await userEvent.type(screen.getByLabelText(ko('connect.key_label')), CLAUDE_FAKE_KEY);
     await userEvent.click(screen.getByRole('button', { name: ko('connect.check') }));
@@ -99,7 +98,7 @@ describe('ConnectScreen', () => {
     expect(document.querySelector('#image-model-select')).toBeNull();
   });
 
-  it('OpenAI 모양 키는 그림 AI 종류도 OpenAI 것이고 그림 없음 안내가 없다', () => {
+  it('an OpenAI key shows OpenAI image models and no no-image notice', () => {
     useSettings.setState({ text_key: OPENAI_FAKE_KEY });
     render(<ConnectScreen />);
     expect(screen.queryByText(ko('connect.no_image'))).toBeNull();
@@ -107,7 +106,7 @@ describe('ConnectScreen', () => {
     expect(options).toEqual(PROVIDER_INFO.openai.image_choices);
   });
 
-  it('그림용 칸에 Claude 모양 키를 넣으면 경고하고 저장하지 않는다', async () => {
+  it('warns and does not save a Claude key in the image key field', async () => {
     render(<ConnectScreen />);
     await userEvent.click(screen.getByText(ko('connect.details')));
     await userEvent.type(screen.getByLabelText(ko('connect.image_key_label')), CLAUDE_FAKE_KEY);

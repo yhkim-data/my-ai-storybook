@@ -1,4 +1,4 @@
-// 가짜 연결부 검사: 줄거리·쪽, 그림, 실패 흉내, 연결부 고르기, 횟수 세기, 쪽 그림 만들기, 그림 설명.
+// Mock provider tests: plots and pages, images, simulated failures, provider selection, usage count, page images, image prompts.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { build_demo_book } from '../data/demo_book';
 import { USAGE_STORAGE_KEY, useSettings } from '../store/settings_store';
@@ -26,7 +26,7 @@ const IMAGE_REQ: ImageRequest = {
 };
 const PAGE_COUNTS = [4, 6, 8] as const;
 
-/** 설정과 주소를 처음 상태로 돌린다. */
+/** Resets settings and the URL. */
 function reset_all() {
   localStorage.clear();
   window.history.replaceState({}, '', '/');
@@ -34,12 +34,11 @@ function reset_all() {
   useSettings.setState({ lang: 'ko', practice: false, text_key: '', image_key: '', usage_count: 0 });
 }
 
-/** 주소에 실패 흉내 꼬리표를 붙인다. */
 function set_mockfail(kind: string) {
   window.history.replaceState({}, '', `/?mock=1&mockfail=${kind}`);
 }
 
-/** 거절된 약속에서 오류를 꺼낸다. */
+/** Returns the rejection reason, asserting it is a ProviderError. */
 async function catch_error(promise: Promise<unknown>): Promise<ProviderError> {
   const error = await promise.then(
     () => null,
@@ -52,8 +51,8 @@ async function catch_error(promise: Promise<unknown>): Promise<ProviderError> {
 beforeEach(reset_all);
 afterEach(reset_all);
 
-describe('가짜 글 연결부', () => {
-  it('줄거리 3개와 쪽 page_count개를 돌려준다', async () => {
+describe('mock text provider', () => {
+  it('returns 3 plots and page_count pages', async () => {
     const provider = create_mock_text();
     const plots = await provider.suggestPlots(SEED, 'ko');
     expect(plots).toHaveLength(3);
@@ -64,7 +63,7 @@ describe('가짜 글 연결부', () => {
     }
   });
 
-  it('영어도 같은 개수다', async () => {
+  it('returns the same counts in English', async () => {
     const provider = create_mock_text();
     const plots = await provider.suggestPlots(SEED, 'en');
     expect(plots).toHaveLength(3);
@@ -72,8 +71,8 @@ describe('가짜 글 연결부', () => {
   });
 });
 
-describe('가짜 그림 연결부', () => {
-  it('image/svg+xml Blob이고 표지와 본문 그림이 다르다', async () => {
+describe('mock image provider', () => {
+  it('returns an image/svg+xml Blob, different for cover and story pages', async () => {
     const provider = create_mock_image();
     const cover = await provider.generate({ ...IMAGE_REQ, page_index: 0 });
     const story = await provider.generate({ ...IMAGE_REQ, page_index: 1 });
@@ -83,7 +82,7 @@ describe('가짜 그림 연결부', () => {
   });
 });
 
-describe('실패 흉내 (?mockfail)', () => {
+describe('simulated failures (?mockfail)', () => {
   const CASES: [string, ProviderErrorKind][] = [
     ['quota', 'quota_daily'],
     ['rate', 'rate'],
@@ -91,20 +90,20 @@ describe('실패 흉내 (?mockfail)', () => {
     ['network', 'network'],
   ];
 
-  it.each(CASES)('?mockfail=%s: 첫 호출은 %s로 실패하고 두 번째는 성공한다', async (value, kind) => {
+  it.each(CASES)('?mockfail=%s: first call fails with %s, second succeeds', async (value, kind) => {
     set_mockfail(value);
     const text = create_mock_text();
     const first = await catch_error(text.suggestPlots(SEED, 'ko'));
     expect(first.kind).toBe(kind);
     if (kind === 'quota_daily' || kind === 'rate') expect(first.retry_at).toBeGreaterThan(Date.now() - MS_PER_SECOND);
     expect(await text.suggestPlots(SEED, 'ko')).toHaveLength(3);
-    // 그림 쪽도 처음 한 번만 실패한다.
+    // The image provider also fails only the first time.
     const image = create_mock_image();
     expect((await catch_error(image.generate(IMAGE_REQ))).kind).toBe(kind);
     expect((await image.generate(IMAGE_REQ)).type).toBe('image/svg+xml');
   });
 
-  it('reset_mock_failures()로 다시 처음처럼 실패한다', async () => {
+  it('fails again after reset_mock_failures()', async () => {
     set_mockfail('quota');
     const text = create_mock_text();
     await catch_error(text.suggestPlots(SEED, 'ko'));
@@ -113,24 +112,24 @@ describe('실패 흉내 (?mockfail)', () => {
     expect((await catch_error(text.suggestPlots(SEED, 'ko'))).kind).toBe('quota_daily');
   });
 
-  it('꼬리표가 없으면 실패하지 않는다', async () => {
+  it('does not fail without the parameter', async () => {
     expect(await create_mock_text().suggestPlots(SEED, 'ko')).toHaveLength(3);
   });
 });
 
-describe('연결부 고르기', () => {
-  it('get_text_provider: 연습 모드도 키도 없으면 null', () => {
+describe('provider selection', () => {
+  it('get_text_provider: null without practice mode or a key', () => {
     expect(get_text_provider()).toBeNull();
   });
 
-  it('get_text_provider: 연습 모드면 mock-text, 키가 있으면 gemini-text', () => {
+  it('get_text_provider: mock-text in practice mode, gemini-text with a key', () => {
     useSettings.setState({ practice: true });
     expect(get_text_provider()?.id).toBe('mock-text');
     useSettings.setState({ practice: false, text_key: TEST_KEY });
     expect(get_text_provider()?.id).toBe('gemini-text');
   });
 
-  it('get_image_provider: 그림용 키가 없고 글용 키만 있어도 만들어진다', () => {
+  it('get_image_provider: works with only a text key', () => {
     expect(get_image_provider()).toBeNull();
     useSettings.setState({ text_key: TEST_KEY, image_key: '' });
     expect(get_image_provider()?.id).toBe('gemini-image');
@@ -138,7 +137,7 @@ describe('연결부 고르기', () => {
     expect(get_image_provider()?.id).toBe('mock-image');
   });
 
-  it('연결부를 부를 때마다 usage_count가 1씩 늘어난다', async () => {
+  it('increments usage_count by 1 on every provider call', async () => {
     useSettings.setState({ practice: true });
     const text = get_text_provider()!;
     const plots = await text.suggestPlots(SEED, 'ko');
@@ -153,8 +152,8 @@ describe('연결부 고르기', () => {
   });
 });
 
-describe('쪽 그림 만들기', () => {
-  it('연습 모드에서 AI 그림 정보와 data URL을 돌려준다', async () => {
+describe('page image generation', () => {
+  it('returns AI image info and a data URL in practice mode', async () => {
     useSettings.setState({ practice: true });
     const book = build_demo_book('ko');
     const image = await generate_page_image(book, 1);
@@ -165,17 +164,17 @@ describe('쪽 그림 만들기', () => {
     expect(useSettings.getState().usage_count).toBe(1);
   });
 
-  it('연결이 없으면 null이고 호출 횟수가 늘지 않는다', async () => {
+  it('returns null without a connection and does not count usage', async () => {
     expect(await generate_page_image(build_demo_book('ko'), 1)).toBeNull();
     expect(useSettings.getState().usage_count).toBe(0);
   });
 
-  it('없는 쪽 번호는 null이다', async () => {
+  it('returns null for a missing page index', async () => {
     useSettings.setState({ practice: true });
     expect(await generate_page_image(build_demo_book('ko'), 99)).toBeNull();
   });
 
-  it('full_image_prompt에 주인공 카드와 그림체 문장이 들어 있다', () => {
+  it('full_image_prompt includes the hero card and style phrase', () => {
     const book = build_demo_book('ko');
     const prompt = full_image_prompt(book, 1);
     const card = build_hero_card(book.seed, book.lang);

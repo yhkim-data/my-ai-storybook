@@ -1,22 +1,20 @@
-// 설정 저장소. 언어, 키, AI 종류, 오늘 쓴 횟수를 localStorage에만 둔다. 서버로 보내지 않는다.
+// Settings store: language, keys, models and today's usage count. Kept only in localStorage, never sent to a server.
 import { create } from 'zustand';
 import type { Lang } from '../types';
 import { KEY_TAIL_LENGTH } from '../constants';
 import { DEFAULT_IMAGE_MODEL, DEFAULT_TEXT_MODEL } from '../providers/gemini_config';
 
-/** localStorage 항목 이름 */
+/** localStorage keys. */
 export const SETTINGS_STORAGE_KEY = 'storybook.settings';
 export const USAGE_STORAGE_KEY = 'storybook.usage';
-/** 연습 모드(가짜 AI 연결부)를 켜는 주소 꼬리표 */
+/** URL query parameter that enables practice mode (mock AI). */
 const PRACTICE_PARAM = 'mock';
 
-/** 오늘 쓴 횟수 기록 */
 interface UsageRecord {
   date: string;
   count: number;
 }
 
-/** localStorage에 남기는 설정 */
 interface SavedSettings {
   lang: Lang;
   text_key: string;
@@ -26,7 +24,7 @@ interface SavedSettings {
 }
 
 export interface SettingsState extends SavedSettings {
-  /** 연습 모드: 주소에 ?mock=1 이 있으면 가짜 AI 연결부를 쓴다 */
+  /** Practice mode: ?mock in the URL switches to the mock AI providers. */
   practice: boolean;
   usage_count: number;
   set_lang: (lang: Lang) => void;
@@ -38,26 +36,19 @@ export interface SettingsState extends SavedSettings {
   add_usage: () => void;
 }
 
-/**
- * 오늘 날짜를 YYYY-MM-DD로 돌려준다 (이 기기 시간 기준).
- */
+/** Today's date as YYYY-MM-DD in local time. */
 function today_string(): string {
   const now = new Date();
   const pad = (value: number) => String(value).padStart(2, '0');
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-/**
- * 브라우저 언어를 보고 처음 화면 언어를 정한다.
- */
 function detect_lang(): Lang {
   const browser_lang = typeof navigator === 'undefined' ? 'ko' : navigator.language;
   return browser_lang.toLowerCase().startsWith('ko') ? 'ko' : 'en';
 }
 
-/**
- * localStorage에서 설정을 읽는다. 없거나 깨졌으면 기본값을 쓴다.
- */
+/** Reads saved settings, falling back to defaults when missing or corrupt. */
 function read_saved_settings(): SavedSettings {
   const defaults: SavedSettings = {
     lang: detect_lang(),
@@ -75,9 +66,7 @@ function read_saved_settings(): SavedSettings {
   }
 }
 
-/**
- * 오늘 쓴 횟수를 읽는다. 날짜가 바뀌었으면 0이다.
- */
+/** Today's usage count; resets to 0 on a new day. */
 function read_usage_count(): number {
   try {
     const raw = localStorage.getItem(USAGE_STORAGE_KEY);
@@ -89,17 +78,11 @@ function read_usage_count(): number {
   }
 }
 
-/**
- * 주소에 연습 모드 꼬리표가 있는지 본다.
- */
 function read_practice_flag(): boolean {
   if (typeof location === 'undefined') return false;
   return new URLSearchParams(location.search).has(PRACTICE_PARAM);
 }
 
-/**
- * 설정을 localStorage에 쓴다.
- */
 function write_saved_settings(state: SavedSettings): void {
   const saved: SavedSettings = {
     lang: state.lang,
@@ -111,12 +94,11 @@ function write_saved_settings(state: SavedSettings): void {
   try {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(saved));
   } catch {
-    // 저장 공간을 못 쓰는 브라우저에서는 이번 방문 동안만 기억한다.
+    // If storage is unavailable, settings last only for this visit.
   }
 }
 
 export const useSettings = create<SettingsState>((set, get) => {
-  /** 설정 일부를 바꾸고 localStorage에 남긴다. */
   const update = (patch: Partial<SavedSettings>) => {
     set(patch);
     write_saved_settings(get());
@@ -140,33 +122,26 @@ export const useSettings = create<SettingsState>((set, get) => {
         const record: UsageRecord = { date: today_string(), count };
         localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(record));
       } catch {
-        // 횟수를 남기지 못해도 동작에는 문제가 없다.
+        // Failing to persist the count is harmless.
       }
       set({ usage_count: count });
     },
   };
 });
 
-/**
- * 키의 끝 몇 자리만 돌려준다. 화면에는 이것만 보여 준다.
- */
+/** Last few characters of a key; only this part is ever shown on screen. */
 export function key_tail(key: string): string {
   return key.slice(-KEY_TAIL_LENGTH);
 }
 
-/**
- * 그림에 쓸 키를 돌려준다. 그림용 키가 없으면 글용 키를 함께 쓴다.
- */
+/** Key for image calls; falls back to the text key when no image key is set. */
 export function effective_image_key(state: Pick<SettingsState, 'text_key' | 'image_key'>): string {
   return state.image_key || state.text_key;
 }
 
-/** AI 연결 상태: 연습 모드, 연결됨, 연결 안 됨 */
 export type AiStatus = 'practice' | 'on' | 'off';
 
-/**
- * 지금 AI 연결 상태를 돌려준다.
- */
+/** AI connection status: practice mode, connected, or not connected. */
 export function ai_status(state: Pick<SettingsState, 'practice' | 'text_key' | 'image_key'>): AiStatus {
   if (state.practice) return 'practice';
   return state.text_key || state.image_key ? 'on' : 'off';

@@ -1,4 +1,4 @@
-/* 3단계(줄거리) 화면에서만 쓰는 모양 */
+/* Plot screen styles */
 .plot-cards {
   display: flex;
   flex-direction: column;

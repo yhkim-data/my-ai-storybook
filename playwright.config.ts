@@ -1,9 +1,8 @@
-// Playwright 설정: 빌드한 앱을 미리보기 서버로 띄우고 태블릿·휴대폰 크기에서 검사한다.
+// Serves the production build with vite preview and tests at tablet and phone sizes.
 import { defineConfig } from '@playwright/test';
 
-/** 미리보기 서버 포트 */
 const PREVIEW_PORT = 4173;
-/** 앱이 놓이는 경로 (vite.config.ts의 base와 같다) */
+/** Must match `base` in vite.config.ts. */
 const APP_PATH = '/my-ai-storybook/';
 
 export default defineConfig({

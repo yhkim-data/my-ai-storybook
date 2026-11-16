@@ -1,4 +1,4 @@
-/* 시작 화면에서만 쓰는 모양 */
+/* Start screen styles */
 .start-choice-text {
   display: flex;
   flex-direction: column;

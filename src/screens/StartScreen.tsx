@@ -1,4 +1,4 @@
-// 1단계 시작 화면: 새 책, 이어 만들기, 체험판, 파일 불러오기, AI 연결, 권리 안내로 가는 길.
+// Step 1 start screen: new book, resume, demo, open file, AI connection and rights notice.
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Brand, DiLabBadge, MadeByLine, Shell } from '../components/Shell';
 import { Notice } from '../components/Notice';
@@ -10,14 +10,10 @@ import { useBook } from '../store/book_store';
 import { ai_status, useSettings } from '../store/settings_store';
 import './StartScreen.css';
 
-/** 큰 카드 아이콘의 한 변(px) */
+/** Choice card icon side in px. */
 const CHOICE_ICON_SIZE = 44;
-/** 확인 창 제목의 id (aria-labelledby용) */
 const DIALOG_TITLE_ID = 'start-replace-title';
 
-/**
- * 새 책 아이콘 (+).
- */
 function PlusIcon() {
   return (
     <svg className="start-choice-icon" aria-hidden="true" width={CHOICE_ICON_SIZE} height={CHOICE_ICON_SIZE} viewBox="0 0 44 44" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round">
@@ -26,9 +22,6 @@ function PlusIcon() {
   );
 }
 
-/**
- * 이어 만들기 아이콘 (연필).
- */
 function PencilIcon() {
   return (
     <svg className="start-choice-icon" aria-hidden="true" width={CHOICE_ICON_SIZE} height={CHOICE_ICON_SIZE} viewBox="0 0 44 44" fill="none" stroke="#2459C4" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
@@ -38,9 +31,6 @@ function PencilIcon() {
   );
 }
 
-/**
- * 체험판 아이콘 (재생).
- */
 function PlayIcon() {
   return (
     <svg className="start-choice-icon" aria-hidden="true" width={CHOICE_ICON_SIZE} height={CHOICE_ICON_SIZE} viewBox="0 0 44 44" fill="none" stroke="#2459C4" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
@@ -56,9 +46,7 @@ interface ReplaceDialogProps {
   on_close: () => void;
 }
 
-/**
- * 만들던 책이 있을 때 새 책을 시작할지 묻는 확인 창. Esc로 닫힌다.
- */
+/** Asks before replacing a book in progress with a new one. Esc closes it. */
 function ReplaceDialog({ on_keep, on_confirm, on_close }: ReplaceDialogProps) {
   const t = useT();
   const keep_ref = useRef<HTMLButtonElement>(null);
@@ -92,9 +80,7 @@ function ReplaceDialog({ on_keep, on_confirm, on_close }: ReplaceDialogProps) {
   );
 }
 
-/**
- * 시작 화면.
- */
+/** Step 1 start screen. */
 export function StartScreen() {
   const t = useT();
   const lang = useSettings((state) => state.lang);
@@ -108,10 +94,8 @@ export function StartScreen() {
   const [has_load_error, set_has_load_error] = useState(false);
   const file_ref = useRef<HTMLInputElement>(null);
 
-  /** 언어를 한국어와 영어 사이에서 바꾼다. */
   const handle_toggle_lang = () => set_lang(lang === 'ko' ? 'en' : 'ko');
 
-  /** 만들던 책을 읽어 연다. 읽지 못하면 안내를 보여 준다. */
   const handle_resume = async () => {
     try {
       const book = await load_current_book();
@@ -122,30 +106,26 @@ export function StartScreen() {
     }
   };
 
-  /** 새 책 만들기: 만들던 책이 있으면 먼저 묻는다. */
   const handle_new = () => {
     if (has_saved_book) set_is_dialog_open(true);
     else start_new_book(lang);
   };
 
-  /** 확인 창에서 새로 시작한다. 만들던 책을 지운다. */
   const handle_confirm_replace = async () => {
     try {
       await delete_current_book();
     } catch {
-      // 지우지 못해도 새 책은 시작할 수 있다.
+      // A new book can still start even if the old one could not be deleted.
     }
     set_is_dialog_open(false);
     start_new_book(lang);
   };
 
-  /** 확인 창에서 만들던 책을 연다. */
   const handle_keep = () => {
     set_is_dialog_open(false);
     void handle_resume();
   };
 
-  /** 고른 작업 파일을 읽어 연다. 실패하면 안내를 보여 준다. */
   const handle_file = async (event: ChangeEvent<HTMLInputElement>) => {
     const input = event.target;
     const file = input.files?.[0];
@@ -157,7 +137,7 @@ export function StartScreen() {
     } catch {
       set_has_load_error(true);
     } finally {
-      // 같은 파일을 다시 골라도 반응하도록 비운다.
+      // Reset so picking the same file again still fires change.
       input.value = '';
     }
   };

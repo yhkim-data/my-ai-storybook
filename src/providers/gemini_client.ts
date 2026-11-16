@@ -1,4 +1,4 @@
-// Gemini Interactions API를 브라우저에서 직접 부르는 얇은 층. 제공사 주소 외에는 요청을 보내지 않는다.
+// Thin layer that calls the Gemini Interactions API straight from the browser. Requests go only to the provider's origin.
 import { RATE_LIMIT_WAIT_SECONDS } from '../constants';
 import {
   BLOCKED_ERROR_CODES,
@@ -20,7 +20,7 @@ const HTTP_PAYMENT_REQUIRED = 402;
 const HTTP_FORBIDDEN = 403;
 const HTTP_TOO_MANY = 429;
 
-/** 응답의 내용 조각: 글 또는 그림 */
+/** One piece of response content: text or an image. */
 interface ContentBlock {
   type?: string;
   text?: string;
@@ -28,7 +28,7 @@ interface ContentBlock {
   mime_type?: string;
 }
 
-/** Interactions API 응답에서 쓰는 부분 */
+/** The parts of the Interactions API response that we read. */
 interface InteractionResponse {
   status?: string;
   steps?: { type?: string; content?: ContentBlock[] }[];
@@ -36,7 +36,7 @@ interface InteractionResponse {
 }
 
 /**
- * 하루 한도가 풀리는 다음 시각(태평양 시간 자정)을 ms로 돌려준다.
+ * Returns the next daily quota reset (midnight Pacific time) as epoch ms.
  */
 export function next_quota_reset(now: Date = new Date()): number {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -53,7 +53,7 @@ export function next_quota_reset(now: Date = new Date()): number {
 }
 
 /**
- * HTTP 상태와 오류 코드를 보고 쉬운 오류 종류로 바꾼다.
+ * Maps an HTTP status and error code to a simple error kind.
  */
 export function to_provider_error(http_status: number, code: string, message: string): ProviderError {
   const lower_code = code.toLowerCase();
@@ -79,9 +79,6 @@ export function to_provider_error(http_status: number, code: string, message: st
   return new ProviderError('unknown', null, message);
 }
 
-/**
- * 오류 응답 본문에서 코드와 설명을 꺼낸다.
- */
 async function read_error_body(response: Response): Promise<{ code: string; message: string }> {
   try {
     const body = (await response.json()) as InteractionResponse & { error?: { status?: string } };
@@ -95,9 +92,7 @@ async function read_error_body(response: Response): Promise<{ code: string; mess
   }
 }
 
-/**
- * fetch를 부르고, 연결이 끊겼으면 network 오류로 바꾼다.
- */
+/** Calls fetch and turns a dropped connection into a network error. */
 async function safe_fetch(url: string, init: RequestInit): Promise<Response> {
   try {
     return await fetch(url, init);
@@ -107,7 +102,7 @@ async function safe_fetch(url: string, init: RequestInit): Promise<Response> {
 }
 
 /**
- * Interactions API를 부르고, 모델이 만든 내용 조각들을 돌려준다.
+ * Calls the Interactions API and returns the content blocks the model produced.
  */
 export async function call_interactions(
   api_key: string,
@@ -137,7 +132,7 @@ export async function call_interactions(
 }
 
 /**
- * 키가 맞는지 확인한다. 글이나 그림을 만들지 않고 목록만 조회한다.
+ * Checks the key by listing models, so no text or image is generated.
  */
 export async function check_api_key(api_key: string): Promise<ConnectionResult> {
   try {
@@ -145,7 +140,7 @@ export async function check_api_key(api_key: string): Promise<ConnectionResult> 
     if (response.ok) return { ok: true };
     const { code, message } = await read_error_body(response);
     const error = to_provider_error(response.status, code, message);
-    // 키 확인에서 400·403은 대부분 틀린 키다.
+    // During a key check, a 400 or 403 almost always means a wrong key.
     const reason = error.kind === 'unknown' || error.kind === 'no_permission' ? 'bad_key' : error.kind;
     return { ok: false, reason };
   } catch (cause) {

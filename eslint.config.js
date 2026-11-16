@@ -1,4 +1,3 @@
-// ESLint 설정: TypeScript 권장 규칙과 React 훅 규칙을 쓴다.
 import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';

@@ -1,4 +1,4 @@
-// 3단계 줄거리 화면. AI가 줄거리 3개를 제안하면 고르고 고친다. 직접 쓸 수도 있다.
+// Step 3 plot screen: pick and edit one of three AI plots, or write your own.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { StepShell } from '../components/Shell';
@@ -9,15 +9,12 @@ import { make_input_key } from '../store/book_model';
 import { useSettings } from '../store/settings_store';
 import './PlotScreen.css';
 
-/** 직접 쓸 때 줄거리에 붙이는 식별자 */
+/** Plot id used when the user writes the plot. */
 const SELF_PLOT_ID = 'self';
-/** 제목과 줄거리 칸 크기 */
 const TITLE_MAX_LENGTH = 60;
 const SUMMARY_ROWS = 4;
 
-/**
- * 3단계 화면. 줄거리를 고르거나 직접 쓰고 나면 쪽 나누기 화면으로 간다.
- */
+/** Step 3 screen; continues to the page split screen. */
 export function PlotScreen() {
   const t = useT();
   const book = useBook((state) => state.book);
@@ -28,7 +25,7 @@ export function PlotScreen() {
   const [is_busy, set_busy] = useState(false);
   const [error, set_error] = useState<ProviderError | null>(null);
   const [show_need_title, set_show_need_title] = useState(false);
-  // 같은 입력으로 자동 호출을 두 번 하지 않게 막는다 (StrictMode에서도 한 번).
+  // Prevents a second automatic call for the same input, including under StrictMode.
   const requested_ref = useRef(false);
 
   const provider = has_connection ? get_text_provider() : null;
@@ -36,7 +33,6 @@ export function PlotScreen() {
   const write_mode = book?.write_mode ?? 'ai';
   const plots_count = book?.plots.length ?? 0;
 
-  /** 줄거리를 AI에게 한 번 묻고 결과를 책에 저장한다. */
   const run_suggest = useCallback(async () => {
     const text_provider = get_text_provider();
     const current = useBook.getState().book;
@@ -70,10 +66,9 @@ export function PlotScreen() {
   const show_editor = is_self || chosen !== null;
   const need_title = show_need_title && (chosen === null || chosen.title.trim() === '');
 
-  /** 입력을 시작하면 "제목이 비었어요" 안내를 지운다. */
   const clear_need_title = () => set_show_need_title(false);
 
-  /** 제목이나 줄거리를 고칠 때마다 고른 줄거리로 저장한다. */
+  /** Every title or summary edit is saved as the chosen plot. */
   const edit_chosen = (patch: { title?: string; summary?: string }) => {
     clear_need_title();
     choose_plot({
@@ -83,7 +78,6 @@ export function PlotScreen() {
     });
   };
 
-  /** 제목이 있으면 다음 단계로 간다. */
   const handle_next = () => {
     if (!chosen || chosen.title.trim() === '') {
       set_show_need_title(true);
@@ -92,7 +86,6 @@ export function PlotScreen() {
     go('pages');
   };
 
-  /** 줄거리 오류에서 "내가 직접 쓸게요"를 누른다. */
   const switch_to_self = () => {
     set_error(null);
     set_write_mode('self');

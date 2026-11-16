@@ -1,28 +1,24 @@
-// 저장소 소개 카드와 링크 미리보기 그림(1280×640)을 HTML로 그려 Playwright로 찍는다.
-// 쓰는 법: `npm run social-card` (화면 사진 docs/images/ko/editor.png 가 먼저 있어야 한다).
-// 결과: docs/images/social-preview.png, public/og-image.png (같은 그림).
+// Renders the 1280x640 repo social card / link preview image from HTML with Playwright.
+// Usage: `npm run social-card` (needs docs/images/ko/editor.png first).
+// Output: docs/images/social-preview.png and an identical public/og-image.png.
 import { chromium } from '@playwright/test';
 import { copyFileSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const WIDTH = 1280;
 const HEIGHT = 640;
-/** 글자를 두지 않는 가장자리 폭(px) */
+/** Edge margin (px) that must stay free of text, since previews may crop it. */
 const SAFE_MARGIN = 80;
 const SHOT_PATH = join('docs', 'images', 'ko', 'editor.png');
 const OUT_PATH = join('docs', 'images', 'social-preview.png');
 const OG_PATH = join('public', 'og-image.png');
 
-/**
- * 글꼴 파일을 data 주소로 바꾼다. 찍는 HTML이 바깥 파일을 읽지 않게 하려는 것이다.
- */
+/** Inlines a font as a data URL so the rendered HTML loads no external files. */
 function font_url(name) {
   return `data:font/woff2;base64,${readFileSync(join('public', 'fonts', name)).toString('base64')}`;
 }
 
-/**
- * 카드 HTML을 만든다. 색은 앱의 공통 색과 같다.
- */
+/** Colors match the app's shared palette. */
 function card_html() {
   const shot = `data:image/png;base64,${readFileSync(SHOT_PATH).toString('base64')}`;
   return `<!doctype html><html><head><meta charset="utf-8"><style>
@@ -51,9 +47,7 @@ h1{font-family:'Gowun Dodum',sans-serif;font-weight:400;font-size:64px;line-heig
 </body></html>`;
 }
 
-/**
- * 카드를 찍고, 글자가 모두 가장자리 안쪽에 있는지 확인한 뒤 두 곳에 저장한다.
- */
+/** Renders the card, fails if any text lies inside the safe margin, then saves both copies. */
 async function main() {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: 1 });

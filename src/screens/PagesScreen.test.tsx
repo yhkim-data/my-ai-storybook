@@ -1,4 +1,4 @@
-// 4단계 쪽 나누기 화면 검사: 쪽 나누기 1회, 다시 그릴 때 호출 없음, 글 고치기, 직접 쓰기, 한도 초과 안내.
+// Step 4 page split screen tests.
 import { StrictMode } from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -12,13 +12,12 @@ import type { Book, PageCount } from '../types';
 import { PagesScreen } from './PagesScreen';
 
 const ko = (key: string) => translate('ko', key);
-/** 검사에서 쓰는 본문 쪽수 */
 const PAGE_COUNT: PageCount = 4;
-/** 본문 글 칸을 찾는 이름 (1쪽 글, 2쪽 글, ...) */
+/** Matches the Korean per-page labels ("page 1 text", "page 2 text", ...). */
 const TEXT_LABEL = /쪽 글$/;
 const DESC_LABEL = /쪽 그림 설명$/;
 
-/** 고른 줄거리가 있는 책을 준비한다. */
+/** Prepares a book with a chosen plot. */
 function prepare_store(patch: Partial<Book> = {}): void {
   useSettings.setState({ lang: 'ko', practice: true, text_key: '' });
   const plot = get_sample_plots('ko', '토리')[0] ?? null;
@@ -33,7 +32,6 @@ function prepare_store(patch: Partial<Book> = {}): void {
 
 const usage = () => useSettings.getState().usage_count;
 
-/** 지금 책을 읽는다. */
 function current_book(): Book {
   const book = useBook.getState().book;
   if (!book) throw new Error('책이 없어요');
@@ -51,7 +49,7 @@ describe('PagesScreen', () => {
     reset_mock_failures();
   });
 
-  it('연습 모드로 들어오면 쪽 칸이 쪽수만큼 생기고 호출은 1회다 (StrictMode 포함)', async () => {
+  it('practice mode creates one field per page with a single call, even under StrictMode', async () => {
     prepare_store();
     const before = usage();
     render(
@@ -65,7 +63,7 @@ describe('PagesScreen', () => {
     expect(current_book().pages).toHaveLength(PAGE_COUNT + 1);
   });
 
-  it('쪽이 이미 있으면 다시 그려도 호출하지 않고 쪽 글을 지킨다', async () => {
+  it('does not call again on re-render when pages exist and keeps their text', async () => {
     prepare_store();
     const first = render(<PagesScreen />);
     await screen.findAllByLabelText(TEXT_LABEL);
@@ -78,7 +76,7 @@ describe('PagesScreen', () => {
     expect(current_book().pages[1]?.text).toBe(kept_text);
   });
 
-  it('글을 고치면 book.pages의 글이 바뀐다', async () => {
+  it('editing updates the text in book.pages', async () => {
     prepare_store();
     render(<PagesScreen />);
     const inputs = await screen.findAllByLabelText(TEXT_LABEL);
@@ -89,7 +87,7 @@ describe('PagesScreen', () => {
     expect(current_book().pages[1]?.image_prompt).toBe('새 그림 설명');
   });
 
-  it('직접 쓰기 상태에서는 호출 없이 빈 칸이 쪽수만큼 보인다', () => {
+  it('self-writing mode shows one empty field per page without a call', () => {
     prepare_store({ write_mode: 'self' });
     const before = usage();
     render(<PagesScreen />);
@@ -100,7 +98,7 @@ describe('PagesScreen', () => {
     expect(usage() - before).toBe(0);
   });
 
-  it('한도 초과 오류가 나면 쉬운 안내가 보인다', async () => {
+  it('shows a friendly notice on a quota error', async () => {
     window.history.pushState({}, '', '/?mockfail=quota');
     prepare_store();
     render(<PagesScreen />);
@@ -108,7 +106,7 @@ describe('PagesScreen', () => {
     expect(screen.getByRole('button', { name: ko('plot.self') })).toBeInTheDocument();
   });
 
-  it('"다시 나눠 달라고 하기"를 누르면 호출이 1회 더 늘고 글이 새 글로 바뀐다', async () => {
+  it('"split again" makes one more call and replaces the text', async () => {
     prepare_store();
     render(<PagesScreen />);
     const inputs = await screen.findAllByLabelText(TEXT_LABEL);

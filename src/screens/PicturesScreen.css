@@ -143,7 +143,7 @@
     max-width: none;
     min-width: 0;
   }
-  /* 작은 화면에서는 쪽 목록을 가로로 넘겨 보는 한 줄로 바꾼다. */
+  /* Small screens turn the page list into one horizontally scrolling row. */
   .pic-list {
     min-width: 0;
     flex-direction: row;

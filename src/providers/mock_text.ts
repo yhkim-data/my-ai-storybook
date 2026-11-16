@@ -1,22 +1,16 @@
-// 가짜 글 연결부. 키 없이 저장소에 넣어 둔 예시 이야기를 돌려준다. 자동 검사와 연습 모드에서 쓴다.
+// Mock text provider. Returns the bundled sample story without a key; used by tests and practice mode.
 import type { Lang, PageDraft, Plot, StorySeed } from '../types';
 import { get_sample_pages, get_sample_plots } from '../data/sample_story';
 import { maybe_fail } from './mock_failure';
 import type { TextProvider } from './types';
 
-/** 기다리는 화면이 보이도록 두는 짧은 시간(ms) */
+/** Short delay in ms so the loading screen is visible. */
 export const MOCK_DELAY_MS = 150;
 
-/**
- * 잠깐 기다린다.
- */
 export function mock_wait(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
 }
 
-/**
- * 가짜 글 연결부를 만든다.
- */
 export function create_mock_text(): TextProvider {
   return {
     id: 'mock-text',

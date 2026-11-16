@@ -1,4 +1,4 @@
-// 글상자를 옮기고 크기를 바꾸는 계산. 쪽 가장자리와 가운데에 자석처럼 붙인다. 단위는 모두 퍼센트(0~100).
+// Text box move/resize math with snapping to page edges and center. All units are percent (0-100).
 import { BOX_MIN_SIZE, SNAP_DISTANCE, SNAP_LINES } from '../constants';
 import type { Rect } from '../types';
 
@@ -6,26 +6,20 @@ const PAGE_MAX = 100;
 const PAGE_CENTER = 50;
 const HALF = 2;
 
-/** 글상자의 네 모서리 */
 export type Corner = 'nw' | 'ne' | 'sw' | 'se';
 
-/** 계산 결과: 새 사각형과, 자석이 붙은 세로선·가로선의 위치 (없으면 null) */
+/** New rect plus the vertical/horizontal snap guide positions (null when not snapped). */
 export interface SnapResult {
   rect: Rect;
   guide_x: number | null;
   guide_y: number | null;
 }
 
-/**
- * 값을 범위 안으로 맞춘다.
- */
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(value, max));
 }
 
-/**
- * 값이 자석 선 가까이에 있으면 그 선을 돌려준다. 없으면 null이다.
- */
+/** Closest snap line within SNAP_DISTANCE, or null. */
 function nearest_line(value: number, lines: number[]): number | null {
   let best: number | null = null;
   for (const line of lines) {
@@ -35,9 +29,7 @@ function nearest_line(value: number, lines: number[]): number | null {
   return best;
 }
 
-/**
- * 한 방향(가로 또는 세로)으로 옮길 때 자석을 적용한다. 앞 가장자리, 뒤 가장자리, 가운데 순으로 본다.
- */
+/** Snaps one axis for a move, checking the leading edge, then the trailing edge, then the center. */
 function snap_axis_move(start: number, length: number): { start: number; guide: number | null } {
   const front = nearest_line(start, SNAP_LINES);
   if (front !== null) return { start: front, guide: front };
@@ -48,9 +40,7 @@ function snap_axis_move(start: number, length: number): { start: number; guide: 
   return { start, guide: null };
 }
 
-/**
- * 글상자를 (dx, dy)만큼 옮긴다. 쪽 밖으로 나가지 않고, 가장자리와 가운데에 붙는다.
- */
+/** Moves a box by (dx, dy), kept inside the page and snapped to edges and center. */
 export function move_box(box: Rect, dx: number, dy: number): SnapResult {
   const snapped_x = snap_axis_move(box.x + dx, box.w);
   const snapped_y = snap_axis_move(box.y + dy, box.h);
@@ -63,9 +53,7 @@ export function move_box(box: Rect, dx: number, dy: number): SnapResult {
   };
 }
 
-/**
- * 한 방향의 크기를 바꾼다. moves_start가 참이면 앞 가장자리를, 아니면 뒤 가장자리를 끈다.
- */
+/** Resizes one axis, dragging the leading edge if moves_start, else the trailing edge. */
 function resize_axis(start: number, length: number, delta: number, moves_start: boolean): { start: number; length: number; guide: number | null } {
   const end = start + length;
   if (moves_start) {
@@ -80,9 +68,7 @@ function resize_axis(start: number, length: number, delta: number, moves_start: 
   return { start, length: next_end - start, guide: next_end === line ? line : null };
 }
 
-/**
- * 모서리를 (dx, dy)만큼 끌어 글상자 크기를 바꾼다. 최소 크기를 지키고, 끄는 가장자리가 자석 선에 붙는다.
- */
+/** Resizes a box by dragging a corner, keeping BOX_MIN_SIZE and snapping the dragged edges. */
 export function resize_box(box: Rect, corner: Corner, dx: number, dy: number): SnapResult {
   const horizontal = resize_axis(box.x, box.w, dx, corner === 'nw' || corner === 'sw');
   const vertical = resize_axis(box.y, box.h, dy, corner === 'nw' || corner === 'ne');

@@ -1,4 +1,4 @@
-// 이어 만들기: 새로고침 뒤에 이어서 열기, 작업 파일을 받았다가 불러오면 같은 책인지, 엉뚱한 파일은 안내가 뜨는지.
+// Resume after reload, project file round-trip, and a clear message for an unrelated file.
 import { expect, test, type Page } from '@playwright/test';
 import {
   SAMPLE_INPUT,
@@ -16,33 +16,27 @@ import {
 } from './helpers';
 
 const LANG: Lang = 'ko';
-/** 연습 모드 기본 책의 전체 쪽수(표지 + 본문 8쪽) */
+/** Cover plus 8 story pages in the default mock book. */
 const BOOK_PAGES = 9;
-/** 쪽 목록에서 글을 비교할 쪽 번호 */
 const COMPARE_INDEX = 2;
 
-/** 작업 파일에서 검사에 쓰는 부분 */
+/** The parts of the project file these tests read. */
 interface SavedBook {
   author: string;
   pages: { text: string; image: { data_url: string } | null }[];
 }
 
-/**
- * 자동 저장이 끝나기를 기다린다.
- */
+/** Waits for autosave to finish. */
 async function wait_saved(page: Page): Promise<void> {
   await expect(page.locator('body')).toHaveAttribute('data-save-state', 'saved');
 }
 
-/**
- * 그림 화면에서 지금 보이는 쪽의 글을 읽는다.
- */
 async function read_picture_text(page: Page): Promise<string> {
   return (await page.locator('.pic-text').innerText()).trim();
 }
 
-test.describe('이어 만들기', () => {
-  test('새로고침 뒤 이어 만들기: 같은 단계에서 글과 그림이 그대로다', async ({ page }) => {
+test.describe('Resume', () => {
+  test('after reload, resume opens the same step with text and pictures intact', async ({ page }) => {
     await go_to_pictures(page, LANG);
     await make_all_pictures(page, LANG);
     await click_by_event(page.locator('.pic-item').nth(COMPARE_INDEX));
@@ -55,7 +49,7 @@ test.describe('이어 만들기', () => {
     await expect(resume).toBeEnabled();
     await resume.click();
 
-    // 같은 단계(그림) 화면이고 모든 쪽에 그림이 있다.
+    // Back on the pictures step with a picture on every page.
     await expect(page.locator('.pic-list')).toBeVisible();
     await expect(page.locator('.pic-item')).toHaveCount(BOOK_PAGES);
     await expect(page.locator('.pic-none')).toHaveCount(0);
@@ -64,7 +58,7 @@ test.describe('이어 만들기', () => {
     await expect(page.locator('.pic-frame img')).toBeAttached();
   });
 
-  test('작업 파일 받기 → 새 책 시작 → 파일 불러오기: 같은 책이 열린다', async ({ page }) => {
+  test('download project file, start a new book, load the file: the same book opens', async ({ page }) => {
     test.slow();
     await go_to_pictures(page, LANG);
     await make_all_pictures(page, LANG);
@@ -80,7 +74,7 @@ test.describe('이어 만들기', () => {
     expect(first_text.length).toBeGreaterThan(0);
     await wait_saved(page);
 
-    // 처음으로 → 새 책 만들기: 만들던 책이 있으니 확인 창이 뜬다.
+    // Home, then new book: a book is in progress, so a confirm dialog appears.
     await exact_button(page, tr(LANG, 'common.home')).click();
     await page.getByRole('button', { name: tr(LANG, 'start.new.title') }).click();
     await exact_button(page, tr(LANG, 'start.replace.confirm')).click();
@@ -88,7 +82,6 @@ test.describe('이어 만들기', () => {
     await exact_button(page, tr(LANG, 'common.prev')).click();
     await expect(page.getByRole('button', { name: tr(LANG, 'start.new.title') })).toBeVisible();
 
-    // 받아 둔 파일을 불러온다.
     await page.getByTestId('file-input').setInputFiles({
       name: work_file.name,
       mimeType: 'application/json',
@@ -104,7 +97,7 @@ test.describe('이어 만들기', () => {
     await expect(page.locator('.book-page img')).toBeAttached();
   });
 
-  test('엉뚱한 파일을 올리면 열 수 없다는 안내가 뜬다', async ({ page }) => {
+  test('loading an unrelated file shows a cannot-open message', async ({ page }) => {
     await open_start(page, LANG);
     await page.getByTestId('file-input').setInputFiles({
       name: 'other.json',

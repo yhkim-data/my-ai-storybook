@@ -1,25 +1,22 @@
-// 직접 코드로 그린 SVG 장면(표지 + 여덟 장면)을 그림체 여섯 가지로 만들어 주는 파일. 외부 그림은 쓰지 않는다.
+// Hand-coded SVG scenes (cover + 8 story scenes) in six styles. No external images.
 import type { StyleId } from '../types';
 
-/** 표지 장면 번호 */
 export const COVER_SCENE_INDEX = 0;
-/** 본문 장면 수 (1~8) */
+/** Story scenes are numbered 1..STORY_SCENE_COUNT. */
 export const STORY_SCENE_COUNT = 8;
 
-/** 그림 한 장의 한 변 길이 */
+/** Canvas side length (SVG user units). */
 const CANVAS = 1024;
-/** 도트 그림의 격자 한 칸 크기 */
+/** Pixel-art cell size (SVG user units). */
 const PIXEL_CELL = 32;
-/** 도트 격자의 가로세로 칸 수 */
 const PIXEL_GRID = CANVAS / PIXEL_CELL;
-/** 도형이 이 크기(칸 수) 이하이면 중심 칸을 반드시 칠한다 */
+/** Shapes this small (in cells) always paint their center cell so they don't vanish. */
 const PIXEL_SMALL_CELLS = 2;
-/** 도형 하나를 그리는 데 쓰는 소수 자릿수 정리용 배수 */
+/** Coordinates are rounded to 1 decimal place. */
 const ROUND_SCALE = 10;
-/** 보이는 이야기 그림의 그림자 색 표시 */
+/** Marker color for ground shadows; only the clay style draws them. */
 const SHADOW_COLOR = 'shadow';
 
-/** 색 이름표 */
 const COLOR = {
   fox: '#f28c28',
   fox_dark: '#7a3b1c',
@@ -55,7 +52,6 @@ const COLOR = {
   flower_yellow: '#ffd23f',
 } as const;
 
-/** 네모 */
 interface RectShape {
   k: 'rect';
   x: number;
@@ -64,7 +60,7 @@ interface RectShape {
   h: number;
   c: string;
 }
-/** 타원 (원도 타원으로 쓴다) */
+/** Ellipse; circles are ellipses too. */
 interface EllShape {
   k: 'ell';
   cx: number;
@@ -73,53 +69,37 @@ interface EllShape {
   ry: number;
   c: string;
 }
-/** 다각형. pts는 x,y,x,y 순서다. */
+/** Polygon; pts is a flat x,y,x,y list. */
 interface PolyShape {
   k: 'poly';
   pts: number[];
   c: string;
 }
-/** 장면을 이루는 도형 */
 type Shape = RectShape | EllShape | PolyShape;
 
-/** 도형을 한 장면으로 모은 목록 */
 type Scene = Shape[];
 
-/**
- * 네모 도형을 만든다.
- */
 function rect(x: number, y: number, w: number, h: number, c: string): Shape {
   return { k: 'rect', x, y, w, h, c };
 }
 
-/**
- * 타원 도형을 만든다.
- */
 function ell(cx: number, cy: number, rx: number, ry: number, c: string): Shape {
   return { k: 'ell', cx, cy, rx, ry, c };
 }
 
-/**
- * 다각형 도형을 만든다.
- */
 function poly(c: string, pts: number[]): Shape {
   return { k: 'poly', pts, c };
 }
 
-/** 별 모양 꼭짓점 수(네 갈래 별은 점 8개) */
+/** A four-pointed star has 8 vertices. */
 const STAR_POINTS = 8;
-/** 별 안쪽 점의 반지름 비율 */
+/** Inner vertex radius as a fraction of the outer radius. */
 const STAR_INNER_RATIO = 0.4;
-/** 한 바퀴(도) */
 const FULL_TURN_DEG = 360;
-/** 평각(도) */
 const HALF_TURN_DEG = 180;
-/** 별 첫 점을 위로 보내는 각도(도) */
+/** Start angle (deg) so the first point faces up. */
 const STAR_START_DEG = -90;
 
-/**
- * 네 갈래 별 도형을 만든다.
- */
 function star(cx: number, cy: number, r: number, c: string): Shape {
   const pts: number[] = [];
   for (let i = 0; i < STAR_POINTS; i += 1) {
@@ -130,9 +110,7 @@ function star(cx: number, cy: number, r: number, c: string): Shape {
   return poly(c, pts);
 }
 
-/**
- * 도형 묶음을 옮기고 키우고(필요하면 좌우로 뒤집어) 새 목록으로 돌려준다.
- */
+/** Translates and scales a shape group, optionally mirroring it horizontally. */
 function place(shapes: Scene, dx: number, dy: number, s: number, flip = false): Scene {
   const mx = (x: number): number => dx + (flip ? -x : x) * s;
   const my = (y: number): number => dy + y * s;
@@ -150,7 +128,7 @@ function place(shapes: Scene, dx: number, dy: number, s: number, flip = false): 
   });
 }
 
-/** 주인공 여우. 발 가운데가 (0,0)이고 오른쪽을 본다. */
+/** Hero fox; origin is between the feet, facing right. */
 const FOX_PARTS: Scene = [
   ell(-25, 2, 110, 14, SHADOW_COLOR),
   ell(-95, -80, 70, 30, COLOR.fox),
@@ -172,7 +150,7 @@ const FOX_PARTS: Scene = [
   poly(COLOR.scarf, [14, -96, 40, -96, 34, -48, 8, -54]),
 ];
 
-/** 친구 파란 새. 발 가운데가 (0,0)이고 오른쪽을 본다. */
+/** Blue bird friend; origin is between the feet, facing right. */
 const BIRD_PARTS: Scene = [
   ell(0, 2, 44, 8, SHADOW_COLOR),
   rect(-12, -14, 6, 14, COLOR.beak),
@@ -186,7 +164,7 @@ const BIRD_PARTS: Scene = [
   ell(38, -76, 4, 5, COLOR.ink),
 ];
 
-/** 집. 바닥 가운데가 (0,0)이다. */
+/** House; origin is the bottom center. */
 const HOUSE_PARTS: Scene = [
   rect(90, -410, 40, 90, '#8a5a44'),
   rect(-180, -260, 360, 260, COLOR.wall),
@@ -197,7 +175,7 @@ const HOUSE_PARTS: Scene = [
   rect(-150, -200, 70, 70, COLOR.window),
 ];
 
-/** 하늘에 뜨는 별 자리 [x, y, 반지름] */
+/** Sky stars as [x, y, radius]. */
 const STAR_FIELD: number[][] = [
   [90, 110, 18],
   [220, 230, 14],
@@ -215,7 +193,7 @@ const STAR_FIELD: number[][] = [
   [560, 340, 12],
 ];
 
-/** 들꽃 자리 [x, y, 색 번호] */
+/** Wildflowers as [x, y, color index]. */
 const FLOWER_SPOTS: number[][] = [
   [90, 760, 0],
   [200, 900, 1],
@@ -227,16 +205,10 @@ const FLOWER_SPOTS: number[][] = [
   [120, 980, 1],
 ];
 
-/**
- * 하늘에 별을 흩뿌린다.
- */
 function star_sky(): Scene {
   return STAR_FIELD.map(([x = 0, y = 0, r = 0]) => star(x, y, r, COLOR.star));
 }
 
-/**
- * 들꽃을 흩뿌린다.
- */
 function flowers(): Scene {
   return FLOWER_SPOTS.flatMap(([x = 0, y = 0, kind = 0]) => [
     ell(x, y, 12, 12, kind === 0 ? COLOR.flower_pink : COLOR.flower_yellow),
@@ -244,9 +216,7 @@ function flowers(): Scene {
   ]);
 }
 
-/**
- * 나무 한 그루를 만든다. base_y는 나무 밑동의 y다.
- */
+/** base_y is the y of the trunk bottom. */
 function tree(x: number, base_y: number, s: number, leaf: string): Scene {
   return [
     rect(x - 16 * s, base_y - 130 * s, 32 * s, 130 * s, COLOR.trunk),
@@ -256,23 +226,14 @@ function tree(x: number, base_y: number, s: number, leaf: string): Scene {
   ];
 }
 
-/**
- * 여우를 놓는다.
- */
 function fox_at(x: number, y: number, s: number, flip = false): Scene {
   return place(FOX_PARTS, x, y, s, flip);
 }
 
-/**
- * 새 친구를 놓는다.
- */
 function bird_at(x: number, y: number, s: number, flip = false): Scene {
   return place(BIRD_PARTS, x, y, s, flip);
 }
 
-/**
- * 구름 하나를 만든다.
- */
 function cloud(x: number, y: number, s: number): Scene {
   return [
     ell(x, y, 80 * s, 28 * s, COLOR.white),
@@ -281,14 +242,11 @@ function cloud(x: number, y: number, s: number): Scene {
   ];
 }
 
-/**
- * 장면 번호별 도형 목록을 만든다.
- */
 function build_scene(index: number): Scene {
   const full = (c: string): Shape => rect(0, 0, CANVAS, CANVAS, c);
   switch (index) {
     case 1:
-      // 아침의 집 앞
+      // Morning in front of the house
       return [
         full(COLOR.sky_day),
         ell(800, 170, 120, 120, '#fff0a8'),
@@ -301,7 +259,7 @@ function build_scene(index: number): Scene {
         ...fox_at(740, 900, 1.3, true),
       ];
     case 2:
-      // 들판 길
+      // Path through the fields
       return [
         full(COLOR.sky_day),
         ell(150, 150, 70, 70, COLOR.sun),
@@ -314,7 +272,7 @@ function build_scene(index: number): Scene {
         ...fox_at(560, 930, 1.3),
       ];
     case 3:
-      // 숲 속
+      // In the forest
       return [
         full('#a8d8a0'),
         rect(0, 640, CANVAS, 384, COLOR.leaf_dark),
@@ -328,7 +286,7 @@ function build_scene(index: number): Scene {
         ...fox_at(520, 930, 1.3),
       ];
     case 4:
-      // 강과 다리
+      // River and bridge
       return [
         full(COLOR.sky_day),
         ...cloud(780, 170, 1),
@@ -345,7 +303,7 @@ function build_scene(index: number): Scene {
         ...fox_at(512, 602, 1),
       ];
     case 5:
-      // 친구를 만남
+      // Meeting the friend
       return [
         full(COLOR.sky_day),
         ell(860, 150, 70, 70, COLOR.sun),
@@ -360,7 +318,7 @@ function build_scene(index: number): Scene {
         ...bird_at(700, 880, 1.8, true),
       ];
     case 6:
-      // 밤 언덕과 별
+      // Night hill and stars
       return [
         full(COLOR.night),
         ell(800, 170, 70, 70, COLOR.moon),
@@ -371,7 +329,7 @@ function build_scene(index: number): Scene {
         ...fox_at(512, 740, 1.3),
       ];
     case 7:
-      // 찾던 것을 발견: 반짝이는 빛
+      // Finding the treasure: a glowing light
       return [
         full('#2a2a62'),
         ...STAR_FIELD.slice(0, 8).map(([x = 0, y = 0, r = 0]) => star(x, y, r, COLOR.star)),
@@ -387,7 +345,7 @@ function build_scene(index: number): Scene {
         ...fox_at(330, 900, 1.4),
       ];
     default:
-      // 해 질 녘 친구와 함께 집으로
+      // Heading home with the friend at sunset
       return [
         rect(0, 0, CANVAS, 300, '#ff9a76'),
         rect(0, 300, CANVAS, 250, '#ffb88a'),
@@ -402,9 +360,6 @@ function build_scene(index: number): Scene {
   }
 }
 
-/**
- * 표지 도형 목록을 만든다. 여우가 가운데 크게 있고 별이 뜬 하늘이다.
- */
 function build_cover(): Scene {
   return [
     rect(0, 0, CANVAS, CANVAS, '#1f2a5c'),
@@ -416,66 +371,48 @@ function build_cover(): Scene {
   ];
 }
 
-/**
- * 장면 번호를 0~8 안으로 맞춘다. 0은 표지, 범위를 벗어난 번호는 1~8로 돌려 쓴다.
- */
+/** 0 stays the cover; any other index wraps into 1..8. */
 function normalize_scene_index(scene_index: number): number {
   const whole = Number.isFinite(scene_index) ? Math.trunc(scene_index) : 1;
   if (whole === COVER_SCENE_INDEX) return COVER_SCENE_INDEX;
   return ((((whole - 1) % STORY_SCENE_COUNT) + STORY_SCENE_COUNT) % STORY_SCENE_COUNT) + 1;
 }
 
-/** 색 값 계산에 쓰는 값 */
 const HEX_RADIX = 16;
 const BYTE_MAX = 255;
+/** Rec. 601 luma weights. */
 const LUMA_R = 0.299;
 const LUMA_G = 0.587;
 const LUMA_B = 0.114;
 
-/**
- * '#rrggbb' 색을 [r, g, b]로 바꾼다.
- */
 function hex_to_rgb(hex: string): [number, number, number] {
   const value = parseInt(hex.slice(1), HEX_RADIX);
   return [(value >> 16) & BYTE_MAX, (value >> 8) & BYTE_MAX, value & BYTE_MAX];
 }
 
-/**
- * [r, g, b]를 '#rrggbb'로 바꾼다.
- */
 function rgb_to_hex(r: number, g: number, b: number): string {
   const part = (n: number): string =>
     Math.max(0, Math.min(BYTE_MAX, Math.round(n))).toString(HEX_RADIX).padStart(2, '0');
   return `#${part(r)}${part(g)}${part(b)}`;
 }
 
-/**
- * 색 a를 색 b 쪽으로 amount(0~1)만큼 섞는다.
- */
+/** Blends color a toward b by amount (0-1). */
 function mix(a: string, b: string, amount: number): string {
   const [ar, ag, ab] = hex_to_rgb(a);
   const [br, bg, bb] = hex_to_rgb(b);
   return rgb_to_hex(ar + (br - ar) * amount, ag + (bg - ag) * amount, ab + (bb - ab) * amount);
 }
 
-/**
- * 색의 밝기(0~1)를 구한다.
- */
+/** Perceived brightness, 0-1. */
 function luminance(hex: string): number {
   const [r, g, b] = hex_to_rgb(hex);
   return (LUMA_R * r + LUMA_G * g + LUMA_B * b) / BYTE_MAX;
 }
 
-/**
- * 소수 한 자리로 정리한 문자열 숫자를 돌려준다.
- */
 function num(n: number): string {
   return String(Math.round(n * ROUND_SCALE) / ROUND_SCALE);
 }
 
-/**
- * 도형 하나를 SVG 요소 문자열로 바꾼다. attrs는 색·선 같은 덧붙일 속성이다.
- */
 function shape_to_element(shape: Shape, attrs: string): string {
   if (shape.k === 'rect') {
     return `<rect x="${num(shape.x)}" y="${num(shape.y)}" width="${num(shape.w)}" height="${num(shape.h)}" ${attrs}/>`;
@@ -490,9 +427,7 @@ function shape_to_element(shape: Shape, attrs: string): string {
   return `<polygon points="${points.join(' ')}" ${attrs}/>`;
 }
 
-/**
- * 점이 도형 안에 있는지 본다.
- */
+/** Point-in-shape test; polygons use even-odd ray casting. */
 function shape_contains(shape: Shape, px: number, py: number): boolean {
   if (shape.k === 'rect') {
     return px >= shape.x && px <= shape.x + shape.w && py >= shape.y && py <= shape.y + shape.h;
@@ -514,9 +449,6 @@ function shape_contains(shape: Shape, px: number, py: number): boolean {
   return inside;
 }
 
-/**
- * 도형을 감싸는 네모 [x1, y1, x2, y2]를 구한다.
- */
 function shape_bounds(shape: Shape): [number, number, number, number] {
   if (shape.k === 'rect') return [shape.x, shape.y, shape.x + shape.w, shape.y + shape.h];
   if (shape.k === 'ell') {
@@ -527,16 +459,11 @@ function shape_bounds(shape: Shape): [number, number, number, number] {
   return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
 }
 
-/**
- * 칸 번호를 격자 안으로 맞춘다.
- */
 function clamp_cell(n: number): number {
   return Math.max(0, Math.min(PIXEL_GRID - 1, n));
 }
 
-/**
- * 도형들을 32px 격자 네모로 바꿔 도트 그림 요소 문자열로 만든다.
- */
+/** Rasterizes shapes onto the pixel grid and merges horizontal runs into rects. */
 function render_pixel_body(shapes: Scene): string {
   const grid: (string | null)[] = new Array<string | null>(PIXEL_GRID * PIXEL_GRID).fill(null);
   for (const shape of shapes) {
@@ -557,7 +484,7 @@ function render_pixel_body(shapes: Scene): string {
         }
       }
     }
-    // 작은 도형(별, 꽃 등)이 사라지지 않도록 중심 칸을 칠한다
+    // Paint the center cell so small shapes (stars, flowers) don't disappear
     const is_small = x2 - x1 <= PIXEL_CELL * PIXEL_SMALL_CELLS && y2 - y1 <= PIXEL_CELL * PIXEL_SMALL_CELLS;
     if (!painted && is_small) {
       const col = clamp_cell(Math.floor((x1 + x2) / 2 / PIXEL_CELL));
@@ -584,7 +511,6 @@ function render_pixel_body(shapes: Scene): string {
   return `<g shape-rendering="crispEdges">${out.join('')}</g>`;
 }
 
-/** 그림체별 설정 값 */
 const WATERCOLOR_WHITE_MIX = 0.45;
 const WATERCOLOR_OPACITY = 0.92;
 const WATERCOLOR_NOISE_FREQ = 0.02;
@@ -610,11 +536,9 @@ const PENCIL_MID_LUMA = 0.65;
 const PENCIL_DARK_GAP = 6;
 const PENCIL_LIGHT_GAP = 12;
 
-/**
- * 그림체 하나로 장면 도형들을 칠한 SVG 안쪽 내용(defs 포함)을 만든다. 도트는 따로 그린다.
- */
+/** Renders the inner SVG (with defs) for every style except pixel. */
 function render_styled_body(shapes: Scene, style_id: Exclude<StyleId, 'pixel'>): string {
-  // 그림자 도형은 점토 그림체에서만 쓴다
+  // Only the clay style draws shadow shapes
   const drawn = style_id === 'clay' ? shapes : shapes.filter((s) => s.c !== SHADOW_COLOR);
 
   if (style_id === 'watercolor') {
@@ -690,7 +614,7 @@ function render_styled_body(shapes: Scene, style_id: Exclude<StyleId, 'pixel'>):
     );
   }
 
-  // 연필 그림체: 회색 선과 빗금
+  // Pencil: gray outlines and hatching
   const body = drawn
     .map((s) => {
       const luma = luminance(s.c);
@@ -710,7 +634,8 @@ function render_styled_body(shapes: Scene, style_id: Exclude<StyleId, 'pixel'>):
 }
 
 /**
- * 장면 번호(0=표지, 1~8)와 그림체로 정사각형 SVG 문자열을 만든다. 범위를 벗어난 번호는 1~8로 돌려 쓴다.
+ * Returns a square SVG for a scene (0 = cover, 1-8 = story) in the given style.
+ * Out-of-range indices wrap into 1-8.
  */
 export function render_scene_svg(scene_index: number, style_id: StyleId): string {
   const index = normalize_scene_index(scene_index);

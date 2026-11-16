@@ -1,4 +1,4 @@
-// 꾸미기 화면의 글상자. 누르면 그 자리에서 글을 고치고, 끌면 옮기고, 모서리를 끌면 크기를 바꾼다.
+// Editor text box: click to edit in place, drag to move, drag a corner to resize.
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { rect_style, text_box_class, text_box_style } from '../components/PageView';
 import { KEY_MOVE_STEP } from '../constants';
@@ -7,13 +7,12 @@ import type { BookPage, Rect } from '../types';
 import { move_box, resize_box, type Corner, type SnapResult } from './geometry';
 
 const PERCENT = 100;
-/** 이만큼(px) 움직여야 끌기로 본다. 그보다 작으면 글을 고치려고 누른 것이다. */
+/** Movement (px) needed to start a drag; anything smaller counts as a click to edit text. */
 const DRAG_THRESHOLD_PX = 5;
 const CORNERS: Corner[] = ['nw', 'ne', 'sw', 'se'];
-/** 키보드로 다루는 크기 손잡이 */
+/** Only this corner handle is keyboard-focusable. */
 const KEYBOARD_RESIZE_CORNER: Corner = 'se';
 
-/** 끌기 한 번의 상태 */
 interface DragState {
   mode: 'move' | Corner;
   start_x: number;
@@ -24,20 +23,17 @@ interface DragState {
 
 interface EditableTextBoxProps {
   page: BookPage;
-  /** 쪽 한 변의 길이(px) */
+  /** Page side length (px). */
   size: number;
-  /** 쪽 이름 (읽어 주는 이름에 쓴다) */
+  /** Page name used in the accessible label. */
   name: string;
   on_text: (text: string) => void;
-  /** 글상자 자리가 바뀔 때. change_key가 같으면 되돌리기 한 단계로 묶인다. */
+  /** Changes with the same change_key are merged into one undo step. */
   on_rect: (rect: Rect, change_key: string) => void;
-  /** 글 고치기를 마쳤을 때 (되돌리기 묶음을 끊는다) */
+  /** Called when text editing ends; closes the current undo group. */
   on_edit_end: () => void;
 }
 
-/**
- * 화살표 키를 (dx, dy) 방향으로 바꾼다. 화살표가 아니면 null이다.
- */
 function arrow_delta(key: string): { dx: number; dy: number } | null {
   if (key === 'ArrowLeft') return { dx: -KEY_MOVE_STEP, dy: 0 };
   if (key === 'ArrowRight') return { dx: KEY_MOVE_STEP, dy: 0 };
@@ -46,28 +42,25 @@ function arrow_delta(key: string): { dx: number; dy: number } | null {
   return null;
 }
 
-/**
- * 고칠 수 있는 글상자. 쪽 위에 얹어서 쓴다.
- */
+/** Editable text box, rendered as an overlay on PageView. */
 export function EditableTextBox({ page, size, name, on_text, on_rect, on_edit_end }: EditableTextBoxProps) {
   const t = useT();
   const box = page.text_box;
   const drag_ref = useRef<DragState | null>(null);
   const [is_dragging, set_is_dragging] = useState(false);
   const [guides, set_guides] = useState<{ x: number | null; y: number | null }>({ x: null, y: null });
-  // 끄는 동안 창에 건 이벤트 처리기가 늘 최신 값을 보도록 ref에 담아 둔다.
+  // Window listeners live for the whole drag, so they read the latest props through a ref.
   const latest = useRef({ size, on_rect, page_id: page.id });
   useEffect(() => {
     latest.current = { size, on_rect, page_id: page.id };
   });
 
-  /** 계산 결과를 책에 반영하고 자석 안내선을 보여 준다. */
   const apply_result = (result: SnapResult, change_key: string) => {
     set_guides({ x: result.guide_x, y: result.guide_y });
     latest.current.on_rect(result.rect, change_key);
   };
 
-  /** 끌기를 시작할 준비를 한다. 실제 끌기는 조금 움직인 뒤에 시작된다. */
+  /** Arms a drag; it only becomes active after moving past DRAG_THRESHOLD_PX. */
   const begin_drag = (event: ReactPointerEvent, mode: DragState['mode']) => {
     if (event.button !== 0) return;
     const drag_id = `${mode}:${latest.current.page_id}:${Date.now()}`;
@@ -79,7 +72,6 @@ export function EditableTextBox({ page, size, name, on_text, on_rect, on_edit_en
       active: false,
     };
 
-    /** 포인터가 움직일 때: 문턱을 넘으면 끌기로 보고 글상자를 옮기거나 크기를 바꾼다. */
     const handle_move = (move_event: PointerEvent) => {
       const drag = drag_ref.current;
       if (!drag) return;
@@ -98,7 +90,6 @@ export function EditableTextBox({ page, size, name, on_text, on_rect, on_edit_en
       apply_result(result, drag_id);
     };
 
-    /** 포인터를 뗄 때: 끌기를 끝내고 창에 건 처리기를 치운다. */
     const handle_up = () => {
       drag_ref.current = null;
       set_is_dragging(false);
@@ -113,7 +104,6 @@ export function EditableTextBox({ page, size, name, on_text, on_rect, on_edit_en
     window.addEventListener('pointercancel', handle_up);
   };
 
-  /** 옮기기 손잡이에서 화살표 키를 누르면 글상자를 옮긴다. */
   const handle_move_key = (event: ReactKeyboardEvent) => {
     const delta = arrow_delta(event.key);
     if (!delta) return;
@@ -121,7 +111,6 @@ export function EditableTextBox({ page, size, name, on_text, on_rect, on_edit_en
     apply_result(move_box(box, delta.dx, delta.dy), `key-move:${page.id}`);
   };
 
-  /** 크기 손잡이에서 화살표 키를 누르면 글상자 크기를 바꾼다. */
   const handle_resize_key = (event: ReactKeyboardEvent) => {
     const delta = arrow_delta(event.key);
     if (!delta) return;

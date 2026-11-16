@@ -1,4 +1,4 @@
-/* 5단계 그림체 화면 모양 */
+/* Style screen styles */
 .style-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -20,7 +20,7 @@
   border: 2px solid var(--primary);
   background: var(--selected-bg);
   color: var(--primary-dark);
-  /* 테두리가 1px 늘어난 만큼 안쪽 여백을 줄여 칸 크기를 지킨다. */
+  /* Padding shrinks by the extra 1px of border so the card size stays the same. */
   padding: 11px;
 }
 .style-sample {

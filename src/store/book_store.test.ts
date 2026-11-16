@@ -1,4 +1,3 @@
-// 책 저장소 검사: 새 책, 쪽 만들기, 쪽수 맞추기, 되돌리기(30단계 이상), 쪽 넣기·옮기기·빼기, 화면 이동.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { HISTORY_LIMIT, LAYOUT_TEXT_RECT } from '../constants';
 import { build_demo_book } from '../data/demo_book';
@@ -6,11 +5,10 @@ import type { BookPage, PageDraft } from '../types';
 import { apply_layout, get_ai_model_names, get_book_title, has_ai_image, make_story_page } from './book_model';
 import { insert_blank_page, move_page, remove_page, useBook } from './book_store';
 
-/** 되돌리기 요구 단계 수 */
+/** Minimum number of undo steps that must work. */
 const REQUIRED_UNDO_STEPS = 35;
 const PLOT = { id: 'plot-1', title: '별을 찾는 곰', summary: '곰이 별을 찾아 떠난다.' };
 
-/** 저장소를 처음 상태로 돌린다. */
 function reset_store() {
   useBook.setState({
     screen: 'start',
@@ -25,22 +23,19 @@ function reset_store() {
   });
 }
 
-/** 쪽 초안 n개를 만든다. */
 function make_drafts(count: number): PageDraft[] {
   return Array.from({ length: count }, (_, index) => ({ text: `글 ${index + 1}`, image_prompt: `그림 ${index + 1}` }));
 }
 
-/** 지금 책의 쪽을 돌려준다. */
 function pages_now(): BookPage[] {
   return useBook.getState().book?.pages ?? [];
 }
 
-/** 1번 쪽의 글을 바꾸는 바꿈 */
+/** Edits the text of page 1. */
 function set_text(text: string, change_key?: string) {
   useBook.getState().edit_pages((pages) => pages.map((page, index) => (index === 1 ? { ...page, text } : page)), change_key);
 }
 
-/** 쪽이 있는 책을 시작 상태로 준비한다. */
 function setup_book_with_pages(page_count = 4) {
   const state = useBook.getState();
   state.start_new_book('ko');
@@ -54,8 +49,8 @@ beforeEach(() => {
   reset_store();
 });
 
-describe('새 책과 쪽 만들기', () => {
-  it('start_new_book 뒤 screen이 seed이고 책이 비어 있다', () => {
+describe('new book and pages', () => {
+  it('start_new_book sets screen to seed with an empty book', () => {
     useBook.getState().start_new_book('en');
     const state = useBook.getState();
     expect(state.screen).toBe('seed');
@@ -64,7 +59,7 @@ describe('새 책과 쪽 만들기', () => {
     expect(state.is_demo).toBe(false);
   });
 
-  it('set_page_drafts가 표지+본문을 만들고 표지 글이 제목이다', () => {
+  it('set_page_drafts builds cover + story pages with the title on the cover', () => {
     setup_book_with_pages(4);
     const pages = pages_now();
     expect(pages).toHaveLength(5);
@@ -75,7 +70,7 @@ describe('새 책과 쪽 만들기', () => {
     expect(useBook.getState().book?.pages_key).toBe('key-1');
   });
 
-  it('ensure_page_count가 쪽수를 늘리고 줄이며 기존 글을 지킨다', () => {
+  it('ensure_page_count grows and shrinks pages and keeps existing text', () => {
     setup_book_with_pages(4);
     useBook.getState().update_seed({ page_count: 6 });
     useBook.getState().ensure_page_count();
@@ -90,14 +85,14 @@ describe('새 책과 쪽 만들기', () => {
     expect(pages_now()[0]?.text).toBe(PLOT.title);
   });
 
-  it('ensure_page_count는 쪽이 없는 책에도 표지를 만든다', () => {
+  it('ensure_page_count creates a cover for a book with no pages', () => {
     useBook.getState().start_new_book('ko');
     useBook.getState().ensure_page_count();
     expect(pages_now()).toHaveLength(useBook.getState().book!.seed.page_count + 1);
     expect(pages_now()[0]?.kind).toBe('cover');
   });
 
-  it('choose_plot이 쪽이 있을 때 표지 제목도 바꾼다', () => {
+  it('choose_plot also updates the cover title when pages exist', () => {
     setup_book_with_pages(4);
     useBook.getState().choose_plot({ id: 'plot-2', title: '새 제목', summary: '요약' });
     expect(pages_now()[0]?.text).toBe('새 제목');
@@ -105,8 +100,8 @@ describe('새 책과 쪽 만들기', () => {
   });
 });
 
-describe('되돌리기와 다시 하기', () => {
-  it('edit_pages 뒤 undo/redo로 상태가 정확히 돌아온다', () => {
+describe('undo and redo', () => {
+  it('undo/redo after edit_pages restores state exactly', () => {
     setup_book_with_pages(4);
     const before = pages_now();
     set_text('고친 글');
@@ -118,7 +113,7 @@ describe('되돌리기와 다시 하기', () => {
     expect(pages_now()).toBe(after);
   });
 
-  it('같은 change_key로 연속 바꾸면 한 단계로 묶인다', () => {
+  it('consecutive changes with the same change_key merge into one step', () => {
     setup_book_with_pages(4);
     const before = pages_now();
     set_text('a', 'text:1');
@@ -129,7 +124,7 @@ describe('되돌리기와 다시 하기', () => {
     expect(pages_now()).toBe(before);
   });
 
-  it('change_key가 다르면 따로 쌓인다', () => {
+  it('different change_keys are separate steps', () => {
     setup_book_with_pages(4);
     set_text('a', 'text:1');
     set_text('b', 'other');
@@ -138,7 +133,7 @@ describe('되돌리기와 다시 하기', () => {
     expect(useBook.getState().undo_stack).toHaveLength(4);
   });
 
-  it('서로 다른 바꿈 35번 뒤 undo 35번으로 처음 상태가 된다', () => {
+  it('35 undos after 35 distinct changes restore the initial state', () => {
     setup_book_with_pages(4);
     const first = pages_now();
     for (let step = 0; step < REQUIRED_UNDO_STEPS; step += 1) set_text(`바꿈 ${step}`, `key-${step}`);
@@ -149,17 +144,17 @@ describe('되돌리기와 다시 하기', () => {
     expect(useBook.getState().redo_stack).toHaveLength(REQUIRED_UNDO_STEPS);
   });
 
-  it('HISTORY_LIMIT을 넘으면 오래된 것부터 버린다', () => {
+  it('drops the oldest entries beyond HISTORY_LIMIT', () => {
     setup_book_with_pages(4);
     const total = HISTORY_LIMIT + 5;
     for (let step = 0; step < total; step += 1) set_text(`바꿈 ${step}`);
     expect(useBook.getState().undo_stack).toHaveLength(HISTORY_LIMIT);
     for (let step = 0; step < total; step += 1) useBook.getState().undo();
-    // 처음 5번의 바꿈은 기록에서 밀려났으므로, 마지막으로 돌아간 상태는 5번째 바꿈 직전("바꿈 4")이다.
+    // The first 5 changes fell out of history, so undo stops at the state before the 5th change.
     expect(pages_now()[1]?.text).toBe('바꿈 4');
   });
 
-  it('새 바꿈을 하면 redo가 비워진다', () => {
+  it('a new change clears redo', () => {
     setup_book_with_pages(4);
     set_text('a');
     set_text('b');
@@ -169,15 +164,15 @@ describe('되돌리기와 다시 하기', () => {
     expect(useBook.getState().redo_stack).toHaveLength(0);
   });
 
-  it('바뀐 것이 없으면(같은 쪽 배열) 기록이 쌓이지 않는다', () => {
+  it('no history entry when nothing changed (same pages array)', () => {
     setup_book_with_pages(4);
     useBook.getState().edit_pages((pages) => pages);
     expect(useBook.getState().undo_stack).toHaveLength(0);
   });
 });
 
-describe('쪽 넣기·옮기기·빼기', () => {
-  it('insert_blank_page가 뒤에 빈 쪽을 넣고, 표지 뒤가 가장 앞이다', () => {
+describe('insert, move and remove pages', () => {
+  it('insert_blank_page inserts after the index, never before the cover', () => {
     setup_book_with_pages(4);
     const pages = pages_now();
     const added = insert_blank_page(pages, 2);
@@ -187,7 +182,7 @@ describe('쪽 넣기·옮기기·빼기', () => {
     expect(insert_blank_page(pages, 0)[1]?.text).toBe('');
   });
 
-  it('move_page: 본문은 옮기고 표지는 못 옮기며 표지 앞으로 못 간다', () => {
+  it('move_page moves story pages but never the cover or before it', () => {
     setup_book_with_pages(4);
     const pages = pages_now();
     const moved = move_page(pages, 2, 4);
@@ -199,7 +194,7 @@ describe('쪽 넣기·옮기기·빼기', () => {
     expect(move_page(pages, 2, pages.length)).toBe(pages);
   });
 
-  it('remove_page: 표지는 못 빼고 본문 한 쪽은 남긴다', () => {
+  it('remove_page keeps the cover and at least one story page', () => {
     setup_book_with_pages(4);
     const pages = pages_now();
     expect(remove_page(pages, 0)).toBe(pages);
@@ -211,15 +206,15 @@ describe('쪽 넣기·옮기기·빼기', () => {
   });
 });
 
-describe('화면 이동', () => {
-  it('go가 단계 화면이면 book.step을 바꾼다', () => {
+describe('navigation', () => {
+  it('go to a step screen updates book.step', () => {
     setup_book_with_pages(4);
     useBook.getState().go('plot');
     expect(useBook.getState().screen).toBe('plot');
     expect(useBook.getState().book?.step).toBe('plot');
   });
 
-  it('go가 곁 화면이면 book.step을 안 바꾼다', () => {
+  it('go to a side screen leaves book.step alone', () => {
     setup_book_with_pages(4);
     useBook.getState().go('pictures');
     useBook.getState().go('connect');
@@ -227,7 +222,7 @@ describe('화면 이동', () => {
     expect(useBook.getState().book?.step).toBe('pictures');
   });
 
-  it('open_side와 close_side가 돌아갈 화면을 기억한다', () => {
+  it('open_side and close_side remember the return screen', () => {
     setup_book_with_pages(4);
     useBook.getState().go('style');
     useBook.getState().open_side('rights');
@@ -236,21 +231,21 @@ describe('화면 이동', () => {
     expect(useBook.getState().screen).toBe('style');
   });
 
-  it('open_book(book, true)는 is_demo와 screen finish이다', () => {
+  it('open_book(book, true) sets is_demo and the finish screen', () => {
     useBook.getState().open_book(build_demo_book('ko'), true);
     expect(useBook.getState().is_demo).toBe(true);
     expect(useBook.getState().screen).toBe('finish');
   });
 
-  it('open_book(book)은 책이 있던 단계로 간다', () => {
+  it('open_book(book) goes to the saved step of the book', () => {
     useBook.getState().open_book({ ...build_demo_book('ko'), step: 'style' });
     expect(useBook.getState().is_demo).toBe(false);
     expect(useBook.getState().screen).toBe('style');
   });
 });
 
-describe('책 도우미', () => {
-  it('has_ai_image와 get_ai_model_names (겹침 제거)', () => {
+describe('book helpers', () => {
+  it('has_ai_image and get_ai_model_names (deduplicated)', () => {
     const book = build_demo_book('ko');
     expect(has_ai_image(book)).toBe(false);
     expect(get_ai_model_names(book)).toEqual([]);
@@ -266,7 +261,7 @@ describe('책 도우미', () => {
     expect(get_ai_model_names(next)).toEqual(['a', 'b']);
   });
 
-  it('get_book_title: 표지 글, 없으면 고른 줄거리 제목, 그것도 없으면 빈 글', () => {
+  it('get_book_title: cover text, then chosen plot title, then empty', () => {
     const book = build_demo_book('ko');
     expect(get_book_title(book)).toBe(book.pages[0]?.text.trim());
     const no_cover_text = { ...book, pages: [{ ...book.pages[0]!, text: '  ' }, ...book.pages.slice(1)] };
@@ -274,7 +269,7 @@ describe('책 도우미', () => {
     expect(get_book_title({ ...no_cover_text, chosen_plot: null })).toBe('');
   });
 
-  it('apply_layout: full이면 바탕이 white가 되고 글상자 자리가 바뀐다', () => {
+  it('apply_layout: full sets a white background and moves the text box', () => {
     const page = make_story_page('글');
     expect(page.text_box.background).toBe('none');
     const full = apply_layout(page, 'full');

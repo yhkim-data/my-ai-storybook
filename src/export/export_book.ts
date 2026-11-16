@@ -1,4 +1,4 @@
-// 내보내기. 쪽을 화면에서 그림으로 바꾼 뒤 PDF나 zip에 넣는다 (한글 글꼴이 깨지지 않게 하기 위해서다).
+// Export. Pages are rendered to images first, then packed into a PDF or zip, so Korean fonts never break.
 import { zipSync } from 'fflate';
 import { toCanvas } from 'html-to-image';
 import { PDFDocument } from 'pdf-lib';
@@ -11,45 +11,37 @@ import { get_book_title } from '../store/book_model';
 import type { Book, FontId } from '../types';
 import { blob_to_data_url } from '../utils/image';
 
-/** 진행 상황을 알리는 함수: (끝난 쪽 수, 전체 쪽 수) */
+/** Progress callback: (pages done, total pages). */
 export type ProgressFn = (done: number, total: number) => void;
 
 const MM_PER_INCH = 25.4;
 const POINTS_PER_INCH = 72;
-/** 인쇄용 해상도 */
 const PRINT_DPI = 300;
-/** 화면용 PDF와 그림 묶음에서 쪽 한 변의 픽셀 수 */
+/** Page side length (px) for the screen PDF and the image zip. */
 const SCREEN_PDF_PX = 1200;
 const ZIP_IMAGE_PX = 1600;
-/** 쪽을 그릴 때 기준으로 삼는 화면 크기(px). 여기에 배율을 곱해 원하는 픽셀 수를 만든다. */
+/** Layout size (px) pages are rendered at; pixelRatio scales it to the target size. */
 const RENDER_BASE_PX = 800;
 const JPEG_QUALITY = 0.92;
-/** 화면 밖에 쪽을 그려 두는 자리 */
+/** Off-screen x position (px) for the render host. */
 const OFFSCREEN_LEFT_PX = -100000;
-/** 파일 이름의 쪽 번호 자릿수 */
 const PAGE_NUMBER_DIGITS = 2;
 
-/** 그림으로 바꿀 때의 설정 */
 interface RenderOptions {
   bleed: boolean;
-  /** 결과 그림 한 변의 픽셀 수 (재단 여백 포함) */
+  /** Output side length (px), including bleed. */
   target_px: number;
   mime_type: 'image/jpeg' | 'image/png';
 }
 
-/** 글꼴 파일을 data URL로 바꿔 둔 것 (한 번만 받는다) */
+/** @font-face CSS with the font inlined as a data URL, fetched once per font. */
 const font_css_cache = new Map<FontId, string>();
 
-/**
- * mm를 PDF 포인트로 바꾼다.
- */
 function mm_to_points(mm: number): number {
   return (mm * POINTS_PER_INCH) / MM_PER_INCH;
 }
 
-/**
- * 글꼴 하나를 그림 안에 심을 수 있는 @font-face 글로 만든다.
- */
+/** Builds an @font-face rule with the font inlined, so it can be embedded in the rendered image. */
 async function load_font_css(font_id: FontId): Promise<string> {
   const cached = font_css_cache.get(font_id);
   if (cached) return cached;
@@ -62,9 +54,7 @@ async function load_font_css(font_id: FontId): Promise<string> {
   return css;
 }
 
-/**
- * 책에 쓰이는 글꼴을 모두 심는 CSS를 만들고, 화면에도 그 글꼴이 준비되게 한다.
- */
+/** Returns embeddable CSS for all book fonts and waits until the document has them loaded too. */
 async function prepare_fonts(): Promise<string> {
   const css_parts = await Promise.all(FONT_IDS.map(load_font_css));
   if (document.fonts) {
@@ -74,9 +64,6 @@ async function prepare_fonts(): Promise<string> {
   return css_parts.join('\n');
 }
 
-/**
- * 요소 안의 그림이 모두 읽힐 때까지 기다린다.
- */
 async function wait_for_images(element: HTMLElement): Promise<void> {
   const images = Array.from(element.querySelectorAll('img'));
   await Promise.all(
@@ -91,9 +78,6 @@ async function wait_for_images(element: HTMLElement): Promise<void> {
   );
 }
 
-/**
- * 캔버스를 파일 바이트로 바꾼다.
- */
 function canvas_to_bytes(canvas: HTMLCanvasElement, mime_type: string): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -110,9 +94,7 @@ function canvas_to_bytes(canvas: HTMLCanvasElement, mime_type: string): Promise<
   });
 }
 
-/**
- * 책의 모든 쪽(표지, 본문, 만든 사람 쪽)을 차례로 그림으로 바꾼다.
- */
+/** Renders every page (cover, story pages, credits) off-screen, one at a time, to image bytes. */
 async function render_book_pages(book: Book, options: RenderOptions, on_progress?: ProgressFn): Promise<Uint8Array[]> {
   const total = book.pages.length + 1;
   on_progress?.(0, total);
@@ -152,15 +134,13 @@ async function render_book_pages(book: Book, options: RenderOptions, on_progress
   return results;
 }
 
-/**
- * 책을 PDF로 만든다. print가 true면 사방 3mm 재단 여백이 든 인쇄용(300dpi 기준)이다.
- */
+/** Exports a PDF. With print, pages get a 3 mm bleed on each side and are rendered at 300 dpi. */
 export async function export_pdf(book: Book, print: boolean, on_progress?: ProgressFn): Promise<Blob> {
   const page_mm = print ? PAGE_MM + BLEED_MM * 2 : PAGE_MM;
   const target_px = print ? Math.round((page_mm / MM_PER_INCH) * PRINT_DPI) : SCREEN_PDF_PX;
   const images = await render_book_pages(book, { bleed: print, target_px, mime_type: 'image/jpeg' }, on_progress);
   const pdf = await PDFDocument.create();
-  // 책은 만든 사람의 것이다. 파일 정보에도 도구 이름을 남기지 않는다.
+  // The book belongs to its author, so the metadata does not name this app.
   pdf.setTitle(get_book_title(book));
   pdf.setAuthor(book.author.trim());
   pdf.setProducer('');
@@ -181,9 +161,7 @@ export async function export_pdf(book: Book, print: boolean, on_progress?: Progr
   return new Blob([pdf_bytes.slice().buffer], { type: 'application/pdf' });
 }
 
-/**
- * 쪽별 PNG를 zip으로 묶는다. 파일 이름은 00-cover, 01, 02, ..., NN-credits 순이다.
- */
+/** Exports one PNG per page in a zip, named 00-cover, 01, 02, ..., NN-credits. */
 export async function export_image_zip(book: Book, on_progress?: ProgressFn): Promise<Blob> {
   const images = await render_book_pages(book, { bleed: false, target_px: ZIP_IMAGE_PX, mime_type: 'image/png' }, on_progress);
   const files: Record<string, Uint8Array> = {};
@@ -192,7 +170,7 @@ export async function export_image_zip(book: Book, on_progress?: ProgressFn): Pr
     const suffix = index === 0 ? '-cover' : index === images.length - 1 ? '-credits' : '';
     files[`${number}${suffix}.png`] = bytes;
   });
-  // PNG는 이미 압축되어 있으므로 다시 압축하지 않는다.
+  // PNGs are already compressed, so store them without recompressing.
   const zipped = zipSync(files, { level: 0 });
   return new Blob([zipped.slice().buffer], { type: 'application/zip' });
 }

@@ -1,4 +1,4 @@
-// Gemini 그림 연결부. 정사각형 그림 한 장을 받아 Blob으로 돌려준다.
+// Gemini image provider. Returns one square image as a Blob.
 import { base64_to_blob, split_data_url } from '../utils/image';
 import { call_interactions, check_api_key } from './gemini_client';
 import {
@@ -11,13 +11,13 @@ import {
 import { build_image_prompt } from './prompts';
 import { ProviderError, type ImageProvider, type ImageRequest } from './types';
 
-/** 참고 그림으로 보낼 수 있는 파일 종류 */
+/** MIME types accepted as a reference image. */
 const REFERENCE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
-/** 안전 설정 때문에 요청이 거절됐는지 알아보는 낱말 */
+/** If an error message contains this, the request was rejected because of the safety settings field. */
 const SAFETY_SETTINGS_FIELD = 'safety_settings';
 
 /**
- * 요청 본문의 input 배열을 만든다. 참고 그림은 지원하는 AI에서만 넣는다.
+ * Builds the request input array. The reference image is included only for models that support it.
  */
 function build_input(req: ImageRequest, use_reference: boolean): object[] {
   const input: object[] = [
@@ -32,15 +32,13 @@ function build_input(req: ImageRequest, use_reference: boolean): object[] {
   return input;
 }
 
-/**
- * 주어진 키와 AI 종류로 Gemini 그림 연결부를 만든다.
- */
+/** Creates a Gemini image provider for the given key and model. */
 export function create_gemini_image(api_key: string, model: string): ImageProvider {
   const supports_reference = REFERENCE_IMAGE_MODELS.includes(model);
 
   /**
-   * 그림 요청을 한 번 보낸다. Api-Revision 머리글은 붙이지 않는다.
-   * Google이 브라우저의 사전 확인(CORS)에서 이 머리글을 거절하고, 2026-06-08부터는 서버가 무시하는 값이다.
+   * Sends one image request without the Api-Revision header: Google rejects it in the browser's
+   * CORS preflight, and the server has ignored it since 2026-06-08.
    */
   const request_image = (req: ImageRequest, with_safety_settings: boolean) =>
     call_interactions(api_key, {
@@ -65,7 +63,7 @@ export function create_gemini_image(api_key: string, model: string): ImageProvid
       try {
         blocks = await request_image(req, true);
       } catch (cause) {
-        // 그림 AI가 안전 설정 값을 받지 않는 경우에만, 그 값을 빼고(제공사 기본값) 한 번 다시 보낸다.
+        // Only if the model rejects the safety settings field, retry once without it (provider defaults).
         const rejected_field = cause instanceof ProviderError && cause.message.includes(SAFETY_SETTINGS_FIELD);
         if (!rejected_field) throw cause;
         blocks = await request_image(req, false);

@@ -1,4 +1,4 @@
-// OpenAI 글 연결부. Responses API에 구조화된 JSON을 요청하고, 형식이 어긋나면 한 번만 다시 요청한다.
+// OpenAI text provider. Asks the Responses API for structured JSON and retries once if the format is wrong.
 import type { Lang, PageDraft, Plot, StorySeed } from '../types';
 import { OPENAI_RESPONSES_URL, check_openai_key, post_openai } from './openai_client';
 import {
@@ -13,14 +13,13 @@ import {
 import { to_strict_schema } from './strict_schema';
 import { ProviderError, type TextProvider } from './types';
 
-/** 형식이 어긋났을 때를 포함해 요청을 보내는 최대 횟수 */
+/** Total attempts, including the one retry after a malformed response. */
 const MAX_FORMAT_ATTEMPTS = 2;
-/** 응답 형식에 붙이는 이름 */
 const FORMAT_NAME = 'storybook';
-/** 안전 장치에 걸려 응답이 끊겼을 때의 이유 */
+/** incomplete_details.reason when the safety filter cut the response off. */
 const CONTENT_FILTER_REASON = 'content_filter';
 
-/** Responses API 응답에서 쓰는 부분 */
+/** The parts of the Responses API response that we read. */
 interface ResponsesBody {
   status?: string;
   incomplete_details?: { reason?: string } | null;
@@ -28,7 +27,7 @@ interface ResponsesBody {
 }
 
 /**
- * 응답에서 글을 꺼낸다. 거절했거나 안전 장치에 걸렸으면 blocked 오류를 던진다.
+ * Extracts the output text. Throws a blocked error on a refusal or a safety-filter cutoff.
  */
 export function read_output_text(body: ResponsesBody): string {
   if (body.incomplete_details?.reason === CONTENT_FILTER_REASON) throw new ProviderError('blocked', null, 'content filter');
@@ -40,9 +39,7 @@ export function read_output_text(body: ResponsesBody): string {
     .join('');
 }
 
-/**
- * JSON 글을 요청하고 읽는다. 읽지 못하면 한 번만 다시 요청한다.
- */
+/** Requests and parses JSON text; retries once if it cannot be parsed. */
 async function request_json<T>(
   api_key: string,
   model: string,
@@ -67,9 +64,7 @@ async function request_json<T>(
   throw new ProviderError('unknown', null, 'bad format');
 }
 
-/**
- * 주어진 키와 AI 종류로 OpenAI 글 연결부를 만든다.
- */
+/** Creates an OpenAI text provider for the given key and model. */
 export function create_openai_text(api_key: string, model: string): TextProvider {
   return {
     id: 'openai-text',

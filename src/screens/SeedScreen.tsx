@@ -1,4 +1,4 @@
-// 2단계 이야기 씨앗 화면. 나이대, 주제, 주인공, 쪽수를 받는다. AI는 부르지 않는다.
+// Step 2 story seed screen: age band, topic, hero and page count. No AI calls.
 import { useState } from 'react';
 import { Notice } from '../components/Notice';
 import { StepShell } from '../components/Shell';
@@ -8,18 +8,14 @@ import { useBook } from '../store/book_store';
 import type { StorySeed } from '../types';
 import './SeedScreen.css';
 
-/** 주인공 이름과 모습의 최대 글자 수 */
+/** In characters. */
 const HERO_NAME_MAX_LENGTH = 20;
 const HERO_LOOK_MAX_LENGTH = 200;
-/** 주인공 모습 칸의 줄 수 */
 const HERO_LOOK_ROWS = 3;
 
-/** 넘어가지 못할 때 보여 주는 안내 종류 */
 type SeedProblem = 'need_topic' | 'need_name' | null;
 
-/**
- * 2단계 화면. 다 채우면 줄거리 화면으로 간다.
- */
+/** Step 2 screen; continues to the plot screen once filled in. */
 export function SeedScreen() {
   const t = useT();
   const book = useBook((state) => state.book);
@@ -32,28 +28,26 @@ export function SeedScreen() {
   const seed = book.seed;
 
   const topic_words = TOPIC_IDS.map((id) => t(`seed.topic.${id}`));
-  // 다섯 낱말에 없는 주제가 이미 있으면 직접 쓰기 상태로 본다.
+  // A saved topic that is not one of the five chip words means custom-topic mode.
   const is_custom = custom_open || (seed.topic !== '' && !topic_words.includes(seed.topic));
 
-  /** 씨앗을 고치고 이전 안내는 지운다. */
   const patch_seed = (patch: Partial<StorySeed>) => {
     set_problem(null);
     update_seed(patch);
   };
 
-  /** 주제 칩을 누르면 번역된 낱말을 주제로 저장한다. */
+  /** Stores the translated chip word as the topic. */
   const pick_topic = (word: string) => {
     set_custom_open(false);
     patch_seed({ topic: word });
   };
 
-  /** "직접 쓸래요"를 누르면 입력 칸을 열고, 칩에서 고른 낱말은 비운다. */
+  /** Opens the custom topic input and clears a topic picked from the chips. */
   const open_custom = () => {
     set_custom_open(true);
     if (topic_words.includes(seed.topic)) patch_seed({ topic: '' });
   };
 
-  /** 빠진 것이 없으면 다음 단계로 간다. */
   const handle_next = () => {
     if (seed.topic.trim() === '') {
       set_problem('need_topic');

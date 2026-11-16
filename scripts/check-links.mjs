@@ -1,40 +1,32 @@
-// README와 docs/ 안의 상대 경로 링크와 그림이 모두 실제 파일을 가리키는지 본다. 하나라도 없으면 실패한다. (npm run check:links)
+// Checks that every relative link and image in README files and docs/ points to an existing file. (npm run check:links)
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
 
-/** 검사할 문서: 맨 위의 Markdown 파일과 docs/ 아래 Markdown 파일 */
+/** Top-level Markdown files and Markdown files under docs/. */
 const DOC_PATTERN = /^([^/]+\.md|docs\/.+\.md)$/;
-/** 링크와 그림 주소를 찾는 모양: [글](주소), ![글](주소), src="주소", href="주소" */
+/** Matches [text](url), ![alt](url), src="url" and href="url". */
 const LINK_PATTERNS = [/!?\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, /\b(?:src|href)="([^"]+)"/g];
-/** 바깥 주소처럼 파일이 아닌 것 (http, mailto, 쪽 안 이동) */
+/** Not a file: any URL scheme (http:, mailto:) or an in-page anchor. */
 const EXTERNAL = /^([a-z][a-z0-9+.-]*:|#)/i;
 
-/**
- * 검사할 문서인지 본다: 맨 위의 Markdown 파일(README.md, README.kr.md, README.en.md 등)과 docs/ 아래 Markdown 파일.
- */
+/** True for top-level Markdown files (README.md, README.kr.md, ...) and Markdown files under docs/. */
 export function is_doc_path(path) {
   return DOC_PATTERN.test(path);
 }
 
-/**
- * git이 관리하거나 관리하게 될 문서 목록을 돌려준다 (.gitignore에 든 것은 뺀다).
- */
+/** Tracked and untracked docs, excluding anything in .gitignore. */
 function list_docs() {
   const output = execSync('git ls-files -co --exclude-standard', { encoding: 'utf8' });
   return output.split('\n').filter(is_doc_path);
 }
 
-/**
- * 코드 블록과 `코드` 안의 글은 링크가 아니므로 지운다.
- */
+/** Text inside code blocks and inline code is not a link, so remove it first. */
 function strip_code(text) {
   return text.replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '');
 }
 
-/**
- * 문서 하나에서 깨진 상대 경로 링크를 찾는다.
- */
+/** Finds relative links in one document that point to missing files. */
 export function find_broken_links(doc_path, text, exists = existsSync) {
   const broken = [];
   const body = strip_code(text);
@@ -51,9 +43,6 @@ export function find_broken_links(doc_path, text, exists = existsSync) {
   return broken;
 }
 
-/**
- * 모든 문서를 검사하고 결과를 알린다.
- */
 function main() {
   const docs = list_docs();
   const broken = docs.flatMap((doc_path) => find_broken_links(doc_path, readFileSync(doc_path, 'utf8')));

@@ -1,24 +1,17 @@
-// 작업 파일(.storybook.json) 내보내기와 불러오기. 그림까지 한 파일에 담는다.
+// Save and load the work file (.storybook.json), images included.
 import { BOOK_FILE_EXTENSION, LAYOUT_IDS, STEP_SCREENS } from '../constants';
 import { get_book_title } from '../store/book_model';
 import type { Book, BookPage } from '../types';
 
-/** 파일 이름에 쓰지 못하는 글자 */
+/** Characters not allowed in file names (whitespace too). */
 const UNSAFE_FILE_CHARS = /[\\/:*?"<>|\s]+/g;
-/** 제목이 없을 때 쓰는 파일 이름 */
 const FALLBACK_FILE_NAME = 'storybook';
 const FILE_NAME_MAX_LENGTH = 40;
 
-/**
- * 책을 작업 파일 글로 바꾼다.
- */
 export function serialize_book(book: Book): string {
   return JSON.stringify(book);
 }
 
-/**
- * 값이 쪽 모양인지 본다.
- */
 function is_book_page(value: unknown): value is BookPage {
   if (typeof value !== 'object' || value === null) return false;
   const page = value as Partial<BookPage>;
@@ -35,9 +28,7 @@ function is_book_page(value: unknown): value is BookPage {
   );
 }
 
-/**
- * 작업 파일 글을 책으로 읽는다. 이 도구의 파일이 아니면 오류를 던진다.
- */
+/** Parses a work file; throws if it is not a storybook file. */
 export function parse_book_file(raw: string): Book {
   const data = JSON.parse(raw) as Partial<Book>;
   const is_valid =
@@ -54,24 +45,17 @@ export function parse_book_file(raw: string): Book {
   return data as Book;
 }
 
-/**
- * 책 제목으로 파일 이름의 앞부분을 만든다.
- */
+/** File name stem derived from the book title. */
 export function book_file_stem(book: Book): string {
   const stem = get_book_title(book).replace(UNSAFE_FILE_CHARS, '_').slice(0, FILE_NAME_MAX_LENGTH);
   return stem.replace(/^_+|_+$/g, '') || FALLBACK_FILE_NAME;
 }
 
-/**
- * 작업 파일 이름을 만든다.
- */
 export function book_file_name(book: Book): string {
   return `${book_file_stem(book)}${BOOK_FILE_EXTENSION}`;
 }
 
-/**
- * Blob을 파일로 내려받게 한다.
- */
+/** Triggers a browser download of blob. */
 export function download_blob(blob: Blob, file_name: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

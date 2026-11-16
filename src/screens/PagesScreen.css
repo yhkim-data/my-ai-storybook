@@ -1,4 +1,4 @@
-/* 4단계(쪽 나누기) 화면에서만 쓰는 모양 */
+/* Page split screen styles */
 .pages-card-name {
   font-size: 18px;
   font-weight: 700;
@@ -14,7 +14,7 @@
   gap: 10px;
 }
 
-/* 넓은 화면에서는 글과 그림 설명을 좌우 두 칸으로 놓는다. */
+/* Wide screens put the text and image description side by side. */
 @media (min-width: 721px) {
   .pages-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

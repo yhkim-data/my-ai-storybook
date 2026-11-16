@@ -1,10 +1,8 @@
-// AI에 보내는 지시문을 만드는 곳. 어린이 안전 규칙을 모든 지시문에 고정한다.
+// Builds the prompts sent to the AI. Every prompt carries the child-safety rules.
 import type { AgeBand, Lang, PageDraft, Plot, StorySeed, StyleId } from '../types';
 
-/** 제안받는 줄거리 수 */
 export const PLOT_SUGGESTION_COUNT = 3;
 
-/** 모든 글 지시문에 붙는 어린이 안전 규칙 */
 const TEXT_SAFETY_RULES: Record<Lang, string> = {
   ko: [
     '너는 어린이용 그림책 작가다.',
@@ -20,13 +18,13 @@ const TEXT_SAFETY_RULES: Record<Lang, string> = {
   ].join(' '),
 };
 
-/** 모든 그림 설명 끝에 붙는 어린이 안전 규칙 */
+/** Appended to the end of every image prompt. */
 const IMAGE_SAFETY_RULES: Record<Lang, string> = {
   ko: '어린이 그림책에 들어갈 정사각형 그림. 그림 안에 글자를 넣지 않는다. 무섭거나 폭력적이거나 선정적인 것은 그리지 않는다. 실제 인물, 기존 캐릭터, 상표는 그리지 않는다.',
   en: "A square illustration for a children's picture book. No text or letters in the picture. Nothing scary, violent, or sexual. No real people, existing characters, or trademarks.",
 };
 
-/** 그림체를 설명하는 문장. 작가나 회사 이름 없이 기법 이름만 쓴다. */
+/** Name only the technique, never an artist or a company. */
 const STYLE_PHRASES: Record<StyleId, Record<Lang, string>> = {
   watercolor: {
     ko: '그림체: 물이 번진 부드러운 수채화, 연한 색',
@@ -54,22 +52,19 @@ const STYLE_PHRASES: Record<StyleId, Record<Lang, string>> = {
   },
 };
 
-/** 나이대를 설명하는 말 */
 const AGE_PHRASES: Record<AgeBand, Record<Lang, string>> = {
   '5-7': { ko: '5~7살 (아주 짧고 쉬운 문장)', en: 'ages 5-7 (very short, simple sentences)' },
   '8-10': { ko: '8~10살 (쉬운 문장)', en: 'ages 8-10 (simple sentences)' },
   '11-13': { ko: '11~13살 (조금 긴 문장도 괜찮음)', en: 'ages 11-13 (slightly longer sentences are fine)' },
 };
 
-/**
- * 글 지시문에 고정하는 규칙을 돌려준다.
- */
+/** System instruction (child-safety rules) for every text request. */
 export function text_system_instruction(lang: Lang): string {
   return TEXT_SAFETY_RULES[lang];
 }
 
 /**
- * 주인공 카드를 만든다. 모든 그림 설명 앞에 붙여 모습을 같게 유지한다.
+ * Builds the hero card. It goes before every image prompt so the hero looks the same on every page.
  */
 export function build_hero_card(seed: StorySeed, lang: Lang): string {
   const name = seed.hero_name.trim();
@@ -86,7 +81,7 @@ export function build_hero_card(seed: StorySeed, lang: Lang): string {
 }
 
 /**
- * 완성된 그림 설명을 만든다. AI에 보낼 때와 "그림 설명 복사"에서 똑같이 쓴다.
+ * Builds the full image prompt. The same text is sent to the AI and used by "copy image prompt".
  */
 export function build_image_prompt(description: string, style_id: StyleId, hero_card: string, lang: Lang): string {
   return [hero_card, description.trim(), STYLE_PHRASES[style_id][lang], IMAGE_SAFETY_RULES[lang]]
@@ -95,16 +90,13 @@ export function build_image_prompt(description: string, style_id: StyleId, hero_
 }
 
 /**
- * 표지 그림 설명을 만든다. AI를 부르지 않고 제목과 줄거리로 만든다.
+ * Builds the cover image description from the title and summary, without calling the AI.
  */
 export function build_cover_description(title: string, summary: string, lang: Lang): string {
   const base = lang === 'ko' ? `책 표지 그림. 제목: ${title}.` : `Book cover picture. Title: ${title}.`;
   return summary.trim() ? `${base} ${summary.trim()}` : base;
 }
 
-/**
- * 이야기 씨앗을 지시문에 넣을 글로 바꾼다.
- */
 function describe_seed(seed: StorySeed, lang: Lang): string {
   if (lang === 'ko') {
     return [
@@ -124,9 +116,7 @@ function describe_seed(seed: StorySeed, lang: Lang): string {
   ].join('\n');
 }
 
-/**
- * 줄거리 3개를 제안해 달라는 지시문.
- */
+/** Prompt asking for PLOT_SUGGESTION_COUNT plot ideas. */
 export function build_plots_prompt(seed: StorySeed, lang: Lang): string {
   const ask =
     lang === 'ko'
@@ -135,9 +125,7 @@ export function build_plots_prompt(seed: StorySeed, lang: Lang): string {
   return `${ask}\n\n${describe_seed(seed, lang)}`;
 }
 
-/**
- * 고른 줄거리를 쪽별 글과 그림 설명으로 나눠 달라는 지시문.
- */
+/** Prompt asking to split the chosen plot into per-page text and image prompts. */
 export function build_pages_prompt(plot: Plot, seed: StorySeed, lang: Lang): string {
   const ask =
     lang === 'ko'
@@ -147,7 +135,7 @@ export function build_pages_prompt(plot: Plot, seed: StorySeed, lang: Lang): str
   return `${ask}\n\n${plot_part}\n\n${describe_seed(seed, lang)}`;
 }
 
-/** 줄거리 응답의 JSON 모양 */
+/** JSON schema for the plot suggestion response. */
 export const PLOTS_SCHEMA = {
   type: 'object',
   properties: {
@@ -165,9 +153,7 @@ export const PLOTS_SCHEMA = {
   required: ['plots'],
 };
 
-/**
- * 쪽 나누기 응답의 JSON 모양을 쪽수에 맞춰 만든다.
- */
+/** JSON schema for the page split response, sized to the page count. */
 export function build_pages_schema(page_count: number): object {
   return {
     type: 'object',
@@ -187,18 +173,13 @@ export function build_pages_schema(page_count: number): object {
   };
 }
 
-/**
- * 값이 문자열 필드를 가진 객체인지 본다.
- */
 function has_string_fields(value: unknown, fields: string[]): value is Record<string, string> {
   if (typeof value !== 'object' || value === null) return false;
   const record = value as Record<string, unknown>;
   return fields.every((field) => typeof record[field] === 'string');
 }
 
-/**
- * 줄거리 응답 글을 읽는다. 형식이 어긋나면 null을 돌려준다.
- */
+/** Parses the plot response. Returns null if the format is wrong. */
 export function parse_plots(raw: string): Plot[] | null {
   try {
     const data = JSON.parse(raw) as { plots?: unknown };
@@ -214,9 +195,7 @@ export function parse_plots(raw: string): Plot[] | null {
   }
 }
 
-/**
- * 쪽 나누기 응답 글을 읽는다. 쪽수가 다르거나 형식이 어긋나면 null을 돌려준다.
- */
+/** Parses the page split response. Returns null if the page count or format is wrong. */
 export function parse_pages(raw: string, page_count: number): PageDraft[] | null {
   try {
     const data = JSON.parse(raw) as { pages?: unknown };

@@ -1,17 +1,17 @@
 // @vitest-environment node
-// Claude 글 연결부 검사: 가짜 fetch로 SDK가 보내는 요청 모양, 오류 바꾸기, 다시 요청, 키 확인을 본다.
+// Claude text provider tests with a fake fetch: SDK request shape, error mapping, retries, key check.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { create_claude_text } from './claude_text';
 import { ProviderError, type ProviderErrorKind } from './types';
 import type { StorySeed } from '../types';
 
-/** 가짜 키. 실제 키가 아니다. */
+/** Fake key, not a real one. */
 const TEST_KEY = 'sk-ant-' + 'test-fake-A1b2';
 const OPUS = 'claude-opus-5-5';
 const SONNET = 'claude-sonnet-5-5';
 const HAIKU = 'claude-haiku-5-5';
 const FALLBACK_BETA = 'server-side-fallback-2026-07-01';
-/** 조직 설정에서 브라우저 사용이 꺼져 있을 때 Claude가 401과 함께 주는 문구 */
+/** Message Claude returns with a 401 when the organization has disabled browser access. */
 const BROWSER_BLOCKED_MESSAGE = 'CORS requests are not allowed for this Organization';
 const MESSAGES_URL = 'https://api.anthropic.com/v1/messages';
 const MODELS_URL = 'https://api.anthropic.com/v1/models';
@@ -23,12 +23,10 @@ const SEED: StorySeed = { age_band: '8-10', topic: '우정', hero_name: '보리'
 const PLOT = { id: 'plot-1', title: '제목', summary: '요약' };
 const PLOTS_TEXT = JSON.stringify({ plots: [1, 2, 3].map((n) => ({ title: `제목${n}`, summary: `요약${n}` })) });
 
-/** 쪽 글 JSON을 만든다. */
 function pages_text(count: number): string {
   return JSON.stringify({ pages: Array.from({ length: count }, (_, i) => ({ text: `글${i}`, image_prompt: `그림${i}` })) });
 }
 
-/** 정상 응답을 만든다. */
 function message_response(text: string, stop_reason = 'end_turn', model = OPUS): Response {
   return new Response(
     JSON.stringify({
@@ -44,7 +42,7 @@ function message_response(text: string, stop_reason = 'end_turn', model = OPUS):
   );
 }
 
-/** 오류 응답을 만든다. SDK가 스스로 다시 보내지 않게 한다. */
+/** Builds an error response; x-should-retry stops the SDK from retrying on its own. */
 function error_response(status: number, error_type: string, extra: Record<string, string> = {}, message = 'x'): Response {
   return new Response(JSON.stringify({ type: 'error', error: { type: error_type, message } }), {
     status,
@@ -54,7 +52,7 @@ function error_response(status: number, error_type: string, extra: Record<string
 
 type FetchMock = ReturnType<typeof vi.fn>;
 
-/** 가짜 fetch를 전역에 둔다. 응답은 차례대로 나온다. */
+/** Installs a global fake fetch that returns the given responses in order. */
 function stub_fetch(...responses: (Response | Error)[]): FetchMock {
   const mock = vi.fn();
   for (const item of responses) {
@@ -65,7 +63,7 @@ function stub_fetch(...responses: (Response | Error)[]): FetchMock {
   return mock;
 }
 
-/** n번째 요청의 주소, 머리글(소문자 이름), 본문을 읽는다. */
+/** Reads the URL, headers (lowercased names), and body of the nth request. */
 function read_call(mock: FetchMock, index: number) {
   const [input, init] = mock.mock.calls[index] as [string | URL | Request, RequestInit];
   const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
@@ -77,13 +75,13 @@ function read_call(mock: FetchMock, index: number) {
   return { url, headers, body };
 }
 
-/** 키가 머리글에만 실려 있는지 본다. 이 SDK 판은 Authorization: Bearer 로 보내고, 옛 판은 x-api-key 로 보낸다. */
+/** Asserts the key is in a header. This SDK version sends Authorization: Bearer; older ones sent x-api-key. */
 function expect_key_header(headers: Record<string, string>): void {
   const sent = headers['x-api-key'] ?? headers.authorization?.replace(/^Bearer /, '');
   expect(sent).toBe(TEST_KEY);
 }
 
-/** 스키마 안의 모든 객체 마디를 모은다. */
+/** Collects every object node in a schema. */
 function collect_objects(node: unknown, found: Record<string, unknown>[] = []): Record<string, unknown>[] {
   if (Array.isArray(node)) node.forEach((item) => collect_objects(item, found));
   else if (typeof node === 'object' && node !== null) {
@@ -94,7 +92,7 @@ function collect_objects(node: unknown, found: Record<string, unknown>[] = []): 
   return found;
 }
 
-/** 줄거리 요청이 주어진 오류 종류로 실패하는지 본다. */
+/** Asserts that a plot request fails with the given error kind. */
 async function expect_plot_error(responses: (Response | Error)[], kind: ProviderErrorKind): Promise<ProviderError> {
   stub_fetch(...responses);
   const error = await create_claude_text(TEST_KEY, HAIKU)
@@ -110,8 +108,8 @@ async function expect_plot_error(responses: (Response | Error)[], kind: Provider
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('Claude 글 요청 모양', () => {
-  it('주소, 키 머리글, json_schema 형식, 엄격한 스키마를 보낸다 (haiku는 fallbacks 없음)', async () => {
+describe('Claude text request shape', () => {
+  it('sends URL, key header, json_schema format, and strict schema (no fallbacks for haiku)', async () => {
     const mock = stub_fetch(message_response(PLOTS_TEXT, 'end_turn', HAIKU));
     const plots = await create_claude_text(TEST_KEY, HAIKU).suggestPlots(SEED, 'ko');
     expect(plots).toHaveLength(3);
@@ -131,7 +129,7 @@ describe('Claude 글 요청 모양', () => {
     expect(headers['anthropic-beta'] ?? '').not.toContain(FALLBACK_BETA);
   });
 
-  it.each([OPUS, SONNET])('%s 는 fallbacks 와 베타 머리글을 보낸다', async (model) => {
+  it.each([OPUS, SONNET])('%s sends fallbacks and the beta header', async (model) => {
     const mock = stub_fetch(message_response(PLOTS_TEXT, 'end_turn', model));
     await create_claude_text(TEST_KEY, model).suggestPlots(SEED, 'ko');
     const { headers, body } = read_call(mock, 0);
@@ -140,44 +138,44 @@ describe('Claude 글 요청 모양', () => {
   });
 });
 
-describe('Claude 응답 읽기와 다시 요청', () => {
-  it('쪽 나누기: 쪽수가 맞으면 한 번에 끝난다', async () => {
+describe('Claude response parsing and retry', () => {
+  it('page split: finishes in one call when the page count matches', async () => {
     const mock = stub_fetch(message_response(pages_text(PAGE_COUNT)));
     const pages = await create_claude_text(TEST_KEY, OPUS).splitIntoPages(PLOT, SEED, 'ko');
     expect(pages).toHaveLength(PAGE_COUNT);
     expect(mock).toHaveBeenCalledTimes(1);
   });
 
-  it('쪽수가 틀리면 한 번 다시 요청한다', async () => {
+  it('retries once on a wrong page count', async () => {
     const mock = stub_fetch(message_response(pages_text(PAGE_COUNT - 1)), message_response(pages_text(PAGE_COUNT)));
     const pages = await create_claude_text(TEST_KEY, OPUS).splitIntoPages(PLOT, SEED, 'ko');
     expect(pages).toHaveLength(PAGE_COUNT);
     expect(mock).toHaveBeenCalledTimes(2);
   });
 
-  it('형식이 두 번 어긋나면 unknown', async () => {
+  it('is unknown after two malformed responses', async () => {
     await expect_plot_error([message_response('not json'), message_response('still not')], 'unknown');
   });
 });
 
-describe('Claude 오류 바꾸기', () => {
-  it('stop_reason refusal 은 blocked', async () => {
+describe('Claude error mapping', () => {
+  it('stop_reason refusal is blocked', async () => {
     await expect_plot_error([message_response('', 'refusal')], 'blocked');
   });
 
-  it('401 은 bad_key', async () => {
+  it('401 is bad_key', async () => {
     await expect_plot_error([error_response(401, 'authentication_error')], 'bad_key');
   });
 
-  it('401 이고 문구가 CORS 막힘이면 bad_key 가 아니라 browser_blocked', async () => {
+  it('401 with the CORS-blocked message is browser_blocked, not bad_key', async () => {
     await expect_plot_error([error_response(401, 'authentication_error', {}, BROWSER_BLOCKED_MESSAGE)], 'browser_blocked');
   });
 
-  it('403 은 no_permission', async () => {
+  it('403 is no_permission', async () => {
     await expect_plot_error([error_response(403, 'permission_error')], 'no_permission');
   });
 
-  it('429 는 rate 이고 다시 해 볼 시각이 있다', async () => {
+  it('429 is rate with a retry time', async () => {
     const before = Date.now();
     const error = await expect_plot_error(
       [error_response(429, 'rate_limit_error', { 'retry-after': String(RETRY_AFTER_SECONDS) })],
@@ -187,14 +185,14 @@ describe('Claude 오류 바꾸기', () => {
     expect(Math.abs((error.retry_at ?? 0) - (before + RETRY_AFTER_SECONDS * MS_PER_SECOND))).toBeLessThan(RATE_TOLERANCE_MS);
   });
 
-  it('fetch가 던지면 network', async () => {
-    // SDK가 연결 오류는 다시 보낼 수 있으므로 같은 오류를 넉넉히 준비한다.
+  it('a throwing fetch is network', async () => {
+    // The SDK may retry connection errors, so queue enough of them.
     await expect_plot_error([new TypeError('fail'), new TypeError('fail'), new TypeError('fail')], 'network');
   });
 });
 
-describe('Claude 키 확인', () => {
-  it('목록 조회가 되면 ok 이고 키는 머리글에만 있다', async () => {
+describe('Claude key check', () => {
+  it('is ok when the model list succeeds, with the key only in a header', async () => {
     const mock = stub_fetch(
       new Response(JSON.stringify({ data: [], has_more: false, first_id: null, last_id: null }), {
         status: 200,
@@ -209,12 +207,12 @@ describe('Claude 키 확인', () => {
     expect_key_header(headers);
   });
 
-  it('401 이면 bad_key', async () => {
+  it('401 is bad_key', async () => {
     stub_fetch(error_response(401, 'authentication_error'));
     expect(await create_claude_text(TEST_KEY, OPUS).testConnection()).toEqual({ ok: false, reason: 'bad_key' });
   });
 
-  it('401 이고 문구가 CORS 막힘이면 browser_blocked', async () => {
+  it('401 with the CORS-blocked message is browser_blocked', async () => {
     stub_fetch(error_response(401, 'authentication_error', {}, BROWSER_BLOCKED_MESSAGE));
     expect(await create_claude_text(TEST_KEY, HAIKU).testConnection()).toEqual({ ok: false, reason: 'browser_blocked' });
   });

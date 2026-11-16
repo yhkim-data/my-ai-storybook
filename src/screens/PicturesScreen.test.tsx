@@ -1,4 +1,4 @@
-// 6단계 그림 화면 검사: AI로 만들기, 올리기, 복사, 모두 만들기, 오류와 다시 하기.
+// Step 6 pictures screen tests: AI image, upload, copy, make all, errors and retry.
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,38 +11,31 @@ import { useSettings } from '../store/settings_store';
 import type { Book } from '../types';
 import { PicturesScreen } from './PicturesScreen';
 
-// jsdom에는 그림 디코딩이 없으므로 올린 그림 줄이기를 바꿔 둔다.
+// jsdom cannot decode images, so upload resizing is stubbed.
 vi.mock('../utils/image', async (orig) => ({
   ...(await orig<typeof import('../utils/image')>()),
   prepare_upload_image: vi.fn(async () => 'data:image/png;base64,AAAA'),
 }));
-// 실패 흉내를 낼 수 있게 그림 만들기를 감싼다. 평소에는 원래대로 움직인다.
+// Wrap image generation so tests can inject failures; it behaves normally otherwise.
 vi.mock('../providers/make_image', async (orig) => {
   const original = await orig<typeof import('../providers/make_image')>();
   return { ...original, generate_page_image: vi.fn(original.generate_page_image) };
 });
 
-/** 한국어 문구 */
 const ko = (key: string, params?: Record<string, string | number>) => translate('ko', key, params);
 
-/** 책의 본문 쪽 수 (체험판은 8쪽) */
+/** Story pages in the demo book. */
 const STORY_PAGES = 8;
-/** 다시 하기가 켜질 때까지 기다리는 최대 시간(ms) */
+/** Max wait in ms for the retry button to enable. */
 const RETRY_WAIT_MS = 4000;
-/** 이미 그림이 있는 쪽 번호 (모두 만들기에서 건너뛰는지 본다) */
+/** Pages that already have images; "make all" must skip them. */
 const EXISTING_INDEXES = [2, 5];
 
-/**
- * 모든 그림을 비운 체험판 책을 만든다.
- */
 function make_empty_book(): Book {
   const book = build_demo_book('ko');
   return { ...book, pages: book.pages.map((page) => ({ ...page, image: null })) };
 }
 
-/**
- * 지금 책의 그림이 있는 쪽 번호들.
- */
 function image_indexes(): number[] {
   const pages = useBook.getState().book?.pages ?? [];
   return pages.flatMap((page, index) => (page.image ? [index] : []));
@@ -64,7 +57,7 @@ afterEach(() => {
 });
 
 describe('PicturesScreen', () => {
-  it('쪽 목록에 표지와 8쪽이 있고 지금 쪽이 표시된다', async () => {
+  it('page list has the cover and 8 pages and marks the current page', async () => {
     const user = userEvent.setup();
     render(<PicturesScreen />);
     const list = screen.getByRole('navigation', { name: ko('pictures.list') });
@@ -75,7 +68,7 @@ describe('PicturesScreen', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(ko('common.page_n', { n: 3 }));
   });
 
-  it('연습 모드에서 AI로 만들기를 누르면 그 쪽에만 그림이 생기고 횟수가 1 늘어난다', async () => {
+  it('in practice mode, AI image fills only that page and adds 1 to usage', async () => {
     const user = userEvent.setup();
     useBook.getState().set_current_page(2);
     render(<PicturesScreen />);
@@ -87,7 +80,7 @@ describe('PicturesScreen', () => {
     expect(await screen.findByRole('img', { name: ko('pictures.image_alt', { name: ko('common.page_n', { n: 2 }) }) })).toBeInTheDocument();
   });
 
-  it('연결이 없으면 안내만 보여 주고 AI를 부르지 않는다', async () => {
+  it('without a connection shows a notice and does not call the AI', async () => {
     const user = userEvent.setup();
     useSettings.setState({ practice: false, text_key: '', image_key: '' });
     render(<PicturesScreen />);
@@ -99,7 +92,7 @@ describe('PicturesScreen', () => {
     expect(useBook.getState().screen).toBe('connect');
   });
 
-  it('그림을 올리면 source가 upload로 들어간다', async () => {
+  it('an uploaded image is stored with source upload', async () => {
     render(<PicturesScreen />);
     const input = screen.getByTestId('upload-input') as HTMLInputElement;
     fireEvent.change(input, { target: { files: [new File(['x'], 'a.png', { type: 'image/png' })] } });
@@ -107,9 +100,9 @@ describe('PicturesScreen', () => {
     expect(useBook.getState().book?.pages[0]?.image?.data_url).toBe('data:image/png;base64,AAAA');
   });
 
-  it('그림 설명 복사는 주인공 카드와 그림체 문장이 든 글을 복사한다', async () => {
+  it('copy prompt includes the hero card and the style sentence', async () => {
     const user = userEvent.setup();
-    // userEvent.setup()이 클립보드를 바꿔 버리므로, 그 뒤에 검사용 클립보드를 다시 단다.
+    // userEvent.setup() replaces the clipboard, so the test clipboard is attached afterwards.
     const write_text = vi.fn(async (_text: string) => undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText: write_text }, configurable: true });
     render(<PicturesScreen />);
@@ -122,7 +115,7 @@ describe('PicturesScreen', () => {
     expect(await screen.findByText(ko('pictures.copied'))).toBeInTheDocument();
   });
 
-  it('복사에 실패하면 직접 복사할 글을 보여 준다', async () => {
+  it('shows text for manual copying when the clipboard fails', async () => {
     const user = userEvent.setup();
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: vi.fn(async () => Promise.reject(new Error('denied'))) },
@@ -134,7 +127,7 @@ describe('PicturesScreen', () => {
     expect((screen.getByTestId('copy-fallback') as HTMLTextAreaElement).value).toContain('수채화');
   });
 
-  it('남은 그림 모두 만들기는 그림 없는 쪽만 한 번씩 만든다', async () => {
+  it('make all generates each missing image exactly once', async () => {
     const user = userEvent.setup();
     const book = make_empty_book();
     const existing_url = 'data:image/png;base64,BBBB';
@@ -158,7 +151,7 @@ describe('PicturesScreen', () => {
     expect(await screen.findByRole('button', { name: ko('pictures.make_all') })).toBeEnabled();
   });
 
-  it('제한에 걸리면 안내가 보이고, 시간이 지난 뒤 다시 하기로 그림이 생긴다', async () => {
+  it('on a rate limit shows a notice, and retry after the wait makes the image', async () => {
     const user = userEvent.setup();
     vi.mocked(make_image.generate_page_image).mockRejectedValueOnce(new ProviderError('rate', Date.now() + 1000));
     render(<PicturesScreen />);
@@ -170,7 +163,7 @@ describe('PicturesScreen', () => {
     await waitFor(() => expect(useBook.getState().book?.pages[0]?.image?.source).toBe('ai'));
   });
 
-  it('차단되면 쉬운 안내 문구가 보인다', async () => {
+  it('shows a friendly notice when blocked', async () => {
     const user = userEvent.setup();
     vi.mocked(make_image.generate_page_image).mockRejectedValueOnce(new ProviderError('blocked'));
     render(<PicturesScreen />);
@@ -179,7 +172,7 @@ describe('PicturesScreen', () => {
     expect(image_indexes()).toEqual([]);
   });
 
-  it('쪽을 바꾸면 안내와 오류가 지워진다', async () => {
+  it('changing page clears notices and errors', async () => {
     const user = userEvent.setup();
     useSettings.setState({ practice: false });
     render(<PicturesScreen />);
@@ -189,7 +182,7 @@ describe('PicturesScreen', () => {
     expect(screen.queryByText(ko('pictures.need_connect'))).not.toBeInTheDocument();
   });
 
-  it('그림 설명을 고치면 책에 반영된다', async () => {
+  it('editing the image description updates the book', async () => {
     const user = userEvent.setup();
     render(<PicturesScreen />);
     const box = screen.getByLabelText(ko('pictures.desc_label'));
