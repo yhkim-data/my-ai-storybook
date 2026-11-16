@@ -2,7 +2,7 @@
 
 **English** | [한국어](teacher-guide.ko.md)
 
-This guide is for teachers who want to run a class with My AI Storybook. Try it now: https://di-lab.io/my-ai-storybook/
+This guide is for teachers who want to run a class with My AI Storybook. Try it now: https://storybook.di-lab.io/
 
 ## What you need for class
 

@@ -12,7 +12,7 @@
 
 ## 바로 써보기
 
-https://di-lab.io/my-ai-storybook/
+https://storybook.di-lab.io/
 
 브라우저에서 주소를 열면 바로 사용할 수 있습니다. 처음이라면 시작 화면의 [체험판 보기]로 완성된 책을 먼저 넘겨 보십시오.
 

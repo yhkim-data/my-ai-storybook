@@ -144,8 +144,8 @@ npm run dev
 ## 배포
 
 - GitHub Actions(`.github/workflows/deploy.yml`)가 빌드해서 GitHub Pages에 올려요.
-- 배포 주소는 https://di-lab.io/my-ai-storybook/ 예요.
-- `vite.config.ts`의 `base`는 상대 경로(`./`)예요. 글꼴 같은 자원도 상대 경로로 불러서, 사용자 도메인의 맨 위(`https://storybook.di-lab.io/`)와 하위 경로(`https://di-lab.io/my-ai-storybook/`) 어디서든 같은 빌드가 동작해요. 미리보기 서버는 맨 위(`/`)에서 열려요(`playwright.config.ts`의 `APP_PATH`).
+- 배포 주소는 https://storybook.di-lab.io/ 예요. GitHub Pages의 사용자 도메인 설정으로 연결해요.
+- `vite.config.ts`의 `base`는 상대 경로(`./`)예요. 글꼴 같은 자원도 상대 경로로 불러서, 도메인의 맨 위(`https://storybook.di-lab.io/`)와 하위 경로(예: `/my-ai-storybook/`) 어디서든 같은 빌드가 동작해요. 미리보기 서버는 맨 위(`/`)에서 열려요(`playwright.config.ts`의 `APP_PATH`).
 - 배포가 끝난 뒤에는 주소를 열어 앱 이름이 보이는지 확인해요. 화면이 비어 있다면 `base` 경로를 먼저 의심해요.
 
 ## 코드 규칙
