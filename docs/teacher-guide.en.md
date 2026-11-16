@@ -142,7 +142,7 @@ The calculation below is for Google Gemini. Claude writes text only; the text fo
 - The author's name can be a nickname.
 - **When Gemini is used within the free limit, what is typed in is used by the provider to improve its services, and people may review it.** The terms say: "Google uses the content you submit to the Services and any generated responses to provide, improve, and develop Google products and services and machine learning technologies..." / "human reviewers may read, annotate, and process your API input and output." / "Do not submit sensitive, confidential, or personal information to the Unpaid Services."
 - When Gemini is used on the paid plan, content is not used to improve products. Logs are still kept for a while to detect abuse.
-- Anthropic's Commercial Terms of Service state: "Anthropic may not train models on Customer Content from Services." (checked 2026-11-16). How OpenAI uses submitted content was not checked. Read the provider's terms before use.
+- Anthropic's Commercial Terms of Service state: "Anthropic may not train models on Customer Content from Services." (checked 2026-11-16). Under OpenAI's Services Agreement, OpenAI does not use customer content to develop or improve its services unless the customer explicitly agrees (checked 2026-11-16). Read the provider's terms before use.
 - Paying does not remove the age requirement. It is separate.
 - The book in progress is saved in the browser on that device. This tool has no server. To move a book to another device, save a work file with [Save work file] and move the file.
 - Keys are saved only in the browser on that device. On a shared device, press [Erase the key from this device] when you finish.

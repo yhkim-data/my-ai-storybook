@@ -79,7 +79,7 @@ Other text AI options are available.
 - Claude writes text only. The text for one book costs about US$0.002 (default AI, 2 text requests, about 2,000 input tokens and 4,000 output tokens). Images cost extra, or nothing if you upload your own.
 - The cost of a book with OpenAI could not be calculated because the per-image price is not published.
 - Gemini's daily limit resets at midnight Pacific Time.
-- Anthropic's Commercial Terms of Service state: "Anthropic may not train models on Customer Content from Services." (checked 2026-11-16). How OpenAI uses submitted content was not checked. With any provider, do not enter real names, addresses, or phone numbers.
+- Anthropic's Commercial Terms of Service state: "Anthropic may not train models on Customer Content from Services." (checked 2026-11-16). Under OpenAI's Services Agreement, OpenAI does not use customer content to develop or improve its services unless the customer explicitly agrees (checked 2026-11-16). With any provider, do not enter real names, addresses, or phone numbers.
 
 ## A separate key for images
 

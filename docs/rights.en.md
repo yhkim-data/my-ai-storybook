@@ -69,7 +69,7 @@ The tool can connect to AI from Google Gemini, Claude (Anthropic), and OpenAI. E
 
 | Provider | Terms | Clause on output | Checked |
 |---|---|---|---|
-| OpenAI | Services Agreement, Korean edition <https://openai.com/ko-KR/policies/services-agreement/> (updated 2025-12-01) | "고객이 모든 출력물을 소유합니다." (The customer owns all output.) It also states that OpenAI assigns its rights in the output to the customer. | 2026-11-16 |
+| OpenAI | Services Agreement, Korean edition <https://openai.com/ko-KR/policies/services-agreement/> (updated 2025-12-01) | "고객이 모든 출력물을 소유합니다." (The customer owns all output.) The customer owns all output, and OpenAI assigns its rights in the output to the customer. Unless the customer explicitly agrees, OpenAI does not use customer content to develop or improve its services. | 2026-11-16 |
 | Anthropic (Claude) | Commercial Terms of Service <https://www.anthropic.com/legal/commercial-terms> (Effective Jun 17, 2025). Applies to API keys. | "Anthropic agrees that Customer (a) retains all rights to its Inputs, and (b) owns its Outputs." / "Anthropic hereby assigns to Customer its right, title and interest (if any) in and to Outputs." | 2026-11-16 |
 | Google (Gemini) | Gemini API Additional Terms of Service <https://aistudio.google.com/docs/terms> (Effective March 23, 2026) | "Some of our Services allow you to generate original content. Google won't claim ownership over that content." | 2026-11-16 |
 

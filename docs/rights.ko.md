@@ -69,7 +69,7 @@ The rights to the book you make belong to you. This tool and DI Lab claim no rig
 
 | 회사 | 약관 | 결과물에 관한 조항 | 확인일 |
 |---|---|---|---|
-| OpenAI | 서비스 계약 한국어판 <https://openai.com/ko-KR/policies/services-agreement/> (업데이트 2025-12-01) | "고객이 모든 출력물을 소유합니다." OpenAI가 출력물에 대한 권리를 고객에게 양도한다고 적혀 있습니다. | 2026-11-16 |
+| OpenAI | 서비스 계약 한국어판 <https://openai.com/ko-KR/policies/services-agreement/> (업데이트 2025-12-01) | "고객이 모든 출력물을 소유합니다." 고객이 모든 출력물을 소유하고, OpenAI는 출력물에 대한 권리를 고객에게 양도합니다. 또한 고객이 명시적으로 동의하지 않으면 OpenAI는 고객 콘텐츠를 서비스 개발이나 개선에 쓰지 않습니다. | 2026-11-16 |
 | Anthropic (Claude) | Commercial Terms of Service <https://www.anthropic.com/legal/commercial-terms> (Effective Jun 17, 2025). API 키에 적용됩니다. | "Anthropic agrees that Customer (a) retains all rights to its Inputs, and (b) owns its Outputs." / "Anthropic hereby assigns to Customer its right, title and interest (if any) in and to Outputs." | 2026-11-16 |
 | Google (Gemini) | Gemini API Additional Terms of Service <https://aistudio.google.com/docs/terms> (Effective March 23, 2026) | "Some of our Services allow you to generate original content. Google won't claim ownership over that content." | 2026-11-16 |
 
