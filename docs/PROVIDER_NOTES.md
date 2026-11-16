@@ -64,7 +64,7 @@
 | `gemini-3.5-flash-lite` (**기본값**) | Stable | 있음 ("Free of charge") | 입력 $0.30, 출력 $2.50 |
 | `gemini-3.8-flash` | Stable | 있음 ("Free of charge") | 입력 $0.75, 출력 $3.75 (2026-12-31까지. 2027-01-01부터 $1.50 / $7.50) |
 
-- 무료 한도의 분당·하루 횟수는 **문서에서 찾지 못했다.** 한도 문서는 숫자를 싣지 않고 AI Studio에서 보라고 한다: <https://aistudio.google.com/rate-limit> (로그인 필요). 지시서의 참고값(일반 Flash 하루 20회 안팎, 경량 하루 500회 안팎)은 공식 문서로 확인하지 못했다.
+- 무료 한도의 분당·하루 횟수는 **문서에서 찾지 못했다.** 한도 문서는 숫자를 싣지 않고 AI Studio에서 보라고 한다: <https://aistudio.google.com/rate-limit> (로그인 필요).
 - 하루 한도는 태평양 시간 자정에 풀린다: "Requests per day (RPD) quotas reset at midnight Pacific time."
 - 무료로 쓰면 내용이 제품 개선에 쓰인다 (가격표의 "Used to improve our products": Free "Yes", Paid "No").
 
@@ -240,7 +240,7 @@
   - "Where required or otherwise appropriate for your use case, using age assurance systems to ensure only intended users can access the product."
 - "OpenAI reserves the right to audit organizations for compliance with this policy."
 
-**OpenAI 약관의 나이 조항.** 자동 도구로는 HTTP 403이 나서, 사람이 브라우저로 2026-11-14에 한국어판을 읽었다. **영어 원문은 확인하지 못했다.**
+**OpenAI 약관의 나이 조항.** 2026-11-14에 한국어판으로 확인했다. 영어 원문은 확인하지 않았다.
 
 - 서비스 계약 <https://openai.com/ko-KR/policies/services-agreement/> (업데이트 2025-12-01, API에 적용): 고객 금지 행위 (c) "부모 또는 법정대리인의 동의 없이 미성년자가 OpenAI 서비스를 사용하도록 허용하는 행위".
 - 이용약관(개인용) <https://openai.com/ko-KR/policies/row-terms-of-use/>: 최소 만 13세 또는 그 나라가 정한 나이 이상이어야 하고, 18세 미만은 부모나 법정대리인의 허가가 필요하다.

@@ -1,4 +1,4 @@
-/* 공통 모양. 색과 크기는 docs/how-it-was-built/STORYBOOK_BUILD.md 5-1의 공통 값과 docs/how-it-was-built/design/ 시안을 따른다. */
+/* Shared styles: color and size tokens used by every screen. */
 
 @font-face {
   font-family: 'Gowun Dodum';

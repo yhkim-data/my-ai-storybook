@@ -114,10 +114,6 @@ The rights to the book you make belong to you. This tool and DI Lab claim no rig
 
 태블릿과 휴대폰 화면 크기에서 쓸 수 있게 검사하고 있어요. 글상자를 옮기고 크기를 바꾸는 일은 큰 화면이 더 편해요.
 
-## 만든 과정
-
-이 도구는 Claude Code가 지시서 한 장으로 만들었어요. 지시서, 화면 시안, 보조 작업자 정의와 사람이 한 일, Claude Code가 한 일은 [만든 과정](docs/how-it-was-built/README.md)에 있어요.
-
 ## 개발자용
 
 Node 20 이상이 필요해요.
