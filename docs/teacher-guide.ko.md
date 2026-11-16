@@ -142,7 +142,7 @@ AI 연결 없이 쓰면 비용이 들지 않습니다. 회사마다 가격이 �
 - 지은이 이름은 별명을 써도 됩니다.
 - **Gemini를 무료 한도로 쓰면 입력한 내용이 제공사의 서비스 개선에 쓰이고, 사람이 검토할 수 있습니다.** 약관 원문: "Google uses the content you submit to the Services and any generated responses to provide, improve, and develop Google products and services and machine learning technologies..." / "human reviewers may read, annotate, and process your API input and output." / "Do not submit sensitive, confidential, or personal information to the Unpaid Services."
 - Gemini를 유료로 쓰면 제품 개선에는 쓰이지 않습니다. 다만 악용 탐지를 위해 일정 기간 기록이 남습니다.
-- Anthropic 상업 서비스 약관에는 "Anthropic may not train models on Customer Content from Services."라는 조항이 있습니다(2026-11-16 확인). OpenAI가 입력 내용을 어떻게 쓰는지는 확인하지 않았습니다. 사용 전에 해당 약관을 확인하십시오.
+- Anthropic 상업 서비스 약관에는 "Anthropic may not train models on Customer Content from Services."라는 조항이 있습니다(2026-11-16 확인). OpenAI 서비스 계약에 따르면 고객이 명시적으로 동의하지 않으면 OpenAI는 고객 콘텐츠를 서비스 개발이나 개선에 쓰지 않습니다(2026-11-16 확인). 사용 전에 해당 약관을 확인하십시오.
 - 유료로 쓰더라도 나이 조건은 그대로 적용됩니다.
 - 만들던 책은 이 기기의 브라우저에 저장됩니다. 이 도구에는 서버가 없습니다. 책을 다른 기기로 옮기려면 [작업 파일 받기]로 받은 파일을 옮깁니다.
 - 키는 이 기기의 브라우저에만 저장됩니다. 함께 쓰는 기기에서는 사용 후 [이 기기에서 키 지우기]를 누르십시오.

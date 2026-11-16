@@ -79,7 +79,7 @@
 - Claude는 글만 만들며, 책 한 권의 글 비용은 약 0.002달러입니다(기본 AI, 글 요청 2회, 입력 약 2천 토큰과 출력 약 4천 토큰 기준). 그림 비용은 별도이며, 직접 올리면 들지 않습니다.
 - OpenAI는 그림 1장 가격이 문서에 없어 책 한 권의 비용을 산정하지 못했습니다.
 - Gemini의 하루 한도는 미국 태평양 시간 자정에 초기화됩니다.
-- Anthropic 상업 서비스 약관에는 "Anthropic may not train models on Customer Content from Services."라는 조항이 있습니다(2026-11-16 확인). OpenAI가 입력 내용을 어떻게 쓰는지는 확인하지 않았습니다. 어느 회사를 쓰든 진짜 이름, 주소, 전화번호는 입력하지 마십시오.
+- Anthropic 상업 서비스 약관에는 "Anthropic may not train models on Customer Content from Services."라는 조항이 있습니다(2026-11-16 확인). OpenAI 서비스 계약에 따르면 고객이 명시적으로 동의하지 않으면 OpenAI는 고객 콘텐츠를 서비스 개발이나 개선에 쓰지 않습니다(2026-11-16 확인). 어느 회사를 쓰든 진짜 이름, 주소, 전화번호는 입력하지 마십시오.
 
 ## 그림용 키 따로 넣기
 
