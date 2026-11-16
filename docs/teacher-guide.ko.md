@@ -49,7 +49,13 @@
 - "Organizations serving minors must take reasonable steps to ensure that the content they are serving to minors via the API is safe and age appropriate"
 - 조치: "Providing age-appropriate disclosures to minors about AI tools and how to use them responsibly." / "Implementing age-appropriate content filters to address potentially sensitive content." / "Implementing reasonable monitoring and reporting mechanisms, including escalation paths for high-risk interactions." / "Where required or otherwise appropriate for your use case, using age assurance systems to ensure only intended users can access the product."
 - "OpenAI reserves the right to audit organizations for compliance with this policy."
-- **OpenAI 서비스 약관의 나이 조항은 확인하지 못했어요.** 약관 주소 세 곳이 자동으로 읽으려 하면 HTTP 403으로 막혔어요(2026-11-14). 쓰기 전에 사람이 브라우저로 직접 열어 읽어야 해요: https://openai.com/policies/terms-of-use/ , https://openai.com/policies/services-agreement/ , https://openai.com/policies/usage-policies/
+- **약관의 나이 조항.** 아래는 사람이 브라우저로 2026-11-14에 한국어판을 읽은 내용이에요. 영어 원문은 확인하지 못했어요.
+  - 서비스 계약(API에 적용, 업데이트 2025-12-01): "부모 또는 법정대리인의 동의 없이 미성년자가 OpenAI 서비스를 사용하도록 허용하는 행위"를 금지해요. https://openai.com/ko-KR/policies/services-agreement/
+  - 이용약관(개인용): 만 13세 이상이어야 하고, 18세 미만은 부모나 법정대리인의 허가가 필요해요. https://openai.com/ko-KR/policies/row-terms-of-use/
+  - 이용정책(2026-11-20 시행판): 미성년자에게 나이에 맞지 않는 콘텐츠를 보여 주는 것 등을 금지해요. https://openai.com/ko-KR/policies/usage-policies/
+  - 서비스 약관(업데이트 2026-11-13): 나이 조항이 없어요. https://openai.com/ko-KR/policies/service-terms/
+- **OpenAI로 학생 수업을 하려면 보호자 동의를 받으세요.**
+- **약관에 미성년자의 나이 정의가 없어요. 한국에서는 만 19세 미만을 기준으로 삼는 것이 안전해요.**
 
 **이 도구가 갖춘 것과 갖추지 못한 것.**
 
