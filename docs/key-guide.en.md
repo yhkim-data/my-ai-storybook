@@ -39,7 +39,7 @@ On the start screen of the app, press [Connect AI]. The same steps are shown the
 2. **Make a key and copy it.** Press the button that says Create and key. Copy the long text that appears.
 3. **Paste it into the app.** Paste it in the [My key] box on the [Connect AI] screen and press [Check connection].
 
-![Connect AI screen](images/connect.png)
+![Connect AI screen](images/en/connect.png)
 
 If you see "Connected to {company name}. Key ends with ····" and the last 4 characters, it worked. The screen shows only the last 4 characters.
 
