@@ -181,7 +181,15 @@
 - 상업 서비스 약관 <https://www.anthropic.com/legal/commercial-terms>: API 키와 콘솔에 적용된다. **나이 조항이 없다.** 영어판 본문에 "18", "minor"가 나오지 않는다. 원문: "Services under these Terms are not for consumer use."
 - 개인용 서비스 약관 <https://www.anthropic.com/legal/consumer-terms> (2025-10-08 시행): Claude.ai 같은 개인용 서비스에 적용된다. 한국어판 원문: "최소 연령. 귀하는 18세 이상 또는 귀하의 지역에서 당사 서비스 이용에 대한 동의에 요구되는 최소 연령 중 더 높은 연령 이상이어야 합니다." 같은 쪽에 API 키와 콘솔은 상업 서비스 약관이 다룬다고 적혀 있다.
 - 사용 정책 <https://www.anthropic.com/legal/aup> (2026-11-12 시행): 한국어판 원문: "미성년자 또는 아동은 관할권에 관계없이 18세 미만의 모든 개인으로 정의됩니다." 미성년자에게 제공되는 제품은 위 기관용 안내와 관련 법을 지켜야 한다고 적혀 있다.
-- 뒤의 두 쪽은 한국어판으로만 읽혀서 영어 원문은 옮기지 못했다.
+- 뒤의 두 쪽은 한국어판으로 확인했다.
+
+### 결과물의 권리와 입력 내용
+
+출처: 상업 서비스 약관 <https://www.anthropic.com/legal/commercial-terms> ("Effective Jun 17, 2025", 확인한 날 2026-11-16)
+
+- "As between the parties and to the extent permitted by applicable law, Anthropic agrees that Customer (a) retains all rights to its Inputs, and (b) owns its Outputs."
+- "Subject to Customer’s compliance with these Terms, Anthropic hereby assigns to Customer its right, title and interest (if any) in and to Outputs."
+- "Anthropic may not train models on Customer Content from Services."
 
 ## 9. OpenAI
 
@@ -247,6 +255,11 @@
 - 이용정책 <https://openai.com/ko-KR/policies/usage-policies/> (2026-11-20 시행판): 아동·청소년 보호 조항이 있다. 미성년자에게 나이에 맞지 않는 콘텐츠를 보여 주는 것 등을 금지한다.
 - 서비스 약관 <https://openai.com/ko-KR/policies/service-terms/> (업데이트 2026-11-13): 나이 조항이 없다.
 - 이 도구에 미치는 영향: API 키로 학생이 쓰게 하려면 위 보호 조치에 더해 **부모나 법정대리인의 동의**가 필요하다. 서비스 계약에는 미성년자의 나이 정의가 없으므로, 한국에서는 민법상 성년 기준인 만 19세 미만을 미성년자로 보는 것이 안전하다.
+
+### 결과물의 권리
+
+- 서비스 계약 <https://openai.com/ko-KR/policies/services-agreement/> (업데이트 2025-12-01, 확인한 날 2026-11-16): "고객이 모든 출력물을 소유합니다." OpenAI가 출력물에 대한 권리를 고객에게 양도한다고 적혀 있다.
+- 입력 내용을 어떻게 쓰는지는 확인하지 않았다.
 
 ## 10. 세 회사 한눈에 보기
 
