@@ -49,7 +49,13 @@ Read this in the following way.
 - "Organizations serving minors must take reasonable steps to ensure that the content they are serving to minors via the API is safe and age appropriate"
 - Safeguards: "Providing age-appropriate disclosures to minors about AI tools and how to use them responsibly." / "Implementing age-appropriate content filters to address potentially sensitive content." / "Implementing reasonable monitoring and reporting mechanisms, including escalation paths for high-risk interactions." / "Where required or otherwise appropriate for your use case, using age assurance systems to ensure only intended users can access the product."
 - "OpenAI reserves the right to audit organizations for compliance with this policy."
-- **We could not check the age clause in OpenAI's terms of service.** All three terms addresses were blocked with HTTP 403 when we tried to read them automatically (2026-11-14). A person must open them in a browser and read them before use: https://openai.com/policies/terms-of-use/ , https://openai.com/policies/services-agreement/ , https://openai.com/policies/usage-policies/
+- **Age clauses in the terms.** A person read the Korean versions in a browser on 2026-11-14. We could not check the English originals.
+  - Services Agreement (covers the API, updated 2025-12-01): it forbids customers from letting minors use OpenAI services without the consent of a parent or legal guardian. https://openai.com/ko-KR/policies/services-agreement/
+  - Terms of Use (personal use): users must be at least 13, and people under 18 need permission from a parent or legal guardian. https://openai.com/ko-KR/policies/row-terms-of-use/
+  - Usage Policies (version effective 2026-11-20): they forbid things such as showing minors content that is not right for their age. https://openai.com/ko-KR/policies/usage-policies/
+  - Service Terms (updated 2026-11-13): no age clause. https://openai.com/ko-KR/policies/service-terms/
+- **To use OpenAI in a class with students, get consent from their parents or guardians.**
+- **The terms do not define the age of a minor. In Korea, it is safest to treat everyone under 19 as a minor.**
 
 **What this tool has, and what it does not have.**
 

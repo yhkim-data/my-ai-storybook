@@ -78,7 +78,7 @@ Each company has its own age rule. (Checked 2026-11-14)
 
 - Google Gemini: Only people 18 or older can get a key. Under the terms, it cannot be connected where people under 18 use it. On devices and in classes where students use the tool, the Gemini connection cannot be turned on.
 - Claude: For people under 18 to use it, the adult or organization that got the key must have the safeguards Anthropic sets (an age check, content filtering, a way to watch and report problems, and more). The age of the person who gets a key: Anthropic's Commercial Terms of Service, which cover keys and the Console, have no age clause (checked 2026-11-14). The 18-or-older rule is in the Consumer Terms (effective 2025-10-08), which cover personal services such as Claude.ai.
-- OpenAI: For people under 18 to use it, the organization that got the key must have the safeguards OpenAI sets. We could not check the age clause in the terms of service.
+- OpenAI: For people under 18 to use it, the organization that got the key must have the safeguards OpenAI sets and get consent from a parent or guardian.
 
 This tool does not have an age check or a way to watch and report problems. In a class with students, using it without an AI connection is the basic way. A book can be finished without any AI connection. The original text and the details are in the [teacher guide](docs/teacher-guide.en.md).
 
