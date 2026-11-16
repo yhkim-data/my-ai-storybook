@@ -8,7 +8,7 @@ This guide is for teachers who want to run a class with My AI Storybook. Try it 
 
 - A computer, tablet, or phone with internet (one per student)
 - A current browser (Chrome, Edge, Safari, and so on)
-- No install, no sign-up, and no cost. (Money may be needed only when you connect AI.)
+- No installation, sign-up, or cost. (Costs apply only when you connect AI.)
 - If students will add their own drawings: paper, colored pencils, and a device to photograph the drawings
 - If you will print the books: a print shop
 
@@ -23,11 +23,11 @@ This tool accepts keys from Google Gemini, Claude, and OpenAI. Each company has 
 - Age: "You must be 18 years of age or older to use the APIs." Only people 18 or older can get a key.
 - Services for people under 18: "You also will not use the Services as part of a website, application, or other service (collectively, "API Clients") that is directed towards or is likely to be accessed by individuals under the age of 18." This clause is still in the current version.
 
-Read this in the following way.
+In practice, this means:
 
 - Students cannot get a Gemini key.
 - On devices and in classes where students use the tool, the Gemini connection cannot be turned on.
-- A teacher can still only demonstrate on their own device with their own key (way B below), and you can still use the tool without any AI connection (way A below).
+- A teacher can still give a demo on their own device with their own key (option B below), and the tool can still be used without any AI connection (option A below).
 
 **Claude (Anthropic): people under 18 may use it when the safeguards are in place.** The text below comes from Anthropic's guidelines for organizations serving minors (the page is dated March 16, 2026), checked on 2026-11-14. Source: https://support.claude.com/en/articles/9307344-responsible-use-of-anthropic-s-models-guidelines-for-organizations-serving-minors
 
@@ -39,7 +39,7 @@ Read this in the following way.
 - "It is the responsibility of organizations to comply with all applicable child safety and data privacy regulations, such as the Children's Online Privacy Protection Act (COPPA) in the United States. Compliance with these regulations should be clearly stated on the organization's website or similar public-facing documentation."
 - "Organizations must disclose to their users that they are interacting with an AI system rather than a human."
 - "Anthropic will periodically audit organizations for compliance with these safeguards." Not following them "may lead to the suspension or termination of your account."
-- This page is written for organizations. The age of the person who gets a key: Anthropic's Commercial Terms of Service, which cover keys and the Console, have no age clause (checked 2026-11-14). The 18-or-older rule is in the Consumer Terms (effective 2025-10-08), which cover personal services such as Claude.ai.
+- These guidelines are for organizations. Anthropic's Commercial Terms of Service, which cover API keys and the Console, have no age clause for the key holder (checked 2026-11-14). The 18-or-older rule is in the Consumer Terms (effective 2025-10-08), which cover personal services such as Claude.ai.
 
 **OpenAI: people under 18 may use it when the safeguards are in place.** The text below comes from OpenAI's guidance for serving people under 18 through the API (the page has no date), checked on 2026-11-14. Source: https://developers.openai.com/api/docs/guides/safety-checks/under-18-api-guidance
 
@@ -49,7 +49,7 @@ Read this in the following way.
 - "Organizations serving minors must take reasonable steps to ensure that the content they are serving to minors via the API is safe and age appropriate"
 - Safeguards: "Providing age-appropriate disclosures to minors about AI tools and how to use them responsibly." / "Implementing age-appropriate content filters to address potentially sensitive content." / "Implementing reasonable monitoring and reporting mechanisms, including escalation paths for high-risk interactions." / "Where required or otherwise appropriate for your use case, using age assurance systems to ensure only intended users can access the product."
 - "OpenAI reserves the right to audit organizations for compliance with this policy."
-- **Age clauses in the terms.** A person read the Korean versions in a browser on 2026-11-14. We could not check the English originals.
+- **Age clauses in the terms.** Checked in the Korean editions on 2026-11-14. The English originals were not checked.
   - Services Agreement (covers the API, updated 2025-12-01): it forbids customers from letting minors use OpenAI services without the consent of a parent or legal guardian. https://openai.com/ko-KR/policies/services-agreement/
   - Terms of Use (personal use): users must be at least 13, and people under 18 need permission from a parent or legal guardian. https://openai.com/ko-KR/policies/row-terms-of-use/
   - Usage Policies (version effective 2026-11-20): they forbid things such as showing minors content that is not right for their age. https://openai.com/ko-KR/policies/usage-policies/
@@ -61,25 +61,25 @@ Read this in the following way.
 
 - It has: a fixed rule in every instruction sent to the AI that the book is for children and must not have violence, horror, or sexual content. It never sets a company's safety settings lower than the default. If any picture was made with AI, the "Made by" page of the book says so. It tells students not to write real names, addresses, or phone numbers.
 - It does not have: an age check, a way to watch and report problems (this tool has no server), or OpenAI's zero data retention setting for personal data of children under 13 (the organization that holds the key must set it on OpenAI's side).
-- So to let students use Claude or OpenAI, **the adult or organization (the school) that got the key must put these safeguards in place and take responsibility.** If you cannot, use way A (no AI connection) or way B (teacher demo).
+- So to let students use Claude or OpenAI, **the adult or organization (the school) that got the key must put these safeguards in place and take responsibility.** If you cannot, use option A (no AI connection) or option B (teacher demo).
 - Claude writes words only. Add pictures yourself, or enter a separate picture key from another company.
 - This guide is not legal advice.
 
-### 2. Choose one of three ways
+### 2. Choose a format
 
-| Way | What happens on student devices | AI connection | Cost |
+| Option | What happens on student devices | AI connection | Cost |
 |---|---|---|---|
 | A. No AI connection | Students write the words and draw the pictures and add them. | None | Free |
 | B. Demo only, with the teacher's key | On the teacher's device, using the teacher's own key, show on screen how AI makes a book. Students do not follow along. | Teacher's device only | See the cost section below |
 | C. Copy picture note | Students press [Copy picture note] and paste it into another AI app. | Not in this tool | Follows the other app's terms |
 
-- In way C, check the age requirement of the other AI app yourself. This tool does not know that app's terms.
+- With option C, check the age requirement of the other AI app yourself. This tool does not know that app's terms.
 - To practice without a key, add `?mock=1` to the end of the address. You can click through the AI steps with ready-made sample stories and pictures. It uses no key, so it works well for demos.
 - After a demo on a shared device, press [Erase the key from this device] on the [Connect AI] screen.
 
 ### 3. Will you print?
 
-If you will print, read "How to take the book to a print shop" below first.
+If you plan to print, read "Ordering prints" below first.
 
 ## A two-lesson plan
 
@@ -117,7 +117,7 @@ Without an AI connection, it costs nothing. The price differs by company. Prices
 | Claude | Default `claude-haiku-5-5`: input $0.10, output $0.50 (`claude-sonnet-5-5` $2 / $10, `claude-opus-5-5` $4 / $20) | Does not make pictures | None |
 | OpenAI | Default `gpt-6-luna`: input $0.10, output $0.50 (`gpt-6.1-terra` $1 / $5, `gpt-6.1-sol` $2 / $10) | $30 per 1 million picture output tokens. The price per picture is not in the documents. | Not in the documents |
 
-The calculation below is for Google Gemini. Claude writes words only, so the words of one book cost about 0.002 US dollars (default type, 2 writing calls, about 2 thousand input tokens and about 4 thousand output tokens). Pictures cost extra. They are free if you add your own. We could not work out the cost for OpenAI, because the price of one picture is not in the documents.
+The calculation below is for Google Gemini. Claude writes text only; the text for one book costs about US$0.002 (default AI, 2 text requests, about 2,000 input tokens and 4,000 output tokens). Images cost extra, or nothing if students upload their own. The cost for OpenAI could not be calculated because the per-image price is not published.
 
 - One book = 9 pictures (1 cover and 8 pages) x $0.0336 = $0.3024
 - The writing is free within the free limit. Even when paid, it is about $0.011 per book.
@@ -132,23 +132,24 @@ The calculation below is for Google Gemini. Claude writes words only, so the wor
 
 - These examples only multiply by the number of students. On devices that students use, the Gemini connection cannot be used, and Claude and OpenAI need the safeguards above.
 - If Gemini writes only the words and you add the pictures yourself, it costs nothing within the free limit.
-- For the number of free uses, check Google AI Studio. This guide does not print numbers that were not found in the official documents.
+- For the number of free uses, check Google AI Studio. This guide lists no numbers that are not in the official documentation.
 - Limits apply per project, not per key. Keys in the same project share the limit.
 - Prices can change. Price check date: 2026-11-14
 
-## Protecting personal information
+## Privacy
 
 - Tell students not to write real names, addresses, or phone numbers. The story seed screen also says "Don't write real names, addresses, or phone numbers." The main character's name should be made up.
 - The author's name can be a nickname.
 - **When Gemini is used within the free limit, what is typed in is used by the provider to improve its services, and people may review it.** The terms say: "Google uses the content you submit to the Services and any generated responses to provide, improve, and develop Google products and services and machine learning technologies..." / "human reviewers may read, annotate, and process your API input and output." / "Do not submit sensitive, confidential, or personal information to the Unpaid Services."
 - When Gemini is used on the paid plan, content is not used to improve products. Logs are still kept for a while to detect abuse.
-- We did not check how Claude and OpenAI use what is typed in this time. Read each company's terms before you use them.
+- Anthropic's Commercial Terms of Service state: "Anthropic may not train models on Customer Content from Services." (checked 2026-11-16). How OpenAI uses submitted content was not checked. Read the provider's terms before use.
 - Paying does not remove the age requirement. It is separate.
 - The book in progress is saved in the browser on that device. This tool has no server. To move a book to another device, save a work file with [Save work file] and move the file.
 - Keys are saved only in the browser on that device. On a shared device, press [Erase the key from this device] when you finish.
-- A work file contains the words and pictures the student made. Follow your school's rules for storing and sending the file.
+- A work file contains the text and images the student made. Follow your school's rules for storing and sending the file.
+- For permission to publish student work and consent for personal information (legal-representative consent for children under 14 in Korea), see section 5 of [Rights and terms of use](rights.en.md).
 
-## How to take the book to a print shop
+## Ordering prints
 
 1. On the finish screen, press [Get PDF for printing]. ([Get PDF] is for reading on a screen.)
 2. The book's page size is a 200 x 200 mm square.
@@ -159,7 +160,7 @@ The calculation below is for Google Gemini. Claude writes words only, so the wor
 
 The book does not contain the name of this tool or DI Lab. If even one picture was made with AI, the "Made by" page automatically says that some pictures were made with AI (with the name). If all pictures were added by the student, it does not.
 
-For the rights to the book and the fonts, see [About your rights](rights.en.md).
+For the rights to the book and the fonts, see [Rights and terms of use](rights.en.md).
 
 ## Common problems
 
@@ -175,4 +176,4 @@ For the rights to the book and the fonts, see [About your rights](rights.en.md).
 | The character looks different on each page. | Describe the character in more detail, and press [Remake only this picture] in Decorate for pictures you do not like. |
 | Text boxes are hard to use on a phone. | Use a bigger screen, or click the words and fix them directly. |
 
-To learn how to get a key, see [How to get a key](key-guide.en.md).
+For getting a key, see [How to get a key](key-guide.en.md).
