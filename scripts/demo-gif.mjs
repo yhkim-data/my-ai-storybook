@@ -13,7 +13,7 @@ const { GIFEncoder, quantize, applyPalette } = gifenc;
 const { PNG } = pngjs;
 
 const PORT = 4174;
-const BASE_PATH = '/my-ai-storybook/';
+const BASE_PATH = '/';
 const LANGS = (process.env.DEMO_LANGS ?? 'ko,en').split(',');
 const FRAMES_DIR = process.env.DEMO_FRAMES_DIR;
 /** GIF size in px; width kept at 960 or less. */

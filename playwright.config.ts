@@ -2,8 +2,8 @@
 import { defineConfig } from '@playwright/test';
 
 const PREVIEW_PORT = 4173;
-/** Must match `base` in vite.config.ts. */
-const APP_PATH = '/my-ai-storybook/';
+/** The build uses a relative base, so the preview server serves it at the root. */
+const APP_PATH = '/';
 
 export default defineConfig({
   testDir: 'e2e',

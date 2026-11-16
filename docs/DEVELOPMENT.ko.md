@@ -36,7 +36,7 @@ npm install
 npm run dev
 ```
 
-- `npm run dev`는 개발 서버를 열어요. 주소는 터미널에 나와요. 앱은 `vite.config.ts`의 `base`(`/my-ai-storybook/`) 아래에 놓여요.
+- `npm run dev`는 개발 서버를 열어요. 주소는 터미널에 나와요. `vite.config.ts`의 `base`는 상대 경로(`./`)라서 같은 빌드가 어느 경로에서든 열려요.
 - `npm run build`는 `dist/`에 배포용 파일을 만들어요.
 - `npm run preview`는 만든 것을 미리 봐요.
 
@@ -145,7 +145,7 @@ npm run dev
 
 - GitHub Actions(`.github/workflows/deploy.yml`)가 빌드해서 GitHub Pages에 올려요.
 - 배포 주소는 https://di-lab.io/my-ai-storybook/ 예요.
-- 앱이 놓이는 경로는 `vite.config.ts`의 `base`(`/my-ai-storybook/`)예요. 저장소 이름을 바꾸면 `base`와 `playwright.config.ts`의 `APP_PATH`도 함께 바꿔요.
+- `vite.config.ts`의 `base`는 상대 경로(`./`)예요. 글꼴 같은 자원도 상대 경로로 불러서, 사용자 도메인의 맨 위(`https://storybook.di-lab.io/`)와 하위 경로(`https://di-lab.io/my-ai-storybook/`) 어디서든 같은 빌드가 동작해요. 미리보기 서버는 맨 위(`/`)에서 열려요(`playwright.config.ts`의 `APP_PATH`).
 - 배포가 끝난 뒤에는 주소를 열어 앱 이름이 보이는지 확인해요. 화면이 비어 있다면 `base` 경로를 먼저 의심해요.
 
 ## 코드 규칙
