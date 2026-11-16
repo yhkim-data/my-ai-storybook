@@ -51,6 +51,7 @@ npm run dev
 | `npm run build` | 배포용 빌드 |
 | `npm run check:secrets` | 코드에 키가 들어갔는지 찾아요. |
 | `npm run check:i18n` | 한국어와 영어 문구의 키가 같은지 봐요. |
+| `npm run check:links` | README와 `docs/` 안의 상대 경로 링크와 그림이 모두 실제 파일을 가리키는지 봐요. |
 | `npm run screenshots` | 화면 사진을 찍어요. 먼저 `npm run build` 후 `npx vite preview --port 4173`을 띄워 두고, `SHOT_LANG=ko`와 `SHOT_LANG=en`으로 한 번씩 돌려요. `docs/images/ko/`, `docs/images/en/`에 같은 이름으로 들어가고, 휴대폰 크기(390x844) 사진 `phone.png`도 찍어요. |
 | `npm run demo-gif` | 연습 모드로 책 한 권을 만들며 움직이는 시연 `docs/images/ko/demo.gif`, `docs/images/en/demo.gif`를 만들어요. 빌드하고 미리보기 서버(포트 4174)를 스스로 띄워요. Playwright로 장면을 찍고 순수 JS 인코더(`gifenc`)로 묶어요. 길이 12~20초, 5MB 이하가 아니면 실패해요. |
 | `npm run social-card` | 저장소 소개 카드 `docs/images/social-preview.png`(1280x640)를 HTML로 그려 찍고, 같은 그림을 링크 미리보기용 `public/og-image.png`로도 넣어요. 글자가 가장자리 80px 안쪽에 있는지 확인해요. |

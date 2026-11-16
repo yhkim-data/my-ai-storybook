@@ -20,7 +20,8 @@
     "check:i18n": "node scripts/check-i18n.mjs",
     "screenshots": "node scripts/screenshots.mjs",
     "demo-gif": "vite build && node scripts/demo-gif.mjs",
-    "social-card": "node scripts/social-card.mjs"
+    "social-card": "node scripts/social-card.mjs",
+    "check:links": "node scripts/check-links.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
