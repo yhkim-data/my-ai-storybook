@@ -142,6 +142,7 @@ npm run dev
 - [권리 안내](docs/rights.ko.md) ([English](docs/rights.en.md))
 - [AI 제공사 조건 확인 기록](docs/PROVIDER_NOTES.md)
 - [개발 문서](docs/DEVELOPMENT.ko.md)
+- [릴리스 노트 v1.0.0](docs/releases/v1.0.0.md)
 
 ## 라이선스
 

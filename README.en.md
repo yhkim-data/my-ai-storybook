@@ -142,6 +142,7 @@ Documents:
 - [About your rights](docs/rights.en.md) ([Korean](docs/rights.ko.md))
 - [Record of AI provider terms](docs/PROVIDER_NOTES.md) (Korean)
 - [Development guide](docs/DEVELOPMENT.ko.md) (Korean)
+- [Release notes v1.0.0](docs/releases/v1.0.0.md)
 
 ## License
 
