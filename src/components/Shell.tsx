@@ -1,5 +1,6 @@
-// Shared screen frame: header (home logo, step dots, DI Lab badge) and footer buttons.
+// Shared screen frame: header (home logo, step dots, DI Lab badge), footer buttons and the corner mark.
 import type { ReactNode } from 'react';
+import di_lab_mark_url from './di_lab_mark.svg';
 import { STEP_SCREENS } from '../constants';
 import { useT } from '../i18n';
 import { go_home } from '../store/navigation';
@@ -10,6 +11,11 @@ const BOOK_ICON_SIZE = 32;
 
 export function DiLabBadge() {
   return <span className="dilab-badge">DI Lab</span>;
+}
+
+/** Small faint DI Lab mark in the bottom-right corner of the app. It is never part of a book or an export. */
+function DiLabWatermark() {
+  return <img className="dilab-watermark" src={di_lab_mark_url} alt="" aria-hidden="true" draggable={false} />;
 }
 
 export function MadeByLine() {
@@ -101,6 +107,7 @@ export function Shell({ header, footer, width = 'normal', compact_header = false
       <header className={compact_header ? 'shell-header compact' : 'shell-header'}>{header}</header>
       <main className={main_class}>{children}</main>
       {footer && <footer className="shell-footer">{footer}</footer>}
+      <DiLabWatermark />
     </div>
   );
 }
