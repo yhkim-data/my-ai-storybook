@@ -77,6 +77,12 @@ export interface PageImage {
   model_name?: string;
   /** Style the AI image was made in (see style_key), so a later style change can offer a redraw. */
   style_key?: string;
+  /** For a fixed picture ("Fix the picture"): what the user asked to change. */
+  edit_note?: string;
+  /** When this picture was made (epoch ms); it also names the picture for based_on. */
+  created_at?: number;
+  /** For a fixed picture: created_at of the picture it was fixed from (missing means the original). */
+  based_on?: number;
 }
 
 /** One page of the book. The cover is a page too. */
@@ -99,6 +105,13 @@ export interface BookPage {
   style?: ArtStyle;
   /** This page's own style description, used when style is 'custom'. */
   custom_style?: string;
+  /**
+   * The picture before and after "Fix the picture": index 0 is the original, the rest are fixed pictures, oldest first.
+   * Missing until the picture is first fixed. `image` is always the version in use.
+   */
+  image_versions?: PageImage[];
+  /** Index in image_versions of the picture in use. */
+  active_version?: number;
 }
 
 /** An art style together with the user's description for 'custom'. */

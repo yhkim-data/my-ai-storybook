@@ -18,6 +18,7 @@ import {
   STYLE_IDS,
 } from '../constants';
 import type { ArtStyle, Book, BookPage, Lang, LayoutId, PageDraft, PageShape, Rect, StorySeed, StyleChoice, TextBox } from '../types';
+import { normalize_versions } from './image_versions';
 
 /** Cover title box position, in percent. */
 const COVER_TEXT_RECT = { x: 8, y: 6, w: 84, h: 22 };
@@ -148,9 +149,13 @@ function is_rect(value: unknown): value is Rect {
 
 /**
  * Fills page fields that older books lack: the picture box comes from the layout, the text stays
- * in front and the picture keeps its proportions. Drops a page style that is not valid.
+ * in front and the picture keeps its proportions. Drops a page style that is not valid, and picture versions that do not hold together.
  */
 function normalize_page(page: BookPage): BookPage {
+  return normalize_versions(normalize_page_fields(page));
+}
+
+function normalize_page_fields(page: BookPage): BookPage {
   const { style, custom_style, ...rest } = page;
   const layout = LAYOUT_IDS.includes(page.layout) ? page.layout : DEFAULT_LAYOUT_ID;
   const filled: BookPage = {

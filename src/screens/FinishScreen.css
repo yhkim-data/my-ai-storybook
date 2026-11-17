@@ -84,3 +84,9 @@
     aspect-ratio: 1 / 1;
   }
 }
+
+.finish-file-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

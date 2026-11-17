@@ -1,5 +1,6 @@
 // Step 6 pictures: each page gets an AI image, an uploaded image, or a copied image prompt.
 import { useEffect, useRef, useState, type CSSProperties, type ChangeEvent } from 'react';
+import { EditPicture } from '../components/EditPicture';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { StepShell } from '../components/Shell';
 import { BATCH_IMAGE_GAP_MS, PAGE_SHAPE_MM } from '../constants';
@@ -84,6 +85,8 @@ export function PicturesScreen() {
   /** Page the AI is currently drawing. */
   const [busy_index, set_busy_index] = useState<number | null>(null);
   const [batch, set_batch] = useState<BatchProgress | null>(null);
+  /** A "Fix the picture" request is running. */
+  const [is_fixing, set_is_fixing] = useState(false);
 
   const input_ref = useRef<HTMLInputElement>(null);
   const is_mounted_ref = useRef(false);
@@ -105,7 +108,7 @@ export function PicturesScreen() {
   const page = book.pages[index];
   if (!page) return null;
 
-  const is_working = busy_index !== null || batch !== null;
+  const is_working = busy_index !== null || batch !== null || is_fixing;
   const columns = list_columns(page_count);
   const is_compact = columns >= COMPACT_LIST_COLUMNS;
   const current_name = page_name(t, index);
@@ -204,7 +207,7 @@ export function PicturesScreen() {
     clear_messages();
     try {
       const data_url = await prepare_upload_image(file);
-      set_page_image(index, { data_url, source: 'upload' });
+      set_page_image(index, { data_url, source: 'upload', created_at: Date.now() });
     } catch {
       if (is_mounted_ref.current) set_notice('upload_error');
     }
@@ -336,6 +339,7 @@ export function PicturesScreen() {
                     onChange={(event) => update_page(index, { image_prompt: event.target.value })}
                   />
                 </div>
+                <EditPicture key={page.id} page_index={index} busy_elsewhere={busy_index !== null || batch !== null} on_busy={set_is_fixing} />
               </div>
             </div>
           </div>

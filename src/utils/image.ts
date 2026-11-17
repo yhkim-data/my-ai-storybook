@@ -51,6 +51,25 @@ export function load_image(src: string): Promise<HTMLImageElement> {
   });
 }
 
+/** Picture types every AI provider accepts as input. */
+const RASTER_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+/** Side (px) an SVG picture is drawn at when it has to become a PNG. */
+const SVG_RASTER_PX = 1024;
+
+/** Returns the picture as PNG, JPEG or WebP; anything else (an SVG sample picture, a GIF) is drawn into a PNG. */
+export async function to_raster_data_url(data_url: string): Promise<string> {
+  const mime_type = /^data:([^;,]+)/.exec(data_url)?.[1] ?? '';
+  if (RASTER_MIME_TYPES.includes(mime_type)) return data_url;
+  const image = await load_image(data_url);
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth || SVG_RASTER_PX;
+  canvas.height = image.naturalHeight || SVG_RASTER_PX;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('no canvas');
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/png');
+}
+
 /** Downscales an uploaded image to UPLOAD_MAX_PX and returns a data URL; rejects non-images. */
 export async function prepare_upload_image(file: Blob): Promise<string> {
   const original_url = await blob_to_data_url(file);

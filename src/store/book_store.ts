@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { HISTORY_LIMIT, STEP_SCREENS } from '../constants';
 import { build_cover_description } from '../providers/prompts';
 import type { ArtStyle, Book, BookPage, Lang, PageDraft, PageImage, PageShape, Plot, Screen, StorySeed, WriteMode } from '../types';
+import { with_new_image } from './image_versions';
 import { build_pages, clean_custom_style, create_book, make_story_page, normalize_book, reshape_pages, resize_pages } from './book_model';
 
 /** One undo step: the pages and the book shape (the shape changes every page at once). */
@@ -43,6 +44,7 @@ export interface BookState {
   set_page_drafts: (drafts: PageDraft[], key: string) => void;
   ensure_page_count: () => void;
   update_page: (index: number, patch: Partial<BookPage>) => void;
+  /** Puts a new picture on a page (drawn again or uploaded); its fixed versions start over. */
   set_page_image: (index: number, image: PageImage | null) => void;
   /** Gives a page its own art style; undefined makes it follow the book again. */
   set_page_style: (index: number, style: ArtStyle | undefined, custom_style: string) => void;
@@ -148,7 +150,11 @@ export const useBook = create<BookState>((set, get) => {
         ...book,
         pages: book.pages.map((page, page_index) => (page_index === index ? { ...page, ...patch } : page)),
       })),
-    set_page_image: (index, image) => get().update_page(index, { image }),
+    set_page_image: (index, image) =>
+      change_book((book) => ({
+        ...book,
+        pages: book.pages.map((page, page_index) => (page_index === index ? with_new_image(page, image) : page)),
+      })),
     set_page_style: (index, style, custom_style) =>
       get().update_page(index, { style, custom_style: style === 'custom' ? clean_custom_style(custom_style) : undefined }),
     set_style: (style_id) => change_book((book) => ({ ...book, style_id })),

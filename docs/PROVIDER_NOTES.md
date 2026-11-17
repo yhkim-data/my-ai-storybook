@@ -79,6 +79,7 @@
 - 그림 모델은 모두 무료 한도가 없다. **결제를 연결한 키가 있어야 그림을 만들 수 있다.**
 - 참고 그림 입력: `gemini-nano-banana-2.1`과 `gemini-3.1-flash-image`는 문서에 참고 그림 예시와 장수 표가 있다. `gemini-3.1-flash-lite-image`는 "Not optimized for multiple reference inputs or multi-turn sequential editing."이라고만 되어 있어 지원한다고 확인하지 못했다. 그래서 기본 모델에서는 참고 그림을 보내지 않고, 위 두 모델을 골랐을 때만 첫 그림을 참고로 보낸다.
 - 만든 그림에는 워터마크가 들어간다: "All generated images include a SynthID watermark." 출처: <https://aistudio.google.com/docs/image-generation>
+- 그림 고치기(2026-11-17 추가): 이미지 생성 안내서에 그림과 글 지시를 함께 보내 고치는 예시가 `gemini-nano-banana-2.1`로 나온다(입력 블록 `{"type": "image", "mime_type": "image/jpeg", "data": "[BASE64_IMAGE_DATA]"}`). 이 도구는 참고 그림과 같은 모양으로 쓰는 그림을 보내고, 지시 문장 앞에 "요청한 부분만 바꾸고 인물·구도·배경·그림체·글자 없음은 그대로 둔다"와 주인공 카드, 그림체 문장을 넣는다(`gemini_image.ts`). `gemini-3.1-flash-lite-image`는 위 문장 말고는 한 장 고치기를 지원하는지 문서에서 찾지 못해 이 모델에서는 [고치기]를 끈다(`gemini_config.ts`의 `EDIT_IMAGE_MODELS`). 실제 키로 받아 보지는 않았다.
 
 ### 책 한 권 비용 계산 (2026-11-14 가격)
 
@@ -217,6 +218,7 @@
 | `gpt-image-2.6-sunburst` | 고를 수 있음 |
 
 - 요청: `POST https://api.openai.com/v1/images/generations`. 크기 1024x1024, `quality` medium, `output_format` png, `moderation` auto(`openai_image.ts`).
+- 그림 고치기(2026-11-17 추가): `POST https://api.openai.com/v1/images/edits`. 참조 문서(<https://developers.openai.com/api/reference/resources/images/methods/edit>)는 본문을 JSON으로 적고, 안내서는 "JSON edit requests use `images` for the input image array"라고 한다. 그림은 `images: [{"image_url": "data:image/png;base64,..."}]`로 보낸다(문서: "A fully qualified URL or base64-encoded data URL."). 크기·`quality`·`output_format`은 그리기와 같게 보낸다. 두 모델 쪽(`gpt-image-2.6-flare`, `-sunburst`)의 Endpoints 표에 "Image edit | `v1/images/edits` | Supported"가 있다. 브라우저에서 바로 부르는 것(CORS)에 대한 말은 그리기 주소와 마찬가지로 문서에서 찾지 못했다. 실제 키로 받아 보지는 않았다.
 - 책 모양(2026-11-17 추가): 틀이 "그림 가득"인 쪽은 세로로 긴 책이면 `1024x1536`, 가로로 긴 책이면 `1536x1024`로 요청한다. 이미지 생성 안내서(<https://developers.openai.com/api/docs/guides/image-generation>)의 크기 목록에 세 크기가 함께 나온다. 실제 키로 받아 보지는 않았다.
 - 2026-11-14에 다시 확인한 것. 출처: <https://developers.openai.com/api/reference/resources/images/methods/generate>, <https://developers.openai.com/api/docs/guides/image-generation>, <https://developers.openai.com/api/docs/models/gpt-image-2.6-flare> (`-sunburst`도 같은 쪽 모양).
   - `/v1/images/generations`에는 reasoning effort 값이 **없다.** `reasoning.effort`는 `svg` 출력(`svg.reasoning.effort`, `output_format=svg`) 안에만 있다: "Reasoning settings for the SVG author, independent of image complexity."

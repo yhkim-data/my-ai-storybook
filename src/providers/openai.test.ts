@@ -1,7 +1,7 @@
 // OpenAI provider tests with a fake fetch: request shape, response parsing, error mapping, key check.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RATE_LIMIT_WAIT_SECONDS } from '../constants';
-import { OPENAI_IMAGES_URL, OPENAI_MODELS_URL, OPENAI_RESPONSES_URL } from './openai_client';
+import { OPENAI_IMAGES_URL, OPENAI_IMAGE_EDITS_URL, OPENAI_MODELS_URL, OPENAI_RESPONSES_URL } from './openai_client';
 import { create_openai_image } from './openai_image';
 import { create_openai_text } from './openai_text';
 import { ProviderError, type ImageRequest, type ProviderErrorKind } from './types';
@@ -163,6 +163,32 @@ describe('OpenAI image', () => {
     expect(read_call(mock, 0).body.size).toBe('1024x1536');
     expect(read_call(mock, 1).body.size).toBe('1536x1024');
     expect(read_call(mock, 2).body.size).toBe('1024x1024');
+  });
+
+  it('fix the picture: the picture in use and the instruction go to the edit address as JSON', async () => {
+    const mock = stub_fetch(json_response({ data: [{ b64_json: PNG_BASE64 }] }));
+    const provider = create_openai_image(TEST_KEY, IMAGE_MODEL);
+    expect(provider.supportsEdit).toBe(true);
+    const picture = `data:image/png;base64,${PNG_BASE64}`;
+    const blob = await provider.edit({
+      image: picture,
+      note: 'make the scarf blue',
+      style_id: 'watercolor',
+      custom_style: '',
+      hero_card: 'Main character "Tori": a small fox.',
+      lang: 'en',
+      shape: 'portrait',
+    });
+    expect(blob.type).toBe('image/png');
+    const { url, headers, body } = read_call(mock, 0);
+    expect(url).toBe(OPENAI_IMAGE_EDITS_URL);
+    expect(headers.Authorization).toBe(`Bearer ${TEST_KEY}`);
+    expect(body.model).toBe(IMAGE_MODEL);
+    expect(body.images).toEqual([{ image_url: picture }]);
+    expect(body.size).toBe('1024x1536');
+    expect(String(body.prompt)).toContain('make the scarf blue');
+    expect(String(body.prompt)).toContain('Change only the part asked for');
+    expect(String(body.prompt)).toContain('Main character "Tori"');
   });
 
   it('no image is blocked', async () => {
