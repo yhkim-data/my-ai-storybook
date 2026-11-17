@@ -113,6 +113,12 @@ export const UPLOAD_JPEG_QUALITY = 0.9;
 export const BATCH_IMAGE_GAP_MS = 4000;
 /** Wait (seconds) after hitting the per-minute rate limit. */
 export const RATE_LIMIT_WAIT_SECONDS = 60;
+/** Keys are forgotten after this many minutes without any use (settings file: IDLE_MINUTES_MIN to IDLE_MINUTES_MAX). */
+export const IDLE_MINUTES_DEFAULT = 20;
+export const IDLE_MINUTES_MIN = 5;
+export const IDLE_MINUTES_MAX = 60;
+/** The "keys will be forgotten soon" warning shows this many seconds before. */
+export const IDLE_WARNING_SECONDS = 60;
 /** Number of trailing API key characters shown on screen. */
 export const KEY_TAIL_LENGTH = 4;
 

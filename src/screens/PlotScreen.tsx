@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AssistControl, AssistError, useAssist } from '../components/Assist';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { StepShell } from '../components/Shell';
+import { KeyNeededNotice } from '../components/KeySafety';
 import { useT } from '../i18n';
 import { get_text_provider, type ProviderError } from '../providers';
 import { useBook } from '../store/book_store';
@@ -119,6 +120,7 @@ export function PlotScreen() {
   return (
     <StepShell screen="plot" width="wide" on_prev={() => go('seed')} on_next={handle_next}>
       <h1 className="title-lg">{t('plot.heading')}</h1>
+      <KeyNeededNotice />
 
       <div className="plot-layout">
         <div className="plot-col">

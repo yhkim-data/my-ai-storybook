@@ -1,6 +1,6 @@
 // Real AI calls. Runs only when GEMINI_API_KEY, ANTHROPIC_API_KEY or OPENAI_API_KEY is set. Keys never go into code or logs.
 import { expect, test } from '@playwright/test';
-import { SETTINGS_KEY, fill_seed, open_start, start_new_book, tr } from './helpers';
+import { fill_seed, open_start, start_new_book, tr } from './helpers';
 
 const LANG = 'ko';
 const REAL_CALL_WAIT_MS = 90_000;
@@ -18,14 +18,14 @@ for (const provider of REAL_PROVIDERS) {
     test.skip(!api_key, `${provider.env_name} is not set, skipping the real-call test`);
     test.setTimeout(REAL_CALL_WAIT_MS * 2);
 
-    // The key goes only into browser storage and is never printed.
-    await page.addInitScript(
-      ([settings_key, key]) => {
-        localStorage.setItem(settings_key as string, JSON.stringify({ lang: 'ko', text_key: key }));
-      },
-      [SETTINGS_KEY, api_key ?? ''],
-    );
+    // The key is typed into the connect screen like a user would; it stays in page memory and is never printed.
     await open_start(page, LANG);
+    await page.getByRole('button', { name: tr(LANG, 'start.connect') }).click();
+    await page.getByRole('checkbox', { name: tr(LANG, 'connect.own_key') }).check();
+    await page.locator('#key-input').fill(api_key ?? '');
+    await page.getByRole('button', { name: tr(LANG, 'connect.check'), exact: true }).click();
+    await expect(page.locator('.notice.ok')).toBeVisible({ timeout: REAL_CALL_WAIT_MS });
+    await page.getByRole('button', { name: tr(LANG, 'common.home'), exact: true }).click();
     await start_new_book(page, LANG);
     await fill_seed(page, LANG);
     await expect(page.locator('button.card.selectable')).toHaveCount(PLOT_COUNT, { timeout: REAL_CALL_WAIT_MS });

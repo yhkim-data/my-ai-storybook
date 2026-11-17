@@ -2,7 +2,6 @@
 // Uses fake test keys only, never real key formats.
 import { expect, test, type Page } from '@playwright/test';
 import {
-  SETTINGS_KEY,
   TINY_PNG_BASE64,
   choose_first_plot,
   exact_button,
@@ -14,7 +13,10 @@ import {
   pass_pages,
   pass_pictures,
   pass_style,
-  read_saved_text_key,
+  connect_key,
+  read_download,
+  read_indexed_db,
+  read_web_storage,
   start_new_book,
   tr,
   type Lang,
@@ -136,22 +138,6 @@ async function install_fake_gemini(page: Page): Promise<FakeGemini> {
   };
 }
 
-/** Starts with the good fake key already saved. Must be called before open_start. */
-async function preset_good_key(page: Page): Promise<void> {
-  await page.addInitScript(
-    ([settings_key, key]) => {
-      try {
-        if (!localStorage.getItem(settings_key as string)) {
-          localStorage.setItem(settings_key as string, JSON.stringify({ lang: 'ko', text_key: key }));
-        }
-      } catch {
-        // Without storage the app starts with no key.
-      }
-    },
-    [SETTINGS_KEY, GOOD_KEY],
-  );
-}
-
 /** The full key must not appear in page text or in any input value. */
 async function expect_key_hidden(page: Page): Promise<void> {
   const shown = await page.evaluate(() => ({
@@ -171,6 +157,12 @@ test.describe('Connect AI', () => {
     const check = page.getByRole('button', { name: tr(LANG, 'connect.check'), exact: true });
     const key_input = page.locator('#key-input');
 
+    // The "this is my own key" box comes first.
+    await key_input.fill(GOOD_KEY);
+    await check.click();
+    await expect(page.getByText(tr(LANG, 'connect.own_key_need'))).toBeVisible();
+    await page.getByRole('checkbox', { name: tr(LANG, 'connect.own_key') }).check();
+    await key_input.fill('');
     await check.click();
     await expect(page.getByText(tr(LANG, 'connect.empty'))).toBeVisible();
 
@@ -178,20 +170,19 @@ test.describe('Connect AI', () => {
     await key_input.fill(BAD_KEY);
     await check.click();
     await expect(page.getByText('키가 맞지 않아요. 다시 복사해 볼까요?')).toBeVisible();
-    expect(await read_saved_text_key(page)).toBe('');
 
     // Good key: only the last 4 characters are shown.
     await key_input.fill(GOOD_KEY);
     await check.click();
     await expect(page.getByText(tr(LANG, 'connect.ok', { name: GOOD_KEY_NAME, tail: GOOD_KEY_TAIL }))).toBeVisible();
     await expect_key_hidden(page);
-    expect(await read_saved_text_key(page)).toBe(GOOD_KEY);
+    expect(await read_web_storage(page)).not.toContain(GOOD_KEY);
 
     await exact_button(page, tr(LANG, 'common.home')).click();
     await expect(page.locator('.pill.ok', { hasText: tr(LANG, 'start.connect.on') })).toBeVisible();
     await expect_key_hidden(page);
 
-    // Reopening shows the saved key tail, today's usage, the age note and the shared-device note.
+    // Reopening shows the connected key tail, today's usage, the age note and the shared-device note.
     await page.getByRole('button', { name: tr(LANG, 'start.connect') }).click();
     await expect(page.getByText(tr(LANG, 'connect.saved_tail', { name: GOOD_KEY_NAME, tail: GOOD_KEY_TAIL }))).toBeVisible();
     await expect(page.getByTestId('usage-line')).toContainText('오늘 쓴 횟수');
@@ -205,7 +196,7 @@ test.describe('Connect AI', () => {
     await expect(page.locator('#text-model-select')).toBeVisible();
 
     await page.getByRole('button', { name: tr(LANG, 'connect.clear'), exact: true }).click();
-    expect(await read_saved_text_key(page)).toBe('');
+    await expect(page.getByText(tr(LANG, 'connect.cleared'))).toBeVisible();
     await page.getByRole('button', { name: tr(LANG, 'connect.skip'), exact: true }).click();
     await expect(page.getByRole('button', { name: tr(LANG, 'start.new.title') })).toBeVisible();
     await expect(page.locator('.pill', { hasText: '아직 연결 안 됨' })).toBeVisible();
@@ -219,8 +210,8 @@ test.describe('Real provider (fake network)', () => {
     const all_urls: string[] = [];
     page.on('request', (request) => all_urls.push(request.url()));
 
-    await preset_good_key(page);
     await open_start(page, LANG);
+    await connect_key(page, LANG, GOOD_KEY, GOOD_KEY_NAME, GOOD_KEY_TAIL);
     await expect(page.locator('.pill.ok', { hasText: tr(LANG, 'start.connect.on') })).toBeVisible();
     await start_new_book(page, LANG);
     await fill_seed(page, LANG, { page_count: PAGE_COUNT });
@@ -269,10 +260,57 @@ test.describe('Real provider (fake network)', () => {
   test('daily quota (429 quota_exceeded) shows the limit message on the plot screen', async ({ page }) => {
     const fake = await install_fake_gemini(page);
     fake.set_quota(true);
-    await preset_good_key(page);
     await open_start(page, LANG);
+    await connect_key(page, LANG, GOOD_KEY, GOOD_KEY_NAME, GOOD_KEY_TAIL);
     await start_new_book(page, LANG);
     await fill_seed(page, LANG);
     await expect(page.getByRole('alert')).toContainText('오늘 쓸 수 있는 횟수를 다 썼어요');
+  });
+});
+
+test.describe('The key is never kept', () => {
+  test('from connecting to the finished files, the key is nowhere but memory; after a reload it is asked for again', async ({ page }) => {
+    test.slow();
+    await install_fake_gemini(page);
+    const console_lines: string[] = [];
+    page.on('console', (message) => console_lines.push(message.text()));
+
+    await open_start(page, LANG);
+    await connect_key(page, LANG, GOOD_KEY, GOOD_KEY_NAME, GOOD_KEY_TAIL);
+    await start_new_book(page, LANG);
+    await fill_seed(page, LANG, { page_count: PAGE_COUNT });
+    await choose_first_plot(page, LANG);
+    await pass_pages(page, LANG);
+    await pass_style(page, LANG);
+    await page.getByRole('button', { name: tr(LANG, 'pictures.ai.title') }).dispatchEvent('click');
+    await expect(page.locator('.pic-frame img')).toBeAttached();
+    await pass_pictures(page, LANG);
+    await pass_editor(page, LANG);
+
+    const files = [await read_download(page, 'download-file'), await read_download(page, 'download-pdf'), await read_download(page, 'download-zip')];
+    for (const file of files) expect(file.bytes.toString('latin1'), file.name).not.toContain(GOOD_KEY);
+    await expect(page.locator('body')).toHaveAttribute('data-save-state', 'saved');
+    expect(await read_web_storage(page)).not.toContain(GOOD_KEY);
+    expect(await read_indexed_db(page)).not.toContain(GOOD_KEY);
+    const dom = await page.evaluate(() => document.documentElement.outerHTML + Array.from(document.querySelectorAll('input, textarea')).map((item) => (item as HTMLInputElement).value).join(''));
+    expect(dom).not.toContain(GOOD_KEY);
+    expect(console_lines.join('\n')).not.toContain(GOOD_KEY);
+
+    // A reload forgets the key; the book stays and an AI button asks for the key again.
+    await page.reload();
+    await expect(page.locator('.pill', { hasText: tr(LANG, 'start.connect.off') })).toBeVisible();
+    expect(await read_web_storage(page)).not.toContain(GOOD_KEY);
+    await page.getByRole('button', { name: tr(LANG, 'start.resume.title') }).click();
+    await page.getByRole('button', { name: tr(LANG, 'common.prev') }).click();
+    await page.getByRole('button', { name: tr(LANG, 'common.prev') }).click();
+    await page.getByRole('button', { name: tr(LANG, 'pictures.ai.title') }).dispatchEvent('click');
+    const dialog = page.getByRole('dialog', { name: tr(LANG, 'key_prompt.title') });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('checkbox', { name: tr(LANG, 'connect.own_key') }).check();
+    await dialog.getByLabel(tr(LANG, 'connect.key_label'), { exact: true }).fill(GOOD_KEY);
+    await dialog.getByRole('button', { name: tr(LANG, 'connect.check'), exact: true }).click();
+    await expect(dialog).toBeHidden();
+    await page.getByRole('button', { name: tr(LANG, 'pictures.ai.title') }).dispatchEvent('click');
+    await expect(page.locator('.pic-frame img')).toBeAttached();
   });
 });

@@ -2,7 +2,7 @@
 // Uses fake test keys only.
 import { expect, test, type Page, type Route } from '@playwright/test';
 import {
-  SETTINGS_KEY,
+  read_web_storage,
   TINY_PNG_BASE64,
   choose_first_plot,
   fill_seed,
@@ -140,21 +140,12 @@ async function install_fake_openai(page: Page): Promise<RecordedRequest[]> {
 /** Enters and checks the key on the connect screen, expecting the "connected to <name>" message. */
 async function connect_with_key(page: Page, key: string, name: string): Promise<void> {
   await page.getByRole('button', { name: tr(LANG, 'start.connect') }).click();
+  await page.getByRole('checkbox', { name: tr(LANG, 'connect.own_key') }).check();
   await page.locator('#key-input').fill(key);
   await page.getByRole('button', { name: tr(LANG, 'connect.check'), exact: true }).click();
   await expect(page.getByText(tr(LANG, 'connect.ok', { name, tail: KEY_TAIL }))).toBeVisible();
-  expect(await read_saved_text_key(page)).toBe(key);
+  expect(await read_web_storage(page)).not.toContain(key);
   await page.getByRole('button', { name: tr(LANG, 'common.home') }).click();
-}
-
-async function read_saved_text_key(page: Page): Promise<string> {
-  return page.evaluate((settings_key) => {
-    try {
-      return (JSON.parse(localStorage.getItem(settings_key) ?? '{}') as { text_key?: string }).text_key ?? '';
-    } catch {
-      return '';
-    }
-  }, SETTINGS_KEY);
 }
 
 /** Starts a new book, checks the 3 plots, picks one, and goes past the page-split screen. */

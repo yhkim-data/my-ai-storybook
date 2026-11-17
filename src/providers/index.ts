@@ -1,4 +1,5 @@
 // Picks the AI provider for the current settings. To add a provider, add a branch here.
+import { mark_activity } from '../store/idle';
 import { effective_image_key, useSettings } from '../store/settings_store';
 import { create_claude_text } from './claude_text';
 import { create_gemini_image } from './gemini_image';
@@ -10,9 +11,11 @@ import { create_openai_text } from './openai_text';
 import { detect_provider, resolve_image_model, resolve_text_model } from './provider_kinds';
 import type { ImageProvider, TextProvider } from './types';
 
-/** Bumps today's usage count. */
-function count_usage(): void {
-  useSettings.getState().add_usage();
+/** Counts one request: a text request, or one picture (a fix counts as a picture). */
+function count_usage(kind: 'text' | 'image' = 'text'): void {
+  // An AI request counts as using the app, so a long picture batch does not run into the away timer.
+  mark_activity();
+  useSettings.getState().add_usage(kind);
 }
 
 /** Wraps every text provider call so it counts toward usage. */
@@ -46,11 +49,11 @@ function with_image_usage(provider: ImageProvider): ImageProvider {
     supportsReferenceImage: provider.supportsReferenceImage,
     supportsEdit: provider.supportsEdit,
     generate: (req) => {
-      count_usage();
+      count_usage('image');
       return provider.generate(req);
     },
     edit: (req) => {
-      count_usage();
+      count_usage('image');
       return provider.edit(req);
     },
     testConnection: () => {

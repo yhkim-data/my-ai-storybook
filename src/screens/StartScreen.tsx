@@ -1,5 +1,6 @@
 // Step 1 start screen: new book, resume, demo, open file, AI connection and rights notice.
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { DeleteBookDialog, EndSessionButton } from '../components/KeySafety';
 import { Brand, DiLabBadge, MadeByLine, Shell } from '../components/Shell';
 import { Notice } from '../components/Notice';
 import { load_scene_art } from '../art/scenes';
@@ -93,6 +94,10 @@ export function StartScreen() {
   const open_side = useBook((state) => state.open_side);
   const [is_dialog_open, set_is_dialog_open] = useState(false);
   const [has_load_error, set_has_load_error] = useState(false);
+  const removed_saved_key = useSettings((state) => state.removed_saved_key);
+  const dismiss_removed_key = useSettings((state) => state.dismiss_removed_key);
+  const [is_delete_open, set_delete_open] = useState(false);
+  const [is_deleted, set_deleted] = useState(false);
   const file_ref = useRef<HTMLInputElement>(null);
 
   const handle_toggle_lang = () => set_lang(lang === 'ko' ? 'en' : 'ko');
@@ -175,6 +180,18 @@ export function StartScreen() {
         </>
       }
     >
+      {removed_saved_key && (
+        <Notice
+          kind="ok"
+          action={
+            <button type="button" className="btn small" onClick={dismiss_removed_key}>
+              {t('common.close')}
+            </button>
+          }
+        >
+          {t('start.removed_key')}
+        </Notice>
+      )}
       <div className="stack">
         <h1 className="title-xl">{t('start.title')}</h1>
         <p className="lead">{t('start.subtitle')}</p>
@@ -213,6 +230,16 @@ export function StartScreen() {
         </button>
         <span className="hint">{t('start.no_ai_hint')}</span>
       </div>
+      <div className="row start-row start-safety">
+        <EndSessionButton class_name="btn small" />
+        {has_saved_book && (
+          <button type="button" className="btn small" onClick={() => set_delete_open(true)}>
+            {t('start.delete_book')}
+          </button>
+        )}
+      </div>
+      {is_deleted && <Notice kind="ok">{t('delete_book.done')}</Notice>}
+      {is_delete_open && <DeleteBookDialog on_close={() => set_delete_open(false)} on_done={() => set_deleted(true)} />}
       {has_load_error && (
         <Notice kind="warn" role="alert">
           {t('start.load_error')}
