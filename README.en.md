@@ -19,9 +19,10 @@ Open the address in your browser to start. If this is your first visit, press [S
 ## Features
 
 - **Story setup:** Choose the reader, a topic, and the main character's name and look, and AI suggests three plots. You can also write your own.
-- **Page text:** Split the plot into 4, 6, or 8 pages, and edit the text and picture notes for each page in place.
-- **Images:** Let AI draw in one of six art styles, or upload your own drawings or photos.
-- **Layout:** Drag text boxes and change their size, font, color, and placement. Undo is supported.
+- **Page text:** Split the plot into 2 to 20 pages (4, 6, and 8 are one tap; set any other number with [Custom]). Pick a page from the page list to edit its text and picture note in place.
+- **AI writing help:** In the boxes for the main character's name and look, the one-line story, the title and plot, and each page's text and picture note, press [Ask AI for help]. An empty box gets a first draft; a box with writing gets a polished version that keeps the student's ideas. [Undo] brings back the original text. This needs an AI connection.
+- **Images:** Let AI draw in one of six art styles, or upload your own drawings or photos. [My own style] lets you describe an art style in words, and each page can have its own art style.
+- **Layout:** Drag text boxes and pictures and change their size, and overlap them with [Bring to front] and [Send to back]. Change the font, color, and placement, and choose the book shape (square, tall, or wide). Undo is supported.
 - **Export:** Save a PDF for screens, a PDF for printing, an image bundle, or a work file for further editing.
 - **Works without AI:** Without any AI connection, you can write the text, upload images, and finish the whole book.
 
@@ -39,7 +40,7 @@ Open the address in your browser to start. If this is your first visit, press [S
 
 All 8 steps are shown as dots at the top of the screen, and you can return to an earlier step at any time. Your work is saved automatically.
 
-AI may draw the same character slightly differently from image to image. A more detailed character description improves consistency, and you can regenerate any image with [Remake only this picture] in the Decorate step.
+AI may draw the same character slightly differently from image to image. A more detailed character description improves consistency, and you can regenerate any image with [Remake only this picture] on the [Picture] tab of the Decorate step.
 
 ## AI connection (optional)
 

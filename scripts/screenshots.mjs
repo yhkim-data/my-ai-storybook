@@ -26,7 +26,6 @@ const WORDS = {
     hero_look: '빨간 목도리를 한 작은 여우, 꼬리 끝이 하얘요',
     next: '다음',
     make_all: '남은 그림 모두 만들기',
-    has_picture: '그림 있음',
     to_editor: '다음: 꾸미기',
     to_finish: '다음: 완성',
     author: '토리 작가',
@@ -41,7 +40,6 @@ const WORDS = {
     hero_look: 'A small fox with a red scarf and a white tail tip',
     next: 'Next',
     make_all: 'Make all the pictures left',
-    has_picture: 'Has picture',
     to_editor: 'Next: Decorate',
     to_finish: 'Next: Finish',
     author: 'Tori the Writer',
@@ -91,7 +89,10 @@ async function main() {
   await page.getByRole('button', { name: words.next, exact: true }).click();
 
   await page.getByRole('button', { name: words.make_all }).click();
-  await page.getByText(words.has_picture).nth(7).waitFor({ timeout: 60000 });
+  // Every page shows the "has a picture" mark once the last picture is in.
+  await page.waitForFunction(() => document.querySelectorAll('.pic-item').length > 0 && document.querySelectorAll('.pic-none').length === 0, null, {
+    timeout: 60000,
+  });
   await page.waitForTimeout(500);
   await shoot(page, 'pictures');
   await page.getByRole('button', { name: words.to_editor }).click();
