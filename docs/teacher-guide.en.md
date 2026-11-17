@@ -130,7 +130,8 @@ The calculation below is for Google Gemini. Claude writes text only; the text fo
 - One book = 9 pictures (1 cover and 8 pages) x $0.0336 = $0.3024
 - The writing is free within the free limit. Even when paid, it is about $0.011 per book.
 - One book costs about 0.31 US dollars.
-- Making a picture again costs another $0.0336 each time.
+- Making a picture again costs another $0.0336 each time. [Fix the picture] also counts as one picture per request.
+- [AI usage] in the header shows the pictures used on that computer and a rough cost (only for picture kinds with an official price). Check the money left on each company's own pages.
 
 | Example | Calculation | Total |
 |---|---|---|

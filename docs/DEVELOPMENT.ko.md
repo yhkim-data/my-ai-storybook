@@ -88,7 +88,8 @@ npm run dev
 - **`Book`**: 책 한 권. `format_version`(지금은 1), `id`, `lang`, `author`, `seed`(이야기 씨앗), `write_mode`(`ai` 또는 `self`), 줄거리 제안 `plots`와 고른 줄거리 `chosen_plot`, `style_id`, `pages`, 마지막 단계 `step`, `updated_at`이 있어요. `plots_key`와 `pages_key`는 같은 입력이면 AI를 다시 부르지 않으려고 두는 열쇠예요.
 - **`BookPage`**: 쪽 하나. `pages[0]`이 표지(`kind: 'cover'`)이고 그 뒤가 본문(`'story'`)이에요. 표지의 글이 책 제목이에요. `text`, `image_prompt`(그림 설명), `image`, `layout`, `text_box`가 있어요.
 - **`TextBox`**: 글상자. `x`, `y`, `w`, `h`는 쪽 크기에 대한 퍼센트(0~100)예요. `font_id`(`round`, `plain`, `hand`), `font_size`(쪽 너비를 `PAGE_REF_SIZE`로 봤을 때의 px), `color`, `align`, `background`(`none`, `white`, `bubble`)가 있어요.
-- **`PageImage`**: `data_url`, `source`(`ai` 또는 `upload`), AI로 만들었을 때의 `model_name`이에요. `source`가 `ai`인 그림이 하나라도 있으면 "만든 사람" 쪽에 AI 표시가 들어가요.
+- **`PageImage`**: `data_url`, `source`(`ai` 또는 `upload`), AI로 만들었을 때의 `model_name`이에요. `source`가 `ai`인 그림이 하나라도 있으면 "만든 사람" 쪽에 AI 표시가 들어가요. 그림 고치기로 만든 그림에는 `edit_note`(고칠 내용), `created_at`, `based_on`(어느 그림에서 고쳤는지)이 붙어요.
+- **그림 버전**: `BookPage.image_versions`(0번이 원래 그림, 나머지가 고친 그림, 최대 6장)와 `active_version`(쓰는 그림 번호)이에요. `page.image`는 늘 쓰는 그림과 같아서, 미리보기·완성·내보내기는 `page.image`만 읽어요. 새로 그리거나 그림을 올리면 버전 목록이 새로 시작돼요. 관련 함수는 `src/store/image_versions.ts`에 있어요.
 
 저장 위치는 이렇게 달라요.
 
