@@ -27,6 +27,10 @@ function with_text_usage(provider: TextProvider): TextProvider {
       count_usage();
       return provider.splitIntoPages(plot, seed, lang);
     },
+    assist: (req) => {
+      count_usage();
+      return provider.assist(req);
+    },
     testConnection: () => {
       count_usage();
       return provider.testConnection();
@@ -102,4 +106,4 @@ export function create_text_provider_for_key(api_key: string): TextProvider {
 }
 
 export { ProviderError } from './types';
-export type { ConnectionResult, ImageProvider, ImageRequest, ProviderErrorKind, TextProvider } from './types';
+export type { AssistKind, AssistRequest, AssistResult, ConnectionResult, ImageProvider, ImageRequest, ProviderErrorKind, TextProvider } from './types';

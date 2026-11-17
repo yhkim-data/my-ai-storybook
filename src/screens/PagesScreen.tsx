@@ -1,9 +1,10 @@
 // Step 4 page split screen: a page list, and the chosen page's text and image description. One AI call splits the pages.
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AssistControl, AssistError, assist_text, useAssist } from '../components/Assist';
 import { AiErrorNotice, Busy, to_provider_error } from '../components/Notice';
 import { StepShell } from '../components/Shell';
 import { page_name, useT } from '../i18n';
-import { get_text_provider, type ProviderError } from '../providers';
+import { get_text_provider, type AssistRequest, type ProviderError } from '../providers';
 import { make_input_key } from '../store/book_model';
 import { useBook } from '../store/book_store';
 import './PagesScreen.css';
@@ -43,6 +44,8 @@ export function PagesScreen() {
   const update_page = useBook((state) => state.update_page);
   /** 1-based story page shown on the right. */
   const [selected, set_selected] = useState(1);
+  const text_assist = useAssist<string>();
+  const desc_assist = useAssist<string>();
   const [is_busy, set_busy] = useState(false);
   const [error, set_error] = useState<ProviderError | null>(null);
   // Decide only once on entry, even under StrictMode's double effects.
@@ -90,6 +93,24 @@ export function PagesScreen() {
   const page = book.pages[n];
   const is_ai = book.write_mode === 'ai' && book.chosen_plot !== null && get_text_provider() !== null;
   const columns = list_columns(story_count);
+
+  /** Base request for one page: the plot, the page number, and the words before and after it. */
+  const page_request = (kind: 'page_text' | 'page_image', current: string): AssistRequest => ({
+    kind,
+    lang: book.lang,
+    seed: book.seed,
+    current,
+    plot: book.chosen_plot,
+    page_number: n,
+    previous_text: book.pages[n - 1]?.kind === 'story' ? book.pages[n - 1]?.text : '',
+    next_text: book.pages[n + 1]?.text ?? '',
+    page_text: page?.text ?? '',
+  });
+  /** Writes into the page with this id, wherever it is now. */
+  const patch_page_by_id = (page_id: string, patch: { text?: string; image_prompt?: string }) => {
+    const index = useBook.getState().book?.pages.findIndex((item) => item.id === page_id) ?? -1;
+    if (index > 0) update_page(index, patch);
+  };
   const is_compact = columns >= COMPACT_LIST_COLUMNS;
 
   /** "Write it myself" from the error notice: switch to self-writing with blank pages. */
@@ -152,29 +173,63 @@ export function PagesScreen() {
 
           <section className="pages-main" aria-label={page_name(t, n)}>
             <div className="pages-fields">
-              <label htmlFor={`page-text-${n}`} className="field-label small pages-label-text">
-                {t('pages.text_label', { n })}
-              </label>
+              <div className="field-head pages-label-text">
+                <label htmlFor={`page-text-${n}`} className="field-label small">
+                  {t('pages.text_label', { n })}
+                </label>
+                <AssistControl
+                  state={text_assist}
+                  field_key={page.id}
+                  on_ask={() =>
+                    void text_assist.run(page.id, page_request('page_text', page.text), page.text, (result) =>
+                      patch_page_by_id(page.id, { text: assist_text(result) }),
+                    )
+                  }
+                  on_undo={() => text_assist.undo((text) => patch_page_by_id(page.id, { text }))}
+                />
+              </div>
               <textarea
                 id={`page-text-${n}`}
                 className="text-area pages-input pages-input-text"
                 rows={FIELD_ROWS}
                 placeholder={t('pages.text_placeholder')}
                 value={page.text}
-                onChange={(event) => update_page(n, { text: event.target.value })}
+                readOnly={text_assist.busy_key === page.id}
+                onChange={(event) => {
+                  text_assist.forget(page.id);
+                  update_page(n, { text: event.target.value });
+                }}
               />
-              <label htmlFor={`page-desc-${n}`} className="field-label small pages-label-desc">
-                {t('pages.desc_label', { n })}
-              </label>
+              <div className="field-head pages-label-desc">
+                <label htmlFor={`page-desc-${n}`} className="field-label small">
+                  {t('pages.desc_label', { n })}
+                </label>
+                <AssistControl
+                  state={desc_assist}
+                  field_key={page.id}
+                  on_ask={() =>
+                    void desc_assist.run(page.id, page_request('page_image', page.image_prompt), page.image_prompt, (result) =>
+                      patch_page_by_id(page.id, { image_prompt: assist_text(result) }),
+                    )
+                  }
+                  on_undo={() => desc_assist.undo((image_prompt) => patch_page_by_id(page.id, { image_prompt }))}
+                />
+              </div>
               <textarea
                 id={`page-desc-${n}`}
                 className="text-area pages-input pages-input-desc"
                 rows={FIELD_ROWS}
                 placeholder={t('pages.desc_placeholder')}
                 value={page.image_prompt}
-                onChange={(event) => update_page(n, { image_prompt: event.target.value })}
+                readOnly={desc_assist.busy_key === page.id}
+                onChange={(event) => {
+                  desc_assist.forget(page.id);
+                  update_page(n, { image_prompt: event.target.value });
+                }}
               />
             </div>
+            <AssistError state={text_assist} />
+            <AssistError state={desc_assist} />
             <div className="row spread">
               <div className="row">
                 <button type="button" className="btn small" disabled={n <= 1} onClick={() => set_selected(n - 1)}>

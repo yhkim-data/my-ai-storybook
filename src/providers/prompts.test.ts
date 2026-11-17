@@ -2,12 +2,16 @@
 import { describe, expect, it } from 'vitest';
 import { STYLE_IDS } from '../constants';
 import type { Lang, StorySeed } from '../types';
+import type { AssistKind, AssistRequest } from './types';
 import {
+  build_assist_prompt,
+  build_assist_schema,
   build_hero_card,
   build_image_prompt,
   build_pages_prompt,
   build_pages_schema,
   build_plots_prompt,
+  parse_assist,
   parse_pages,
   parse_plots,
   text_system_instruction,
@@ -166,5 +170,82 @@ describe('my own style in the image prompt', () => {
     const prompt = build_image_prompt('숲길', 'custom', '', 'ko', '   ');
     expect(prompt).not.toContain('그림체:');
     expect(prompt).toContain('실제 인물');
+  });
+});
+
+describe('build_assist_prompt', () => {
+  const PLOT = { id: 'p', title: '곰의 하루', summary: '곰이 숲에서 친구를 만난다.' };
+  const KINDS: AssistKind[] = ['hero_name', 'hero_look', 'topic', 'plot', 'page_text', 'page_image'];
+  const request = (kind: AssistKind, lang: Lang, current = '', extra: Partial<AssistRequest> = {}): AssistRequest => ({
+    kind,
+    lang,
+    seed: SEED,
+    current,
+    plot: PLOT,
+    page_number: 2,
+    previous_text: '앞 쪽 이야기',
+    next_text: '뒤 쪽 이야기',
+    page_text: '곰이 강을 건넌다.',
+    ...extra,
+  });
+
+  it('every kind asks for a draft when the box is empty and polishes the words when it is not', () => {
+    for (const lang of LANGS) {
+      for (const kind of KINDS) {
+        const draft = build_assist_prompt(request(kind, lang));
+        expect(draft).toMatch(lang === 'ko' ? /새로 써 줘/ : /first draft/);
+        const polish = build_assist_prompt(request(kind, lang, '학생이 쓴 문장'));
+        expect(polish).toContain('학생이 쓴 문장');
+        expect(polish).toMatch(lang === 'ko' ? /뜻은 바꾸지 않는다/ : /Do not change the meaning/);
+        // The book seed always goes along, nothing else from the app.
+        expect(polish).toContain('보리');
+      }
+    }
+  });
+
+  it('states the length for each box', () => {
+    expect(build_assist_prompt(request('topic', 'ko'))).toContain('30자 안팎');
+    expect(build_assist_prompt(request('hero_look', 'ko'))).toContain('한 문장');
+    const plot = build_assist_prompt(request('plot', 'ko'));
+    expect(plot).toContain('20자 안팎');
+    expect(plot).toContain('2~3문장');
+    expect(build_assist_prompt(request('page_image', 'en'))).toMatch(/one or two sentences/);
+    // Page words follow the reader age.
+    expect(build_assist_prompt(request('page_text', 'ko', '', { seed: { ...SEED, age_band: '5-7' } }))).toContain('아주 쉬운 1문장');
+    expect(build_assist_prompt(request('page_text', 'ko', '', { seed: { ...SEED, age_band: '11-13' } }))).toContain('2~3문장');
+  });
+
+  it('page words get the plot and the pages before and after; picture notes get the page words and the hero card', () => {
+    const text_prompt = build_assist_prompt(request('page_text', 'ko'));
+    expect(text_prompt).toContain('곰이 숲에서 친구를 만난다.');
+    expect(text_prompt).toContain('앞 쪽 이야기');
+    expect(text_prompt).toContain('뒤 쪽 이야기');
+    expect(text_prompt).toContain('2쪽');
+    const image_prompt = build_assist_prompt(request('page_image', 'ko'));
+    expect(image_prompt).toContain('곰이 강을 건넌다.');
+    expect(image_prompt).toContain(build_hero_card(SEED, 'ko'));
+    expect(image_prompt).toContain('그림 안에 글자를 넣으라는 말은 쓰지 않는다');
+    expect(build_assist_prompt(request('page_image', 'en'))).toMatch(/Never ask for words or letters inside the picture/);
+  });
+
+  it('the plot box sends both the title and the summary the student wrote', () => {
+    const prompt = build_assist_prompt(request('plot', 'ko', '곰이 걷는다', { current_title: '곰 이야기' }));
+    expect(prompt).toContain('곰 이야기');
+    expect(prompt).toContain('곰이 걷는다');
+  });
+});
+
+describe('assist answers', () => {
+  it('plot answers have a title and a summary; other answers have one text', () => {
+    expect(JSON.stringify(build_assist_schema('plot'))).toContain('summary');
+    expect(JSON.stringify(build_assist_schema('hero_name'))).toContain('"text"');
+    expect(parse_assist('{"title":" 곰 ","summary":"걷는다"}', 'plot')).toEqual({ title: '곰', summary: '걷는다' });
+    expect(parse_assist('{"text":" 보리 "}', 'hero_name')).toEqual({ text: '보리' });
+  });
+
+  it('broken or empty answers are null, so the provider retries once', () => {
+    expect(parse_assist('oops', 'topic')).toBeNull();
+    expect(parse_assist('{"text":"  "}', 'topic')).toBeNull();
+    expect(parse_assist('{"title":"a"}', 'plot')).toBeNull();
   });
 });

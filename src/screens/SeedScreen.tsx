@@ -1,5 +1,6 @@
 // Step 2 story seed screen: age band, topic, hero and page count (a button or any count). No AI calls.
 import { useState } from 'react';
+import { AssistControl, AssistError, assist_text, useAssist } from '../components/Assist';
 import { Notice } from '../components/Notice';
 import { StepShell } from '../components/Shell';
 import { AGE_BANDS, CUSTOM_PAGE_COUNT_START, MANY_PAGES_FROM, PAGE_COUNTS, PAGE_COUNT_MAX, PAGE_COUNT_MIN, TOPIC_IDS } from '../constants';
@@ -71,6 +72,9 @@ export function SeedScreen() {
   const [custom_open, set_custom_open] = useState(false);
   const [custom_count_open, set_custom_count_open] = useState(false);
   const [problem, set_problem] = useState<SeedProblem>(null);
+  const name_assist = useAssist<string>();
+  const look_assist = useAssist<string>();
+  const topic_assist = useAssist<string>();
 
   if (!book) return null;
   const seed = book.seed;
@@ -80,6 +84,7 @@ export function SeedScreen() {
   const is_custom = custom_open || (seed.topic !== '' && !topic_words.includes(seed.topic));
 
   const is_custom_count = custom_count_open || !PAGE_COUNTS.includes(seed.page_count);
+  const lang = book.lang;
 
   const patch_seed = (patch: Partial<StorySeed>) => {
     set_problem(null);
@@ -155,17 +160,34 @@ export function SeedScreen() {
             </div>
             {is_custom && (
               <div className="seed-field">
-                <label htmlFor="topic-custom" className="field-label small">
-                  {t('seed.topic.custom_label')}
-                </label>
+                <div className="field-head">
+                  <label htmlFor="topic-custom" className="field-label small">
+                    {t('seed.topic.custom_label')}
+                  </label>
+                  <AssistControl
+                    state={topic_assist}
+                    field_key="topic"
+                    on_ask={() =>
+                      void topic_assist.run('topic', { kind: 'topic', lang, seed, current: seed.topic }, seed.topic, (result) =>
+                        patch_seed({ topic: assist_text(result) }),
+                      )
+                    }
+                    on_undo={() => topic_assist.undo((topic) => patch_seed({ topic }))}
+                  />
+                </div>
                 <input
                   id="topic-custom"
                   type="text"
                   className="text-input"
                   placeholder={t('seed.topic.custom_placeholder')}
                   value={seed.topic}
-                  onChange={(event) => patch_seed({ topic: event.target.value })}
+                  readOnly={topic_assist.busy_key === 'topic'}
+                  onChange={(event) => {
+                    topic_assist.forget('topic');
+                    patch_seed({ topic: event.target.value });
+                  }}
                 />
+                <AssistError state={topic_assist} />
               </div>
             )}
           </fieldset>
@@ -208,9 +230,21 @@ export function SeedScreen() {
         </div>
         <div className="seed-col">
           <div className="seed-field">
-            <label htmlFor="hero-name" className="field-label">
-              {t('seed.hero_name.label')}
-            </label>
+            <div className="field-head">
+              <label htmlFor="hero-name" className="field-label">
+                {t('seed.hero_name.label')}
+              </label>
+              <AssistControl
+                state={name_assist}
+                field_key="hero_name"
+                on_ask={() =>
+                  void name_assist.run('hero_name', { kind: 'hero_name', lang, seed, current: seed.hero_name }, seed.hero_name, (result) =>
+                    patch_seed({ hero_name: assist_text(result).slice(0, HERO_NAME_MAX_LENGTH) }),
+                  )
+                }
+                on_undo={() => name_assist.undo((hero_name) => patch_seed({ hero_name }))}
+              />
+            </div>
             <input
               id="hero-name"
               type="text"
@@ -218,13 +252,30 @@ export function SeedScreen() {
               maxLength={HERO_NAME_MAX_LENGTH}
               placeholder={t('seed.hero_name.placeholder')}
               value={seed.hero_name}
-              onChange={(event) => patch_seed({ hero_name: event.target.value })}
+              readOnly={name_assist.busy_key === 'hero_name'}
+              onChange={(event) => {
+                name_assist.forget('hero_name');
+                patch_seed({ hero_name: event.target.value });
+              }}
             />
+            <AssistError state={name_assist} />
           </div>
           <div className="seed-field">
-            <label htmlFor="hero-look" className="field-label">
-              {t('seed.hero_look.label')}
-            </label>
+            <div className="field-head">
+              <label htmlFor="hero-look" className="field-label">
+                {t('seed.hero_look.label')}
+              </label>
+              <AssistControl
+                state={look_assist}
+                field_key="hero_look"
+                on_ask={() =>
+                  void look_assist.run('hero_look', { kind: 'hero_look', lang, seed, current: seed.hero_look }, seed.hero_look, (result) =>
+                    patch_seed({ hero_look: assist_text(result).slice(0, HERO_LOOK_MAX_LENGTH) }),
+                  )
+                }
+                on_undo={() => look_assist.undo((hero_look) => patch_seed({ hero_look }))}
+              />
+            </div>
             <textarea
               id="hero-look"
               className="text-area"
@@ -232,8 +283,13 @@ export function SeedScreen() {
               maxLength={HERO_LOOK_MAX_LENGTH}
               placeholder={t('seed.hero_look.placeholder')}
               value={seed.hero_look}
-              onChange={(event) => patch_seed({ hero_look: event.target.value })}
+              readOnly={look_assist.busy_key === 'hero_look'}
+              onChange={(event) => {
+                look_assist.forget('hero_look');
+                patch_seed({ hero_look: event.target.value });
+              }}
             />
+            <AssistError state={look_assist} />
           </div>
 
           <Notice kind="warn">{t('seed.privacy')}</Notice>

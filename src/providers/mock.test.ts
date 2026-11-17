@@ -1,6 +1,7 @@
 // Mock provider tests: plots and pages, images, simulated failures, provider selection, usage count, page images, image prompts.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { build_demo_book } from '../data/demo_book';
+import { SAMPLE_HERO, get_sample_pages } from '../data/sample_story';
 import { USAGE_STORAGE_KEY, useSettings } from '../store/settings_store';
 import type { ImageRequest, ProviderErrorKind } from './types';
 import { ProviderError } from './types';
@@ -215,5 +216,21 @@ describe('page image generation', () => {
     expect(needs_style_redraw(changed, 1)).toBe(true);
     // Uploaded pictures and pages without a picture never ask for a redraw.
     expect(needs_style_redraw({ ...changed, style_id: 'pencil' }, 2)).toBe(false);
+  });
+
+  it('practice mode answers "Ask AI for help" with sample story lines for every box', async () => {
+    useSettings.setState({ practice: true });
+    const provider = get_text_provider();
+    const seed = { age_band: '8-10' as const, topic: '', hero_name: '토리', hero_look: '', page_count: 8 };
+    expect(await provider?.assist({ kind: 'hero_name', lang: 'ko', seed, current: '' })).toEqual({ text: '토리' });
+    expect(await provider?.assist({ kind: 'hero_look', lang: 'en', seed, current: '' })).toEqual({ text: SAMPLE_HERO.en.look });
+    const plot = await provider?.assist({ kind: 'plot', lang: 'ko', seed, current: '' });
+    expect(plot && 'title' in plot ? plot.title : '').toContain('토리');
+    const page = await provider?.assist({ kind: 'page_text', lang: 'ko', seed, current: '', page_number: 2 });
+    expect(page).toEqual({ text: get_sample_pages('sample-1', 'ko', '토리', 8)[1]?.text });
+    const note = await provider?.assist({ kind: 'page_image', lang: 'ko', seed, current: '', page_number: 2 });
+    expect(note).toEqual({ text: get_sample_pages('sample-1', 'ko', '토리', 8)[1]?.image_prompt });
+    // Each request counts as one AI use.
+    expect(useSettings.getState().usage_count).toBe(5);
   });
 });

@@ -1,6 +1,6 @@
 // Step 3 plot screen tests.
 import { StrictMode } from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { get_sample_plots } from '../data/sample_story';
@@ -126,5 +126,17 @@ describe('PlotScreen', () => {
     await user.click(screen.getByRole('button', { name: ko('error.retry') }));
     expect(await screen.findAllByRole('button', { name: CARD_NAME })).toHaveLength(PLOT_COUNT);
     expect(screen.queryByText(ko('error.blocked'))).not.toBeInTheDocument();
+  });
+
+  it('"Ask AI for help" writes the title and the summary together, and undo restores both', async () => {
+    prepare_store({ write_mode: 'self' });
+    render(<PlotScreen />);
+    fireEvent.change(screen.getByLabelText(ko('plot.title_label')), { target: { value: '내 제목' } });
+    fireEvent.click(screen.getByRole('button', { name: ko('assist.button') }));
+    await waitFor(() => expect(current_book().chosen_plot?.title).not.toBe('내 제목'));
+    expect(current_book().chosen_plot?.summary.length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: ko('assist.undo') }));
+    expect(current_book().chosen_plot?.title).toBe('내 제목');
+    expect(current_book().chosen_plot?.summary).toBe('');
   });
 });

@@ -43,12 +43,40 @@ export interface ImageRequest {
   lang: Lang;
 }
 
+/** Which box "Ask AI for help" writes into. */
+export type AssistKind = 'hero_name' | 'hero_look' | 'topic' | 'plot' | 'page_text' | 'page_image';
+
+/** One "Ask AI for help" request. Only the book's own content goes in it. */
+export interface AssistRequest {
+  kind: AssistKind;
+  lang: Lang;
+  seed: StorySeed;
+  /** What the box holds now; empty asks for a first draft. For 'plot' this is the summary. */
+  current: string;
+  /** 'plot' only: the title the user has now. */
+  current_title?: string;
+  /** The chosen plot, for page words and picture notes. */
+  plot?: Plot | null;
+  /** 1-based story page number, for page words and picture notes. */
+  page_number?: number;
+  /** Words on the pages before and after, so the story flows. */
+  previous_text?: string;
+  next_text?: string;
+  /** 'page_image' only: the words on this page. */
+  page_text?: string;
+}
+
+/** 'plot' gives a title and a summary; every other kind gives one text. */
+export type AssistResult = { title: string; summary: string } | { text: string };
+
 export interface TextProvider {
   id: string;
   /** Suggests three plots. */
   suggestPlots(seed: StorySeed, lang: Lang): Promise<Plot[]>;
   /** Makes every page's text and image description in one request. */
   splitIntoPages(plot: Plot, seed: StorySeed, lang: Lang): Promise<PageDraft[]>;
+  /** Writes a draft for one box, or polishes what the user wrote there. */
+  assist(req: AssistRequest): Promise<AssistResult>;
   testConnection(): Promise<ConnectionResult>;
 }
 

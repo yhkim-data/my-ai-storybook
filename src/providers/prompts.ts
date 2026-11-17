@@ -1,5 +1,6 @@
 // Builds the prompts sent to the AI. Every prompt carries the child-safety rules.
 import type { AgeBand, ArtStyle, Lang, PageDraft, Plot, StorySeed, StyleId } from '../types';
+import type { AssistKind, AssistRequest, AssistResult } from './types';
 
 export const PLOT_SUGGESTION_COUNT = 3;
 
@@ -221,3 +222,119 @@ export function parse_pages(raw: string, page_count: number): PageDraft[] | null
     return null;
   }
 }
+
+/** What each "Ask AI for help" box should hold, and how long it should be. */
+const ASSIST_TASKS: Record<AssistKind, Record<Lang, string>> = {
+  hero_name: {
+    ko: '그림책 주인공의 이름을 하나 지어 줘(text). 실제 사람, 기존 작품의 캐릭터, 상표의 이름은 쓰지 않는다. 이름 하나만 10자 이내로 쓴다.',
+    en: 'Make up one name for the main character of a picture book (text). Never use the name of a real person, an existing character, or a brand. Write only one name, at most 15 letters.',
+  },
+  hero_look: {
+    ko: '주인공이 어떻게 생겼는지 한 문장으로 써 줘(text). 모든 그림에서 같은 모습으로 그릴 수 있게 눈에 보이는 특징을 쓴다.',
+    en: 'Describe what the main character looks like in one sentence (text). Use features you can see, so every picture can draw the character the same way.',
+  },
+  topic: {
+    ko: '그림책 이야기를 한 줄로 써 줘(text). 30자 안팎의 한 문장으로 쓴다.',
+    en: 'Write the picture book story in one line (text). Use one sentence of about 8 words.',
+  },
+  plot: {
+    ko: '그림책의 제목(title)과 줄거리(summary)를 써 줘. 제목은 20자 안팎, 줄거리는 2~3문장으로 쓴다.',
+    en: 'Write a title and a plot summary for the picture book. The title has about 5 words; the summary has two or three sentences.',
+  },
+  page_text: {
+    ko: '그림책 {n}쪽에 들어갈 글을 써 줘(text). 줄거리와 앞뒤 쪽 글에 자연스럽게 이어지게 쓴다. 길이는 {length}.',
+    en: 'Write the words for page {n} of the picture book (text). They must flow from the plot and the pages before and after. Length: {length}.',
+  },
+  page_image: {
+    ko: '그림책 {n}쪽의 그림 설명을 써 줘(text). 장면, 배경, 주인공이 하는 일처럼 그림에서 눈에 보이는 것만 1~2문장으로 쓴다. 그림 안에 글자를 넣으라는 말은 쓰지 않는다.',
+    en: 'Write the picture note for page {n} of the picture book (text). In one or two sentences, describe only what can be seen: the scene, the place, and what the main character is doing. Never ask for words or letters inside the picture.',
+  },
+};
+
+/** Page word length for each reader age. */
+const PAGE_TEXT_LENGTH: Record<AgeBand, Record<Lang, string>> = {
+  '5-7': { ko: '아주 쉬운 1문장', en: 'one very simple sentence' },
+  '8-10': { ko: '쉬운 1~2문장', en: 'one or two simple sentences' },
+  '11-13': { ko: '2~3문장', en: 'two or three sentences' },
+};
+
+/** Draft or polish: an empty box gets a first draft; written words are kept and polished. */
+function assist_mode(req: AssistRequest): string {
+  const is_plot = req.kind === 'plot';
+  const written = is_plot ? [req.current_title ?? '', req.current].some((part) => part.trim()) : req.current.trim() !== '';
+  if (!written) return req.lang === 'ko' ? '칸이 비어 있으니 처음부터 새로 써 줘.' : 'The box is empty, so write a first draft.';
+  const quoted = is_plot
+    ? req.lang === 'ko'
+      ? `학생이 쓴 제목: «${(req.current_title ?? '').trim()}»\n학생이 쓴 줄거리: «${req.current.trim()}»`
+      : `The student's title: «${(req.current_title ?? '').trim()}»\nThe student's summary: «${req.current.trim()}»`
+    : req.lang === 'ko'
+      ? `학생이 쓴 글: «${req.current.trim()}»`
+      : `The student wrote: «${req.current.trim()}»`;
+  const rule =
+    req.lang === 'ko'
+      ? '학생의 생각과 표현을 살려서 다듬거나 이어 써 줘. 뜻은 바꾸지 않는다.'
+      : "Keep the student's ideas and words, and polish or continue them. Do not change the meaning.";
+  return `${quoted}\n${rule}`;
+}
+
+/** The book content the box depends on. */
+function assist_context(req: AssistRequest): string {
+  const ko = req.lang === 'ko';
+  const parts = [describe_seed(req.seed, req.lang)];
+  if ((req.kind === 'page_text' || req.kind === 'page_image') && req.plot) {
+    parts.push(ko ? `제목: ${req.plot.title}\n줄거리: ${req.plot.summary}` : `Title: ${req.plot.title}\nPlot: ${req.plot.summary}`);
+  }
+  if (req.kind === 'page_text') {
+    const none = ko ? '없음' : 'none';
+    parts.push(
+      ko
+        ? `앞 쪽 글: ${req.previous_text?.trim() || none}\n뒤 쪽 글: ${req.next_text?.trim() || none}`
+        : `Words on the page before: ${req.previous_text?.trim() || none}\nWords on the page after: ${req.next_text?.trim() || none}`,
+    );
+  }
+  if (req.kind === 'page_image') {
+    const card = build_hero_card(req.seed, req.lang);
+    parts.push(ko ? `이 쪽 글: ${req.page_text?.trim() ?? ''}` : `Words on this page: ${req.page_text?.trim() ?? ''}`);
+    if (card) parts.push(card);
+  }
+  return parts.join('\n\n');
+}
+
+/** Prompt for "Ask AI for help". The system instruction stays the usual child-safety rules. */
+export function build_assist_prompt(req: AssistRequest): string {
+  const task = ASSIST_TASKS[req.kind][req.lang]
+    .replace('{n}', String(req.page_number ?? 1))
+    .replace('{length}', PAGE_TEXT_LENGTH[req.seed.age_band][req.lang]);
+  return `${task}\n${assist_mode(req)}\n\n${assist_context(req)}`;
+}
+
+/** JSON schema for an "Ask AI for help" answer. */
+export function build_assist_schema(kind: AssistKind): object {
+  if (kind === 'plot') {
+    return {
+      type: 'object',
+      properties: { title: { type: 'string' }, summary: { type: 'string' } },
+      required: ['title', 'summary'],
+    };
+  }
+  return { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] };
+}
+
+/** Parses an "Ask AI for help" answer. Returns null if the format is wrong or the answer is empty. */
+export function parse_assist(raw: string, kind: AssistKind): AssistResult | null {
+  try {
+    const data = JSON.parse(raw) as unknown;
+    if (kind === 'plot') {
+      if (!has_string_fields(data, ['title', 'summary'])) return null;
+      const title = (data.title ?? '').trim();
+      const summary = (data.summary ?? '').trim();
+      return title || summary ? { title, summary } : null;
+    }
+    if (!has_string_fields(data, ['text'])) return null;
+    const text = (data.text ?? '').trim();
+    return text ? { text } : null;
+  } catch {
+    return null;
+  }
+}
+

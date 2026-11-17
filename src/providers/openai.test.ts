@@ -91,6 +91,26 @@ describe('OpenAI text', () => {
     expect(JSON.stringify(format.schema)).toContain('"additionalProperties":false');
   });
 
+  it('ask AI for help: strict text schema, store:false, and the page words come back', async () => {
+    const mock = stub_fetch(json_response(text_body('{"text":"곰이 다리를 건넜어요."}')));
+    const result = await create_openai_text(TEST_KEY, TEXT_MODEL).assist({
+      kind: 'page_text',
+      lang: 'ko',
+      seed: SEED,
+      current: '',
+      plot: { id: 'p', title: 't', summary: 's' },
+      page_number: 3,
+    });
+    expect(result).toEqual({ text: '곰이 다리를 건넜어요.' });
+    const { url, body } = read_call(mock, 0);
+    expect(url).toBe(OPENAI_RESPONSES_URL);
+    expect(body.store).toBe(false);
+    expect(JSON.stringify(body.input)).toContain('3쪽');
+    const format = (body.text as { format: { strict: boolean; schema: unknown } }).format;
+    expect(format.strict).toBe(true);
+    expect(JSON.stringify(format.schema)).toContain('"text"');
+  });
+
   it('retries once on a wrong page count', async () => {
     const wrong = JSON.stringify({ pages: [{ text: 'a', image_prompt: 'b' }] });
     const right = JSON.stringify({ pages: Array.from({ length: PAGE_COUNT }, () => ({ text: 'a', image_prompt: 'b' })) });

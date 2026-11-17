@@ -3,15 +3,18 @@ import type { Lang, PageDraft, Plot, StorySeed } from '../types';
 import { OPENAI_RESPONSES_URL, check_openai_key, post_openai } from './openai_client';
 import {
   PLOTS_SCHEMA,
+  build_assist_prompt,
+  build_assist_schema,
   build_pages_prompt,
   build_pages_schema,
   build_plots_prompt,
+  parse_assist,
   parse_pages,
   parse_plots,
   text_system_instruction,
 } from './prompts';
 import { to_strict_schema } from './strict_schema';
-import { ProviderError, type TextProvider } from './types';
+import { ProviderError, type AssistRequest, type AssistResult, type TextProvider } from './types';
 
 /** Total attempts, including the one retry after a malformed response. */
 const MAX_FORMAT_ATTEMPTS = 2;
@@ -79,6 +82,8 @@ export function create_openai_text(api_key: string, model: string): TextProvider
         lang,
         (raw) => parse_pages(raw, seed.page_count),
       ),
+    assist: (req: AssistRequest): Promise<AssistResult> =>
+      request_json(api_key, model, build_assist_prompt(req), build_assist_schema(req.kind), req.lang, (raw) => parse_assist(raw, req.kind)),
     testConnection: () => check_openai_key(api_key),
   };
 }

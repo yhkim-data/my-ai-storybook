@@ -138,6 +138,22 @@ describe('Claude text request shape', () => {
   });
 });
 
+describe('Claude ask AI for help', () => {
+  it('sends the assist prompt with a strict title/summary schema and reads the plot', async () => {
+    const mock = stub_fetch(message_response('{"title":"곰의 하루","summary":"곰이 걷는다."}', 'end_turn', HAIKU));
+    const result = await create_claude_text(TEST_KEY, HAIKU).assist({ kind: 'plot', lang: 'ko', seed: SEED, current: '', current_title: '' });
+    expect(result).toEqual({ title: '곰의 하루', summary: '곰이 걷는다.' });
+    const { url, headers, body } = read_call(mock, 0);
+    expect(url.startsWith(MESSAGES_URL)).toBe(true);
+    expect_key_header(headers);
+    expect(JSON.stringify(body.messages)).toContain('제목(title)');
+    expect(typeof body.system).toBe('string');
+    const schema = (body.output_config as { format: { schema: unknown } }).format.schema;
+    expect(JSON.stringify(schema)).toContain('summary');
+    for (const item of collect_objects(schema)) expect(item.additionalProperties).toBe(false);
+  });
+});
+
 describe('Claude response parsing and retry', () => {
   it('page split: finishes in one call when the page count matches', async () => {
     const mock = stub_fetch(message_response(pages_text(PAGE_COUNT)));

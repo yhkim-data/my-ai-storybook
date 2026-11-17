@@ -1,5 +1,6 @@
 // Step 3 plot screen: pick one of three AI plots on the left and edit it on the right, or write your own.
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AssistControl, AssistError, useAssist } from '../components/Assist';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { StepShell } from '../components/Shell';
 import { useT } from '../i18n';
@@ -13,6 +14,8 @@ import './PlotScreen.css';
 const SELF_PLOT_ID = 'self';
 const TITLE_MAX_LENGTH = 60;
 const SUMMARY_ROWS = 4;
+/** One "Ask AI for help" writes the title and the summary together. */
+const PLOT_ASSIST_KEY = 'plot';
 
 /** Step 3 screen; continues to the page split screen. */
 export function PlotScreen() {
@@ -25,6 +28,7 @@ export function PlotScreen() {
   const [is_busy, set_busy] = useState(false);
   const [error, set_error] = useState<ProviderError | null>(null);
   const [show_need_title, set_show_need_title] = useState(false);
+  const plot_assist = useAssist<{ title: string; summary: string }>();
   // Prevents a second automatic call for the same input, including under StrictMode.
   const requested_ref = useRef(false);
 
@@ -71,12 +75,27 @@ export function PlotScreen() {
   /** Every title or summary edit is saved as the chosen plot. */
   const edit_chosen = (patch: { title?: string; summary?: string }) => {
     clear_need_title();
+    plot_assist.forget(PLOT_ASSIST_KEY);
     choose_plot({
       id: chosen?.id ?? SELF_PLOT_ID,
       title: patch.title ?? chosen?.title ?? '',
       summary: patch.summary ?? chosen?.summary ?? '',
     });
   };
+
+  /** Asks the AI to write or polish the title and summary together. */
+  const ask_plot_help = () => {
+    const before = { title: chosen?.title ?? '', summary: chosen?.summary ?? '' };
+    const request = { kind: 'plot' as const, lang: book.lang, seed: book.seed, current: before.summary, current_title: before.title };
+    void plot_assist.run(PLOT_ASSIST_KEY, request, before, (result) => {
+      if (!('title' in result)) return;
+      clear_need_title();
+      choose_plot({ id: chosen?.id ?? SELF_PLOT_ID, title: result.title.slice(0, TITLE_MAX_LENGTH), summary: result.summary });
+    });
+  };
+  const undo_plot_help = () =>
+    plot_assist.undo((before) => choose_plot({ id: useBook.getState().book?.chosen_plot?.id ?? SELF_PLOT_ID, ...before }));
+  const is_plot_busy = plot_assist.busy_key === PLOT_ASSIST_KEY;
 
   const handle_next = () => {
     if (!chosen || chosen.title.trim() === '') {
@@ -155,9 +174,12 @@ export function PlotScreen() {
         {show_editor && (
           <div className="plot-col plot-editor">
             <div className="plot-field">
-              <label htmlFor="plot-title" className="field-label">
-                {t('plot.title_label')}
-              </label>
+              <div className="field-head">
+                <label htmlFor="plot-title" className="field-label">
+                  {t('plot.title_label')}
+                </label>
+                <AssistControl state={plot_assist} field_key={PLOT_ASSIST_KEY} on_ask={ask_plot_help} on_undo={undo_plot_help} />
+              </div>
               <input
                 id="plot-title"
                 type="text"
@@ -165,6 +187,7 @@ export function PlotScreen() {
                 maxLength={TITLE_MAX_LENGTH}
                 placeholder={t('plot.title_placeholder')}
                 value={chosen?.title ?? ''}
+                readOnly={is_plot_busy}
                 onChange={(event) => edit_chosen({ title: event.target.value })}
               />
             </div>
@@ -178,9 +201,11 @@ export function PlotScreen() {
                 rows={SUMMARY_ROWS}
                 placeholder={t('plot.summary_placeholder')}
                 value={chosen?.summary ?? ''}
+                readOnly={is_plot_busy}
                 onChange={(event) => edit_chosen({ summary: event.target.value })}
               />
             </div>
+            <AssistError state={plot_assist} />
             {need_title && (
               <Notice kind="warn" role="alert">
                 {t('plot.need_title')}
