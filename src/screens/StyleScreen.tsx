@@ -1,6 +1,6 @@
 // Step 5 style screen: pick one of six art styles. No AI calls.
-import { useMemo } from 'react';
-import { render_scene_svg } from '../art/scenes';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { is_scene_art_ready, load_scene_art, render_scene_svg, subscribe_scene_art } from '../art/scenes';
 import { StepShell } from '../components/Shell';
 import { STYLE_IDS } from '../constants';
 import { useT } from '../i18n';
@@ -19,10 +19,18 @@ export function StyleScreen() {
   const go = useBook((state) => state.go);
   const set_style = useBook((state) => state.set_style);
 
-  // Build the sample images only once.
+  const art_ready = useSyncExternalStore(subscribe_scene_art, is_scene_art_ready);
+  useEffect(() => {
+    load_scene_art().catch(() => undefined);
+  }, []);
+
+  // Build the sample images once the art is there.
   const sample_urls = useMemo(
-    () => Object.fromEntries(STYLE_IDS.map((id) => [id, svg_to_data_url(render_scene_svg(SAMPLE_SCENE_INDEX, id))])) as Record<StyleId, string>,
-    [],
+    () =>
+      Object.fromEntries(
+        STYLE_IDS.map((id) => [id, art_ready ? svg_to_data_url(render_scene_svg(SAMPLE_SCENE_INDEX, id)) : '']),
+      ) as Record<StyleId, string>,
+    [art_ready],
   );
 
   if (!book) return null;
@@ -44,7 +52,11 @@ export function StyleScreen() {
               aria-pressed={book.style_id === style_id}
               onClick={() => set_style(style_id)}
             >
-              <img className="style-sample" src={sample_urls[style_id]} alt={t('style.sample_alt', { name })} />
+              {sample_urls[style_id] ? (
+                <img className="style-sample" src={sample_urls[style_id]} alt={t('style.sample_alt', { name })} />
+              ) : (
+                <span className="style-sample" aria-hidden="true" />
+              )}
               <span className="style-name">{name}</span>
             </button>
           );
