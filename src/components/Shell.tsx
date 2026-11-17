@@ -1,7 +1,8 @@
-// Shared screen frame: header, step dots, DI Lab badge, footer buttons.
+// Shared screen frame: header (home logo, step dots, DI Lab badge) and footer buttons.
 import type { ReactNode } from 'react';
 import { STEP_SCREENS } from '../constants';
 import { useT } from '../i18n';
+import { go_home } from '../store/navigation';
 import type { Screen } from '../types';
 
 /** Book icon size (px). */
@@ -20,29 +21,45 @@ export function MadeByLine() {
   );
 }
 
+function BookIcon({ class_name }: { class_name?: string }) {
+  return (
+    <svg
+      className={class_name}
+      aria-hidden="true"
+      width={BOOK_ICON_SIZE}
+      height={BOOK_ICON_SIZE}
+      viewBox="0 0 32 32"
+      fill="none"
+      stroke="#2459C4"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 7c4-1.5 8-1.5 12 1v18c-4-2.5-8-2.5-12-1z" />
+      <path d="M28 7c-4-1.5-8-1.5-12 1v18c4-2.5 8-2.5 12-1z" />
+    </svg>
+  );
+}
+
 /** App name, optionally with the book icon. */
 export function Brand({ with_icon = false }: { with_icon?: boolean }) {
   const t = useT();
   return (
     <span className={with_icon ? 'brand big' : 'brand'}>
-      {with_icon && (
-        <svg
-          aria-hidden="true"
-          width={BOOK_ICON_SIZE}
-          height={BOOK_ICON_SIZE}
-          viewBox="0 0 32 32"
-          fill="none"
-          stroke="#2459C4"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M4 7c4-1.5 8-1.5 12 1v18c-4-2.5-8-2.5-12-1z" />
-          <path d="M28 7c-4-1.5-8-1.5-12 1v18c4-2.5 8-2.5 12-1z" />
-        </svg>
-      )}
+      {with_icon && <BookIcon />}
       {t('app.name')}
     </span>
+  );
+}
+
+/** App name as a button that saves and goes back to the start screen. Narrow headers show only the icon. */
+export function HomeBrand() {
+  const t = useT();
+  return (
+    <button type="button" className="brand brand-home" aria-label={t('common.home_aria')} onClick={() => void go_home()}>
+      <BookIcon class_name="brand-icon" />
+      <span className="brand-text">{t('app.name')}</span>
+    </button>
   );
 }
 
@@ -109,7 +126,7 @@ export function StepShell({ screen, on_prev, on_next, next_label, next_disabled,
       width={width}
       header={
         <>
-          <Brand />
+          <HomeBrand />
           <StepDots screen={screen} />
           <DiLabBadge />
         </>

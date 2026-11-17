@@ -5,6 +5,7 @@
   "common.prev": "Back",
   "common.next": "Next",
   "common.home": "Home",
+  "common.home_aria": "Go to the start screen",
   "common.autosave": "Your work is saved as you go",
   "common.made_by": "Made by",
   "common.step_label": "{n} / 8 {name}",

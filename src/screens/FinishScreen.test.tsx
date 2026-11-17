@@ -152,10 +152,10 @@ describe('FinishScreen', () => {
     expect(vi.mocked(download_blob).mock.calls[0]?.[1]).toMatch(/\.storybook\.json$/);
   });
 
-  it('demo shows a notice and its start button returns to the start screen', () => {
+  it('demo shows a notice and its start button returns to the start screen', async () => {
     setup(build_demo_book('ko'), true);
     const notice = screen.getByText(t('finish.demo_badge')).closest('.notice') as HTMLElement;
     fireEvent.click(within(notice).getByRole('button', { name: t('finish.demo_start') }));
-    expect(useBook.getState().screen).toBe('start');
+    await waitFor(() => expect(useBook.getState().screen).toBe('start'));
   });
 });

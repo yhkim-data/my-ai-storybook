@@ -153,6 +153,24 @@ button:disabled {
 .brand.big {
   font-size: 24px;
 }
+/* The header logo is a button that goes back to the start screen. */
+.brand-home {
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 6px;
+  margin-left: -6px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+}
+.brand-home:hover {
+  background: var(--selected-bg);
+}
+.brand-home .brand-icon {
+  display: none;
+  width: 28px;
+  height: 28px;
+}
 .header-right {
   display: flex;
   flex-wrap: wrap;
