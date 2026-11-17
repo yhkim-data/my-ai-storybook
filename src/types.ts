@@ -71,6 +71,8 @@ export interface PageImage {
   source: ImageSource;
   /** Model name, when the image was AI-generated. */
   model_name?: string;
+  /** Style the AI image was made in (see style_key), so a later style change can offer a redraw. */
+  style_key?: string;
 }
 
 /** One page of the book. The cover is a page too. */
@@ -82,6 +84,16 @@ export interface BookPage {
   image: PageImage | null;
   layout: LayoutId;
   text_box: TextBox;
+  /** This page's own art style; when missing the page follows the book's style. */
+  style?: ArtStyle;
+  /** This page's own style description, used when style is 'custom'. */
+  custom_style?: string;
+}
+
+/** An art style together with the user's description for 'custom'. */
+export interface StyleChoice {
+  style_id: ArtStyle;
+  custom_style: string;
 }
 
 /** Saved as-is in the work file (.storybook.json). */

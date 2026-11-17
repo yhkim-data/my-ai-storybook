@@ -38,6 +38,8 @@ export interface BookState {
   ensure_page_count: () => void;
   update_page: (index: number, patch: Partial<BookPage>) => void;
   set_page_image: (index: number, image: PageImage | null) => void;
+  /** Gives a page its own art style; undefined makes it follow the book again. */
+  set_page_style: (index: number, style: ArtStyle | undefined, custom_style: string) => void;
   set_style: (style_id: ArtStyle) => void;
   /** Saves the user's own style description and picks the 'custom' style. */
   set_custom_style: (text: string) => void;
@@ -135,6 +137,8 @@ export const useBook = create<BookState>((set, get) => {
         pages: book.pages.map((page, page_index) => (page_index === index ? { ...page, ...patch } : page)),
       })),
     set_page_image: (index, image) => get().update_page(index, { image }),
+    set_page_style: (index, style, custom_style) =>
+      get().update_page(index, { style, custom_style: style === 'custom' ? clean_custom_style(custom_style) : undefined }),
     set_style: (style_id) => change_book((book) => ({ ...book, style_id })),
     set_custom_style: (text) => change_book((book) => ({ ...book, style_id: 'custom', custom_style: clean_custom_style(text) })),
     set_author: (author) => change_book((book) => ({ ...book, author })),

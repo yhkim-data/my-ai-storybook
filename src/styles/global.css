@@ -577,6 +577,71 @@ legend {
   background: var(--selected-bg);
 }
 
+/* A choice whose picture no longer matches the page's style: the redraw button stands out. */
+.choice.attention,
+.btn.attention {
+  box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px #f0a43a;
+}
+
+/* Per-page art style menu */
+.style-menu {
+  position: relative;
+}
+.style-menu-button {
+  gap: 6px;
+  font-weight: 500;
+}
+.style-menu-list {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  right: 0;
+  width: max(100%, 260px);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: 0 10px 30px rgba(23, 35, 58, 0.18);
+}
+.style-menu-list.up {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+.style-menu-item {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  font-size: 15px;
+}
+.style-menu-item:hover {
+  background: var(--bg);
+}
+.style-menu-item[aria-pressed='true'] {
+  background: var(--selected-bg);
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+.style-menu-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 4px 2px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.style-menu-custom .text-area {
+  font-size: 15px;
+  font-weight: 400;
+  resize: none;
+}
+
 /* Busy indicator */
 .spinner {
   width: 28px;

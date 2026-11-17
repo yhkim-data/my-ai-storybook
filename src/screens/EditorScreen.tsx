@@ -1,16 +1,18 @@
 // Step 7 editor: text, text box, layout and page order are edited locally without calling the AI.
-import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { PageView } from '../components/PageView';
 import { DiLabBadge, HomeBrand, MadeByLine, Shell } from '../components/Shell';
+import { StyleMenu } from '../components/StyleMenu';
 import { FONT_IDS, FONT_SIZE_MAX, FONT_SIZE_MIN, LAYOUT_IDS, TEXT_COLORS } from '../constants';
 import { EditableTextBox } from '../editor/EditableTextBox';
 import { page_name, useT } from '../i18n';
-import { generate_page_image } from '../providers/make_image';
+import { generate_page_image, needs_style_redraw, practice_restyle } from '../providers/make_image';
 import type { ProviderError } from '../providers/types';
 import { apply_layout } from '../store/book_model';
 import { insert_blank_page, move_page, remove_page, useBook } from '../store/book_store';
-import type { BookPage, BoxBackground, FontId, LayoutId, PageImage, Rect, TextAlign, TextBox } from '../types';
+import { clean_custom_style } from '../store/book_model';
+import type { ArtStyle, BookPage, BoxBackground, FontId, LayoutId, PageImage, Rect, TextAlign, TextBox } from '../types';
 import { prepare_upload_image } from '../utils/image';
 import { useElementSize } from '../utils/use_element_size';
 import './EditorScreen.css';
@@ -44,6 +46,9 @@ function OrderIcon({ kind }: { kind: 'up' | 'down' | 'remove' }) {
 }
 const BACKGROUNDS: BoxBackground[] = ['none', 'white', 'bubble'];
 const ALIGNS: TextAlign[] = ['left', 'center', 'right'];
+/** Settings tabs: the text box, or the picture. */
+type SettingsTab = 'text' | 'image';
+const SETTINGS_TABS: SettingsTab[] = ['text', 'image'];
 /** A page can be removed only when the book (cover included) has more pages than this. */
 const MIN_PAGES_WITH_COVER = 2;
 
@@ -99,6 +104,7 @@ export function EditorScreen() {
   const [is_drawing, set_is_drawing] = useState(false);
   const [ai_error, set_ai_error] = useState<ProviderError | null>(null);
   const [message, set_message] = useState<string | null>(null);
+  const [settings_tab, set_settings_tab] = useState<SettingsTab>('text');
 
   // Ctrl+Z undoes; Ctrl+Shift+Z or Ctrl+Y redoes.
   useEffect(() => {
@@ -134,6 +140,27 @@ export function EditorScreen() {
   const clear_notices = () => {
     set_ai_error(null);
     set_message(null);
+  };
+
+  /** Left and right arrows move between the settings tabs. */
+  const handle_tab_key = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const next: SettingsTab = settings_tab === 'text' ? 'image' : 'text';
+    set_settings_tab(next);
+    document.getElementById(`editor-tab-${next}`)?.focus();
+  };
+
+  /** Changes this page's style as one undo step. Practice mode swaps the picture at once. */
+  const change_style = async (style: ArtStyle | undefined, custom_style: string) => {
+    const change_key = `style:${page.id}`;
+    change_page(
+      (target) => ({ ...target, style, custom_style: style === 'custom' ? clean_custom_style(custom_style) : undefined }),
+      change_key,
+    );
+    const latest = useBook.getState().book;
+    const image = latest ? await practice_restyle(latest, current_page) : null;
+    if (image) change_page((target) => ({ ...target, image }), change_key);
   };
 
   const select_page = (index: number) => {
@@ -188,6 +215,7 @@ export function EditorScreen() {
   };
 
   const is_cover = current_page === 0;
+  const needs_redraw = needs_style_redraw(book, current_page);
   const can_remove = !is_cover && book.pages.length > MIN_PAGES_WITH_COVER;
 
   return (
@@ -200,14 +228,19 @@ export function EditorScreen() {
             <h1 className="editor-title">{t('common.step_label', { n: 7, name: t('step.editor') })}</h1>
             <button type="button" className="btn small" onClick={undo} disabled={!can_undo}>
               <UndoIcon />
-              {t('editor.undo')}
+              <span className="btn-text">{t('editor.undo')}</span>
             </button>
             <button type="button" className="btn small" onClick={redo} disabled={!can_redo}>
               <UndoIcon flipped />
-              {t('editor.redo')}
+              <span className="btn-text">{t('editor.redo')}</span>
             </button>
-            <button type="button" className="btn small" onClick={() => void handle_regenerate()} disabled={is_drawing}>
-              {t('editor.regen')}
+            <button
+              type="button"
+              className={needs_redraw ? 'btn small primary attention' : 'btn small'}
+              onClick={() => void handle_regenerate()}
+              disabled={is_drawing}
+            >
+              {t(needs_redraw ? 'pictures.redo_style' : 'editor.regen')}
             </button>
             <button type="button" className="btn small" onClick={() => file_input_ref.current?.click()} disabled={is_drawing}>
               {t('editor.change_image')}
@@ -298,94 +331,129 @@ export function EditorScreen() {
           <p className="editor-small-hint">{is_cover ? t('editor.cover_hint') : t('editor.box_help')}</p>
         </section>
 
-        <aside className="editor-settings" aria-label={t('editor.box_settings')}>
-          <div className="stack tight">
-            <label htmlFor="font-pick" className="editor-label">
-              {t('editor.font')}
-            </label>
-            <select id="font-pick" className="select" value={box.font_id} onChange={(event) => change_box({ font_id: event.target.value as FontId })}>
-              {FONT_IDS.map((font_id) => (
-                <option key={font_id} value={font_id}>
-                  {t(`editor.font.${font_id}`)}
-                </option>
-              ))}
-            </select>
+        <aside className="editor-settings" aria-label={t('editor.settings')}>
+          <div className="editor-tabs" role="tablist" aria-label={t('editor.settings')}>
+            {SETTINGS_TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                id={`editor-tab-${tab}`}
+                className="editor-tab"
+                aria-selected={settings_tab === tab}
+                aria-controls={`editor-panel-${tab}`}
+                tabIndex={settings_tab === tab ? 0 : -1}
+                onClick={() => set_settings_tab(tab)}
+                onKeyDown={handle_tab_key}
+              >
+                {t(`editor.tab.${tab}`)}
+              </button>
+            ))}
           </div>
-          <div className="stack tight">
-            <label htmlFor="font-size" className="editor-label">
-              {t('editor.font_size')}
-            </label>
-            <input
-              id="font-size"
-              type="range"
-              className="editor-range"
-              min={FONT_SIZE_MIN}
-              max={FONT_SIZE_MAX}
-              value={box.font_size}
-              onChange={(event) => change_box({ font_size: Number(event.target.value) }, `font-size:${page.id}`)}
-            />
-          </div>
-          <div className="stack tight">
-            <span id="color-label" className="editor-label">
-              {t('editor.color')}
-            </span>
-            <div role="group" aria-labelledby="color-label" className="editor-swatches">
-              {TEXT_COLORS.map((color) => (
-                <button
-                  key={color.id}
-                  type="button"
-                  className="editor-swatch"
-                  aria-label={t(`editor.color.${color.id}`)}
-                  aria-pressed={box.color === color.value}
-                  style={{ background: color.value }}
-                  onClick={() => change_box({ color: color.value })}
+          {settings_tab === 'text' ? (
+            <div className="editor-panel" role="tabpanel" id="editor-panel-text" aria-labelledby="editor-tab-text">
+              <div className="stack tight">
+                <label htmlFor="font-pick" className="editor-label">
+                  {t('editor.font')}
+                </label>
+                <select id="font-pick" className="select" value={box.font_id} onChange={(event) => change_box({ font_id: event.target.value as FontId })}>
+                  {FONT_IDS.map((font_id) => (
+                    <option key={font_id} value={font_id}>
+                      {t(`editor.font.${font_id}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="stack tight">
+                <label htmlFor="font-size" className="editor-label">
+                  {t('editor.font_size')}
+                </label>
+                <input
+                  id="font-size"
+                  type="range"
+                  className="editor-range"
+                  min={FONT_SIZE_MIN}
+                  max={FONT_SIZE_MAX}
+                  value={box.font_size}
+                  onChange={(event) => change_box({ font_size: Number(event.target.value) }, `font-size:${page.id}`)}
                 />
-              ))}
+              </div>
+              <div className="stack tight">
+                <span id="color-label" className="editor-label">
+                  {t('editor.color')}
+                </span>
+                <div role="group" aria-labelledby="color-label" className="editor-swatches">
+                  {TEXT_COLORS.map((color) => (
+                    <button
+                      key={color.id}
+                      type="button"
+                      className="editor-swatch"
+                      aria-label={t(`editor.color.${color.id}`)}
+                      aria-pressed={box.color === color.value}
+                      style={{ background: color.value }}
+                      onClick={() => change_box({ color: color.value })}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="stack tight">
+                <span id="align-label" className="editor-label">
+                  {t('editor.align')}
+                </span>
+                <div role="group" aria-labelledby="align-label" className="editor-seg-row">
+                  {ALIGNS.map((align) => (
+                    <button key={align} type="button" className="seg small" aria-pressed={box.align === align} onClick={() => change_box({ align })}>
+                      {t(`editor.align.${align}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="stack tight">
+                <span id="bg-label" className="editor-label">
+                  {t('editor.bg')}
+                </span>
+                <div role="group" aria-labelledby="bg-label" className="editor-seg-row">
+                  {BACKGROUNDS.map((background) => (
+                    <button key={background} type="button" className="seg small" aria-pressed={box.background === background} onClick={() => change_box({ background })}>
+                      {t(`editor.bg.${background}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="stack tight">
-            <span id="align-label" className="editor-label">
-              {t('editor.align')}
-            </span>
-            <div role="group" aria-labelledby="align-label" className="editor-seg-row">
-              {ALIGNS.map((align) => (
-                <button key={align} type="button" className="seg small" aria-pressed={box.align === align} onClick={() => change_box({ align })}>
-                  {t(`editor.align.${align}`)}
-                </button>
-              ))}
+          ) : (
+            <div className="editor-panel" role="tabpanel" id="editor-panel-image" aria-labelledby="editor-tab-image">
+              <div className="stack tight">
+                <span id="layout-label" className="editor-label">
+                  {t('editor.layout')}
+                </span>
+                <div role="group" aria-labelledby="layout-label" className="editor-layouts">
+                  {LAYOUT_IDS.map((layout) => (
+                    <button
+                      key={layout}
+                      type="button"
+                      className="editor-layout-btn"
+                      aria-label={t(`editor.layout.${layout}`)}
+                      aria-pressed={page.layout === layout}
+                      onClick={() => change_page((target) => apply_layout(target, layout))}
+                    >
+                      <LayoutIcon layout={layout} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="stack tight">
+                <span className="editor-label">{t('style.page.label')}</span>
+                <StyleMenu
+                  id="editor-style"
+                  book_style={{ style_id: book.style_id, custom_style: book.custom_style }}
+                  page_style={page.style}
+                  page_custom_style={page.custom_style ?? ''}
+                  on_change={(style, custom_style) => void change_style(style, custom_style)}
+                />
+              </div>
             </div>
-          </div>
-          <div className="stack tight">
-            <span id="bg-label" className="editor-label">
-              {t('editor.bg')}
-            </span>
-            <div role="group" aria-labelledby="bg-label" className="editor-seg-row">
-              {BACKGROUNDS.map((background) => (
-                <button key={background} type="button" className="seg small" aria-pressed={box.background === background} onClick={() => change_box({ background })}>
-                  {t(`editor.bg.${background}`)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="stack tight">
-            <span id="layout-label" className="editor-label">
-              {t('editor.layout')}
-            </span>
-            <div role="group" aria-labelledby="layout-label" className="editor-layouts">
-              {LAYOUT_IDS.map((layout) => (
-                <button
-                  key={layout}
-                  type="button"
-                  className="editor-layout-btn"
-                  aria-label={t(`editor.layout.${layout}`)}
-                  aria-pressed={page.layout === layout}
-                  onClick={() => change_page((target) => apply_layout(target, layout))}
-                >
-                  <LayoutIcon layout={layout} />
-                </button>
-              ))}
-            </div>
-          </div>
+          )}
         </aside>
       </div>
     </Shell>

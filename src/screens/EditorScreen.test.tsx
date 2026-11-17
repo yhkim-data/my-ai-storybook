@@ -170,6 +170,7 @@ describe('layout', () => {
   it.each(LAYOUTS)('layout %s changes layout, text box rect and aria-pressed, and undo restores them', (layout) => {
     setup();
     const before = page_one();
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
     fireEvent.click(button(ko(`editor.layout.${layout}`)));
     expect(page_one().layout).toBe(layout);
     expect(page_one().text_box).toMatchObject(LAYOUT_TEXT_RECT[layout]);
@@ -308,5 +309,70 @@ describe('navigation buttons', () => {
     fireEvent.click(within(document.body).getByRole('button', { name: ko('common.prev') }));
     expect(useBook.getState().screen).toBe('pictures');
     expect_no_ai_calls();
+  });
+});
+
+describe('settings tabs and the page art style', () => {
+  it('the words tab is shown first; the picture tab has the layout and the art style', () => {
+    setup();
+    expect(screen.getByRole('tab', { name: ko('editor.tab.text') })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByLabelText(ko('editor.font'))).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
+    expect(screen.queryByLabelText(ko('editor.font'))).not.toBeInTheDocument();
+    expect(button(ko('editor.layout.full'))).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ko('style.page.menu_aria', { name: ko('style.name.watercolor') }) })).toBeInTheDocument();
+  });
+
+  it('arrow keys move between the tabs', () => {
+    setup();
+    const text_tab = screen.getByRole('tab', { name: ko('editor.tab.text') });
+    fireEvent.keyDown(text_tab, { key: 'ArrowRight' });
+    expect(screen.getByRole('tab', { name: ko('editor.tab.image') })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('a page style is one undo step; with real AI the picture stays and the redraw button asks to redraw', () => {
+    setup();
+    const book = useBook.getState().book!;
+    // Pretend page 1 has an AI picture made in the book style.
+    useBook.setState({
+      book: { ...book, pages: book.pages.map((page, index) => (index === 1 ? { ...page, image: { data_url: 'data:image/png;base64,AA', source: 'ai', model_name: 'm', style_key: 'watercolor' } } : page)) },
+      undo_stack: [],
+    });
+    const image_before = page_one().image;
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
+    fireEvent.click(screen.getByRole('button', { name: ko('style.page.menu_aria', { name: ko('style.name.watercolor') }) }));
+    fireEvent.click(button(ko('style.name.pixel')));
+    expect(page_one().style).toBe('pixel');
+    expect(page_one().image).toEqual(image_before);
+    expect(button(ko('pictures.redo_style'))).toHaveClass('attention');
+    expect_no_ai_calls();
+    fireEvent.click(button(ko('editor.undo')));
+    expect(page_one().style).toBeUndefined();
+    expect(button(ko('editor.regen'))).not.toHaveClass('attention');
+  });
+
+  it('practice mode swaps the picture for the new style right away', async () => {
+    setup({ practice: true });
+    const book = useBook.getState().book!;
+    useBook.setState({
+      book: { ...book, pages: book.pages.map((page, index) => (index === 1 ? { ...page, image: { data_url: 'data:image/png;base64,AA', source: 'ai', model_name: 'mock-image', style_key: 'watercolor' } } : page)) },
+    });
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
+    fireEvent.click(screen.getByRole('button', { name: ko('style.page.menu_aria', { name: ko('style.name.watercolor') }) }));
+    fireEvent.click(button(ko('style.name.pencil')));
+    await waitFor(() => expect(page_one().image?.style_key).toBe('pencil'));
+    expect(page_one().image?.data_url.startsWith('data:image/svg+xml')).toBe(true);
+  });
+
+  it('"my own style" for one page opens a description box right under it', () => {
+    setup();
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
+    fireEvent.click(screen.getByRole('button', { name: ko('style.page.menu_aria', { name: ko('style.name.watercolor') }) }));
+    fireEvent.click(button(ko('style.name.custom')));
+    fireEvent.change(screen.getByLabelText(ko('style.page.custom_label')), { target: { value: '수묵화 느낌' } });
+    expect(page_one().style).toBe('custom');
+    expect(page_one().custom_style).toBe('수묵화 느낌');
+    fireEvent.click(button(ko('style.page.follow', { name: ko('style.name.watercolor') })));
+    expect(page_one().style).toBeUndefined();
   });
 });

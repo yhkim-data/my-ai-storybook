@@ -96,6 +96,7 @@ test.describe('Editor', () => {
 
   test('changing the layout moves the text box and undo restores it', async ({ page }) => {
     const usage_before = await prepare_editor(page);
+    await page.getByRole('tab', { name: tr(LANG, 'editor.tab.image') }).click();
     const top_layout = page.getByRole('button', { name: tr(LANG, 'editor.layout.image_top'), exact: true });
     const left_layout = page.getByRole('button', { name: tr(LANG, 'editor.layout.image_left'), exact: true });
     await expect(top_layout).toHaveAttribute('aria-pressed', 'true');

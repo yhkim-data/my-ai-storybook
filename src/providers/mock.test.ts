@@ -6,7 +6,7 @@ import type { ImageRequest, ProviderErrorKind } from './types';
 import { ProviderError } from './types';
 import { blob_to_data_url } from '../utils/image';
 import { get_image_provider, get_text_provider } from './index';
-import { generate_page_image, full_image_prompt } from './make_image';
+import { full_image_prompt, generate_page_image, needs_style_redraw } from './make_image';
 import { reset_mock_failures } from './mock_failure';
 import { create_mock_image } from './mock_image';
 import { create_mock_text } from './mock_text';
@@ -192,5 +192,28 @@ describe('page image generation', () => {
     const image = await generate_page_image(book, 1);
     expect(image?.data_url.startsWith('data:image/svg+xml')).toBe(true);
     expect(decodeURIComponent(image?.data_url ?? '')).not.toContain('<filter');
+  });
+
+  it('a page with its own style is drawn and copied in that style; other pages keep the book style', async () => {
+    const book = build_demo_book('ko');
+    const styled = { ...book, pages: book.pages.map((page, index) => (index === 2 ? { ...page, style: 'pixel' as const } : page)) };
+    expect(full_image_prompt(styled, 2)).toContain(build_image_prompt('', 'pixel', '', 'ko'));
+    expect(full_image_prompt(styled, 1)).toContain(build_image_prompt('', 'watercolor', '', 'ko'));
+    const custom = { ...book, pages: book.pages.map((page, index) => (index === 2 ? { ...page, style: 'custom' as const, custom_style: '수묵화 느낌' } : page)) };
+    expect(full_image_prompt(custom, 2)).toContain('그림체: 수묵화 느낌');
+
+    useSettings.setState({ practice: true });
+    const image = await generate_page_image(styled, 2);
+    expect(image?.style_key).toBe('pixel');
+  });
+
+  it('needs_style_redraw notices a style change after an AI picture was made', () => {
+    const book = build_demo_book('ko');
+    const with_ai = { ...book, pages: book.pages.map((page, index) => (index === 1 ? { ...page, image: { data_url: 'x', source: 'ai' as const, style_key: 'watercolor' } } : page)) };
+    expect(needs_style_redraw(with_ai, 1)).toBe(false);
+    const changed = { ...with_ai, pages: with_ai.pages.map((page, index) => (index === 1 ? { ...page, style: 'clay' as const } : page)) };
+    expect(needs_style_redraw(changed, 1)).toBe(true);
+    // Uploaded pictures and pages without a picture never ask for a redraw.
+    expect(needs_style_redraw({ ...changed, style_id: 'pencil' }, 2)).toBe(false);
   });
 });

@@ -12,7 +12,7 @@ import {
   DEFAULT_TEXT_BOX,
   LAYOUT_TEXT_RECT,
 } from '../constants';
-import type { ArtStyle, Book, BookPage, Lang, LayoutId, PageDraft, StorySeed, TextBox } from '../types';
+import type { ArtStyle, Book, BookPage, Lang, LayoutId, PageDraft, StorySeed, StyleChoice, TextBox } from '../types';
 
 /** Cover title box position, in percent. */
 const COVER_TEXT_RECT = { x: 8, y: 6, w: 84, h: 22 };
@@ -81,6 +81,24 @@ export function is_art_style(value: unknown): value is ArtStyle {
   return value === 'custom' || STYLE_IDS.some((style_id) => style_id === value);
 }
 
+/** The style a page is drawn in: its own style if it has one, else the book's style. */
+export function effective_style(book: Book, page: BookPage | undefined): StyleChoice {
+  if (page?.style) return { style_id: page.style, custom_style: page.custom_style ?? '' };
+  return { style_id: book.style_id, custom_style: book.custom_style };
+}
+
+/** Short text that names a style choice, stored with AI images to notice a later style change. */
+export function style_key(choice: StyleChoice): string {
+  return choice.style_id === 'custom' ? `custom:${choice.custom_style.trim()}` : choice.style_id;
+}
+
+/** Drops a page style that is not valid and cleans its description. */
+function normalize_page_style(page: BookPage): BookPage {
+  const { style, custom_style, ...rest } = page;
+  if (!is_art_style(style)) return rest;
+  return style === 'custom' ? { ...rest, style, custom_style: clean_custom_style(custom_style) } : { ...rest, style };
+}
+
 /**
  * Fills fields that older saved books may lack and fixes out-of-range values.
  * Used for every book that is opened (saved on this device, loaded from a file, or the demo).
@@ -91,6 +109,7 @@ export function normalize_book(book: Book): Book {
     seed: { ...make_seed(), ...book.seed, page_count: clamp_page_count(book.seed?.page_count) },
     style_id: is_art_style(book.style_id) ? book.style_id : DEFAULT_STYLE_ID,
     custom_style: clean_custom_style(book.custom_style),
+    pages: (book.pages ?? []).map(normalize_page_style),
   };
 }
 

@@ -5,8 +5,10 @@ import { StepShell } from '../components/Shell';
 import { BATCH_IMAGE_GAP_MS } from '../constants';
 import { page_name, useT } from '../i18n';
 import { get_image_provider } from '../providers';
-import { full_image_prompt, generate_page_image } from '../providers/make_image';
+import { StyleMenu } from '../components/StyleMenu';
+import { full_image_prompt, generate_page_image, needs_style_redraw, practice_restyle } from '../providers/make_image';
 import type { ProviderError } from '../providers/types';
+import type { ArtStyle } from '../types';
 import { useBook } from '../store/book_store';
 import { useSettings } from '../store/settings_store';
 import { prepare_upload_image } from '../utils/image';
@@ -73,6 +75,7 @@ export function PicturesScreen() {
   const set_current_page = useBook((state) => state.set_current_page);
   const update_page = useBook((state) => state.update_page);
   const set_page_image = useBook((state) => state.set_page_image);
+  const set_page_style = useBook((state) => state.set_page_style);
 
   const [notice, set_notice] = useState<NoticeKind | null>(null);
   const [copy_text, set_copy_text] = useState('');
@@ -105,7 +108,7 @@ export function PicturesScreen() {
   const columns = list_columns(page_count);
   const is_compact = columns >= COMPACT_LIST_COLUMNS;
   const current_name = page_name(t, index);
-  const style_name = t(`style.name.${book.style_id}`);
+  const needs_redraw = needs_style_redraw(book, index);
 
   const clear_messages = () => {
     set_notice(null);
@@ -116,6 +119,15 @@ export function PicturesScreen() {
   const choose_page = (next_index: number) => {
     clear_messages();
     set_current_page(next_index);
+  };
+
+  /** Changes this page's style. Practice mode swaps the picture at once; with real AI the user chooses to redraw. */
+  const change_style = async (style: ArtStyle | undefined, custom_style: string) => {
+    set_page_style(index, style, custom_style);
+    const latest = useBook.getState().book;
+    if (!latest) return;
+    const image = await practice_restyle(latest, index);
+    if (image && is_mounted_ref.current) set_page_image(index, image);
   };
 
   const make_one = async (target_index: number) => {
@@ -280,7 +292,13 @@ export function PicturesScreen() {
         <section className="pic-main">
           <div className="row spread">
             <h1 className="title-md">{t('pictures.heading', { name: current_name })}</h1>
-            <span className="pill plain">{t('pictures.style', { name: style_name })}</span>
+            <StyleMenu
+              id="pic-style"
+              book_style={{ style_id: book.style_id, custom_style: book.custom_style }}
+              page_style={page.style}
+              page_custom_style={page.custom_style ?? ''}
+              on_change={(style, custom_style) => void change_style(style, custom_style)}
+            />
           </div>
 
           <div className="pic-middle">
@@ -347,8 +365,13 @@ export function PicturesScreen() {
           {error_state && <AiErrorNotice error={error_state.error} on_retry={error_state.retry} />}
 
           <div className="grid-3">
-            <button type="button" className="choice medium primary" onClick={() => void make_one(index)} disabled={is_working}>
-              <span className="choice-title">{t('pictures.ai.title')}</span>
+            <button
+              type="button"
+              className={needs_redraw ? 'choice medium primary attention' : 'choice medium primary'}
+              onClick={() => void make_one(index)}
+              disabled={is_working}
+            >
+              <span className="choice-title">{t(needs_redraw ? 'pictures.redo_style' : 'pictures.ai.title')}</span>
               <span className="choice-desc">{t('pictures.ai.desc')}</span>
             </button>
             <button type="button" className="choice medium" onClick={() => input_ref.current?.click()} disabled={is_working}>
