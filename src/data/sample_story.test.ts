@@ -1,16 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import { PAGE_COUNT_MAX, PAGE_COUNT_MIN } from '../constants';
 import type { Lang, PageCount } from '../types';
 import {
   SAMPLE_HERO,
   find_sample_scene,
   get_sample_pages,
   get_sample_plots,
+  plan_sample_scenes,
 } from './sample_story';
 
 const LANGS: Lang[] = ['ko', 'en'];
 const PAGE_COUNTS: PageCount[] = [4, 6, 8];
 const PLOT_IDS = ['sample-1', 'sample-2', 'sample-3'];
-const SCENES_BY_COUNT: Record<PageCount, number[]> = {
+const SCENES_BY_COUNT: Record<number, number[]> = {
   4: [1, 3, 5, 8],
   6: [1, 2, 4, 5, 7, 8],
   8: [1, 2, 3, 4, 5, 6, 7, 8],
@@ -121,5 +123,53 @@ describe('find_sample_scene', () => {
     expect(find_sample_scene('')).toBeNull();
     expect(find_sample_scene('우주선을 타고 달에 가는 아이')).toBeNull();
     expect(find_sample_scene('a dragon eating pizza')).toBeNull();
+  });
+});
+
+describe('plan_sample_scenes (any page count)', () => {
+  const FIRST = 1;
+  const LAST = 8;
+  for (let count = PAGE_COUNT_MIN; count <= PAGE_COUNT_MAX; count += 1) {
+    it(`${count} pages: starts at scene 1, ends at scene 8, scenes never go backwards`, () => {
+      const plan = plan_sample_scenes(count);
+      expect(plan).toHaveLength(count);
+      expect(plan[0]).toEqual({ scene: FIRST, is_bridge: false });
+      expect(plan[count - 1]).toEqual({ scene: LAST, is_bridge: false });
+      for (let index = 1; index < plan.length; index += 1) {
+        expect(plan[index]!.scene).toBeGreaterThanOrEqual(plan[index - 1]!.scene);
+      }
+    });
+  }
+
+  it('up to 8 pages: distinct scenes and no linking pages', () => {
+    for (let count = PAGE_COUNT_MIN; count <= LAST; count += 1) {
+      const plan = plan_sample_scenes(count);
+      expect(new Set(plan.map((item) => item.scene)).size).toBe(count);
+      expect(plan.some((item) => item.is_bridge)).toBe(false);
+    }
+  });
+
+  it('more than 8 pages: every scene 1-8 once in order, extra pages repeat middle scenes only', () => {
+    for (let count = LAST + 1; count <= PAGE_COUNT_MAX; count += 1) {
+      const plan = plan_sample_scenes(count);
+      expect(plan.filter((item) => !item.is_bridge).map((item) => item.scene)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+      const bridges = plan.filter((item) => item.is_bridge).map((item) => item.scene);
+      expect(bridges).toHaveLength(count - LAST);
+      for (const scene of bridges) expect(scene === FIRST || scene === LAST).toBe(false);
+    }
+  });
+
+  it('12 pages: linking pages use short linking text in both languages, and pictures follow the scene', () => {
+    for (const lang of LANGS) {
+      const pages = get_sample_pages('sample-1', lang, '토리', 12);
+      const plan = plan_sample_scenes(12);
+      expect(pages).toHaveLength(12);
+      pages.forEach((page, index) => {
+        expect(page.text.trim().length).toBeGreaterThan(0);
+        expect(find_sample_scene(page.image_prompt)).toBe(plan[index]!.scene);
+      });
+      const bridge_texts = pages.filter((_, index) => plan[index]!.is_bridge).map((page) => page.text);
+      expect(new Set(bridge_texts).size).toBe(bridge_texts.length);
+    }
   });
 });

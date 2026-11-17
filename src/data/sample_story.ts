@@ -1,5 +1,6 @@
 // Original sample story (3 plots, 8 scenes) used by the mock AI provider and the demo book.
 import type { Lang, PageCount, PageDraft, Plot } from '../types';
+import { clamp_page_count } from '../store/book_model';
 
 /** Hero of the demo book. */
 export const SAMPLE_HERO: Record<Lang, { name: string; look: string }> = {
@@ -8,12 +9,15 @@ export const SAMPLE_HERO: Record<Lang, { name: string; look: string }> = {
 };
 
 const SCENE_COUNT = 8;
-/** 1-based scenes used per page count, chosen so shorter books still read as one story. */
-const SCENES_BY_PAGE_COUNT: Record<PageCount, number[]> = {
+const FIRST_SCENE = 1;
+/** Hand-picked scenes for the button page counts, chosen so shorter books still read as one story. */
+const SCENES_BY_PAGE_COUNT: Partial<Record<PageCount, number[]>> = {
   4: [1, 3, 5, 8],
   6: [1, 2, 4, 5, 7, 8],
   8: [1, 2, 3, 4, 5, 6, 7, 8],
 };
+/** Scenes between the first and the last; longer books show these more than once. */
+const MIDDLE_SCENES = [2, 3, 4, 5, 6, 7];
 /** Placeholder for the hero's name in text. */
 const HERO_MARK = '{hero}';
 /** Unicode range of precomposed Hangul syllables. */
@@ -54,6 +58,22 @@ const IMAGE_TEMPLATES: Record<Lang, string[]> = {
     '{hero} sitting on a hill under a night sky full of stars',
     '{hero} finding a sparkling light in the grass and looking amazed',
     '{hero} coming home at sunset together with a blue bird friend',
+  ],
+};
+
+/** Short linking lines for the extra pages of books longer than eight pages, used in turn. */
+const BRIDGE_TEXTS: Record<Lang, string[]> = {
+  ko: [
+    '{hero:은/는} 잠시 멈춰 서서 주위를 천천히 둘러봤어요.',
+    '살랑살랑 부는 바람이 “조금만 더 가 봐” 하고 속삭이는 것 같았어요.',
+    '{hero:은/는} 숨을 크게 한 번 쉬고 다시 걸음을 옮겼어요.',
+    '주변은 조용했지만, {hero}의 마음은 두근두근 설렜어요.',
+  ],
+  en: [
+    '{hero} stopped for a moment and looked around slowly.',
+    'A gentle breeze seemed to whisper, “Keep going, just a little more.”',
+    '{hero} took a big breath and walked on again.',
+    'It was quiet all around, but {hero}’s heart was beating with excitement.',
   ],
 };
 
@@ -191,6 +211,44 @@ export function get_sample_plots(lang: Lang, hero_name: string): Plot[] {
   }));
 }
 
+/** Picks `count` items spread evenly over `items`, always keeping the first and the last. */
+function spread_pick<T>(items: T[], count: number): T[] {
+  if (count <= 0) return [];
+  if (count === 1) return items.slice(0, 1);
+  const last = items.length - 1;
+  return Array.from({ length: count }, (_, index) => items[Math.round((index * last) / (count - 1))] as T);
+}
+
+/** One page of the sample book: a scene, and whether it is an extra linking page for that scene. */
+interface ScenePlan {
+  scene: number;
+  is_bridge: boolean;
+}
+
+/**
+ * Plans which scenes a sample book of page_count pages shows. Up to eight pages pick scenes
+ * evenly from 1-8; longer books show 1-8 in order and repeat middle scenes as linking pages.
+ * The first page is always scene 1 and the last page is always scene 8.
+ */
+export function plan_sample_scenes(page_count: PageCount): ScenePlan[] {
+  const count = clamp_page_count(page_count);
+  if (count <= SCENE_COUNT) {
+    const scenes = SCENES_BY_PAGE_COUNT[count] ?? spread_pick(Array.from({ length: SCENE_COUNT }, (_, index) => index + FIRST_SCENE), count);
+    return scenes.map((scene) => ({ scene, is_bridge: false }));
+  }
+  const extra = count - SCENE_COUNT;
+  const rounds = Math.floor(extra / MIDDLE_SCENES.length);
+  const chosen = spread_pick(MIDDLE_SCENES, extra % MIDDLE_SCENES.length);
+  const plan: ScenePlan[] = [];
+  for (let scene = FIRST_SCENE; scene <= SCENE_COUNT; scene += 1) {
+    plan.push({ scene, is_bridge: false });
+    if (!MIDDLE_SCENES.includes(scene)) continue;
+    const repeats = rounds + (chosen.includes(scene) ? 1 : 0);
+    for (let repeat = 0; repeat < repeats; repeat += 1) plan.push({ scene, is_bridge: true });
+  }
+  return plan;
+}
+
 /** Returns exactly page_count drafts for plot_id; unknown ids fall back to the first plot. */
 export function get_sample_pages(
   plot_id: string,
@@ -206,10 +264,12 @@ export function get_sample_pages(
   );
   const plot = plots[known_index >= 0 ? known_index : fallback_index];
   const templates = IMAGE_TEMPLATES[lang];
-  return SCENES_BY_PAGE_COUNT[page_count].map((scene) => ({
-    text: fill_hero(plot?.pages[scene - 1] ?? '', name),
-    image_prompt: fill_hero(templates[scene - 1] ?? '', name),
-  }));
+  const bridges = BRIDGE_TEXTS[lang];
+  let bridge_count = 0;
+  return plan_sample_scenes(page_count).map(({ scene, is_bridge }) => {
+    const text = is_bridge ? (bridges[bridge_count++ % bridges.length] ?? '') : (plot?.pages[scene - 1] ?? '');
+    return { text: fill_hero(text, name), image_prompt: fill_hero(templates[scene - 1] ?? '', name) };
+  });
 }
 
 /**

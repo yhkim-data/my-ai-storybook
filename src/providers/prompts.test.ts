@@ -6,6 +6,7 @@ import {
   build_hero_card,
   build_image_prompt,
   build_pages_prompt,
+  build_pages_schema,
   build_plots_prompt,
   parse_pages,
   parse_plots,
@@ -130,4 +131,22 @@ describe('parse_pages', () => {
     expect(parse_pages('oops', 4)).toBeNull();
     expect(parse_pages('{"pages":[{"text":"a"}]}', 1)).toBeNull();
   });
+});
+
+describe('custom page counts', () => {
+  const make_raw = (count: number) =>
+    JSON.stringify({ pages: Array.from({ length: count }, (_, n) => ({ text: `글${n}`, image_prompt: `그림${n}` })) });
+
+  for (const count of [2, 5, 12, 20]) {
+    it(`${count} pages: the prompt asks for exactly ${count}, the schema fixes the length, and parsing checks it`, () => {
+      const seed = { ...SEED, page_count: count };
+      expect(build_pages_prompt({ id: 'p', title: '곰', summary: '곰이 걷는다' }, seed, 'ko')).toContain(`정확히 ${count}쪽`);
+      expect(build_pages_prompt({ id: 'p', title: 'Bear', summary: 'A bear walks' }, seed, 'en')).toContain(`exactly ${count} pages`);
+      const schema = build_pages_schema(count) as { properties: { pages: { minItems: number; maxItems: number } } };
+      expect(schema.properties.pages.minItems).toBe(count);
+      expect(schema.properties.pages.maxItems).toBe(count);
+      expect(parse_pages(make_raw(count), count)).toHaveLength(count);
+      expect(parse_pages(make_raw(count - 1), count)).toBeNull();
+    });
+  }
 });
