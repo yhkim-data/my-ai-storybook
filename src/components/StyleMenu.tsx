@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { CUSTOM_STYLE_MAX_LENGTH, STYLE_IDS } from '../constants';
 import { useT } from '../i18n';
+import { ai_status, useSettings } from '../store/settings_store';
 import type { ArtStyle, StyleChoice } from '../types';
 import { usePopover } from './use_popover';
 
@@ -31,6 +32,7 @@ export function StyleMenu({ book_style, page_style, page_custom_style, on_change
   const shown_name = page_style ? t(`style.name.${page_style}`) : book_name;
   const custom_id = `${id}-custom`;
   const { is_open, list_ref } = popover;
+  const status = useSettings((state) => ai_status(state));
 
   // The list opens at the end of the page, so keyboard focus moves to the chosen item in it.
   useEffect(() => {
@@ -87,6 +89,7 @@ export function StyleMenu({ book_style, page_style, page_custom_style, on_change
                 />
               </div>
             )}
+            {status !== 'off' && <p className="style-menu-note">{t(status === 'practice' ? 'style.page.note_practice' : 'style.page.note_ai')}</p>}
           </div>,
           document.body,
         )}

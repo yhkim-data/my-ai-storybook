@@ -161,6 +161,8 @@
   "style.page.menu_aria": "Choose this page's art style (now: {name})",
   "style.page.follow": "Same as the book ({name})",
   "style.page.custom_label": "This page's style description",
+  "style.page.note_ai": "After changing the art style, press [Redraw in this style] to draw it again. That is one request per picture.",
+  "style.page.note_practice": "In practice mode the sample picture changes right away. No AI is used.",
   "style.sample_alt": "{name} sample picture",
   "pictures.list": "Pages",
   "pictures.has": "Has picture",

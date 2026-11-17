@@ -687,6 +687,14 @@ legend {
   font-size: 14px;
   font-weight: 700;
 }
+.style-menu-note {
+  margin: 4px 4px 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.45;
+}
 .style-menu-custom .text-area {
   font-size: 15px;
   font-weight: 400;
