@@ -1,6 +1,6 @@
 // Picks the AI provider for the current settings. To add a provider, add a branch here.
 import { mark_activity } from '../store/idle';
-import { effective_image_key, useSettings } from '../store/settings_store';
+import { effective_image_key, image_limit_reached, useSettings } from '../store/settings_store';
 import { create_claude_text } from './claude_text';
 import { create_gemini_image } from './gemini_image';
 import { create_gemini_text } from './gemini_text';
@@ -9,7 +9,7 @@ import { create_mock_text } from './mock_text';
 import { create_openai_image } from './openai_image';
 import { create_openai_text } from './openai_text';
 import { detect_provider, resolve_image_model, resolve_text_model } from './provider_kinds';
-import type { ImageProvider, TextProvider } from './types';
+import { ProviderError, type ImageProvider, type TextProvider } from './types';
 
 /** Counts one request: a text request, or one picture (a fix counts as a picture). */
 function count_usage(kind: 'text' | 'image' = 'text'): void {
@@ -41,18 +41,25 @@ function with_text_usage(provider: TextProvider): TextProvider {
   };
 }
 
-/** Wraps every image provider call so it counts toward usage. */
+/** Stops a picture request when today's picture limit on this computer is used up. */
+function check_image_limit(): void {
+  if (image_limit_reached(useSettings.getState())) throw new ProviderError('limit', null, 'picture limit reached');
+}
+
+/** Wraps every image provider call so it counts toward usage and keeps to the picture limit. */
 function with_image_usage(provider: ImageProvider): ImageProvider {
   return {
     id: provider.id,
     model_name: provider.model_name,
     supportsReferenceImage: provider.supportsReferenceImage,
     supportsEdit: provider.supportsEdit,
-    generate: (req) => {
+    generate: async (req) => {
+      check_image_limit();
       count_usage('image');
       return provider.generate(req);
     },
-    edit: (req) => {
+    edit: async (req) => {
+      check_image_limit();
       count_usage('image');
       return provider.edit(req);
     },
@@ -113,7 +120,7 @@ export function create_text_provider_for_key(api_key: string): TextProvider {
   return with_text_usage(create_text_for_key(api_key, settings.text_model));
 }
 
-export { ProviderError } from './types';
+export { ProviderError };
 export type {
   AssistKind,
   AssistRequest,

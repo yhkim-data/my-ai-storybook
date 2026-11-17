@@ -123,6 +123,7 @@ export function EditPicture({ page_index, compact = false, busy_elsewhere = fals
     no_ai: 'edit.need_ai',
     no_edit_model: 'edit.no_model',
     practice_upload: 'edit.practice_upload',
+    limit: 'error.limit',
   };
 
   return (

@@ -13,7 +13,7 @@ import type { ProviderError } from '../providers/types';
 import type { ArtStyle } from '../types';
 import { page_aspect } from '../store/book_model';
 import { useBook } from '../store/book_store';
-import { useSettings } from '../store/settings_store';
+import { image_limit_reached, useSettings } from '../store/settings_store';
 import { prepare_upload_image } from '../utils/image';
 import './PicturesScreen.css';
 
@@ -86,6 +86,7 @@ export function PicturesScreen() {
   /** Page the AI is currently drawing. */
   const [busy_index, set_busy_index] = useState<number | null>(null);
   const [batch, set_batch] = useState<BatchProgress | null>(null);
+  const is_limit_reached = useSettings((state) => image_limit_reached(state));
   /** A "Fix the picture" request is running. */
   const [is_fixing, set_is_fixing] = useState(false);
 
@@ -283,7 +284,7 @@ export function PicturesScreen() {
           </div>
           <div className="pic-all">
             <div className="row">
-              <button type="button" className="btn outline" onClick={() => void make_all()} disabled={is_working}>
+              <button type="button" className="btn outline" onClick={() => void make_all()} disabled={is_working || is_limit_reached}>
                 {batch ? t('pictures.making_all', { done: batch.done, total: batch.total }) : t('pictures.make_all')}
               </button>
               {batch && (
@@ -369,6 +370,11 @@ export function PicturesScreen() {
               />
             </>
           )}
+          {is_limit_reached && (
+            <Notice kind="warn" role="status">
+              {t('error.limit')}
+            </Notice>
+          )}
           {error_state && <AiErrorNotice error={error_state.error} on_retry={error_state.retry} />}
 
           <div className="grid-3">
@@ -376,7 +382,7 @@ export function PicturesScreen() {
               type="button"
               className={needs_redraw ? 'choice medium primary attention' : 'choice medium primary'}
               onClick={() => void make_one(index)}
-              disabled={is_working}
+              disabled={is_working || is_limit_reached}
             >
               <span className="choice-title">{t(needs_redraw ? 'pictures.redo_style' : 'pictures.ai.title')}</span>
               <span className="choice-desc">{t('pictures.ai.desc')}</span>

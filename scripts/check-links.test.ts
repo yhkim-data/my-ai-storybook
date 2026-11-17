@@ -1,6 +1,6 @@
 import { normalize } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { find_broken_links, is_doc_path } from './check-links.mjs';
+import { find_broken_links, is_doc_path, judge_status, read_provider_pages } from './check-links.mjs';
 
 /** Files treated as existing. */
 const FILES = new Set([normalize('docs/images/ko/start.png'), normalize('docs/key-guide.ko.md')]);
@@ -40,5 +40,20 @@ describe('is_doc_path', () => {
     for (const path of ['index.html', 'src/notes.md', 'docs/images/ko/demo.gif']) {
       expect(is_doc_path(path)).toBe(false);
     }
+  });
+});
+
+describe('provider usage pages', () => {
+  it('reads the addresses and flags any that are not https', () => {
+    const pages = read_provider_pages(JSON.stringify({ usage: { a: 'https://a.example/usage', b: 'http://b.example/usage' } }));
+    expect(pages.urls).toHaveLength(2);
+    expect(pages.not_https).toEqual(['http://b.example/usage']);
+    expect(read_provider_pages().not_https).toEqual([]);
+  });
+
+  it('only a missing page fails; sign-in redirects and walls are fine', () => {
+    expect(judge_status(404)).toBe('gone');
+    expect(judge_status(410)).toBe('gone');
+    for (const status of [200, 302, 401, 403]) expect(judge_status(status)).toBe('ok');
   });
 });

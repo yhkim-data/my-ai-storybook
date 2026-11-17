@@ -1,7 +1,7 @@
 // Generates one page's image with the AI. Shared by the image screen and the editor's "redo this image".
 // A page's own art style, if it has one, is used instead of the book's style.
 import { effective_style, style_key } from '../store/book_model';
-import { useSettings } from '../store/settings_store';
+import { image_limit_reached, useSettings } from '../store/settings_store';
 import type { Book, BookPage, PageImage, PageShape } from '../types';
 import { blob_to_data_url, to_raster_data_url } from '../utils/image';
 import { get_image_provider } from './index';
@@ -42,7 +42,7 @@ export async function generate_page_image(book: Book, page_index: number): Promi
 }
 
 /** Why "Fix the picture" cannot be used on a page right now; 'ok' when it can. */
-export type EditAvailability = 'ok' | 'no_image' | 'no_ai' | 'no_edit_model' | 'practice_upload';
+export type EditAvailability = 'ok' | 'no_image' | 'no_ai' | 'no_edit_model' | 'practice_upload' | 'limit';
 
 const SVG_DATA_URL_PREFIX = 'data:image/svg+xml';
 
@@ -52,6 +52,7 @@ export function edit_availability(page: BookPage | undefined): EditAvailability 
   const provider = get_image_provider();
   if (!provider) return 'no_ai';
   if (!provider.supportsEdit) return 'no_edit_model';
+  if (image_limit_reached(useSettings.getState())) return 'limit';
   // Practice mode can only recolor its own sample pictures.
   if (useSettings.getState().practice && !page.image.data_url.startsWith(SVG_DATA_URL_PREFIX)) return 'practice_upload';
   return 'ok';

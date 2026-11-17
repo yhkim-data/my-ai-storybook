@@ -9,7 +9,7 @@ const MS_PER_SECOND = 1000;
 const COUNTDOWN_TICK_MS = 500;
 const ICON_SIZE = 22;
 /** Errors where retrying cannot help (daily quota, bad key, setup problems), so no retry button. */
-const NO_RETRY_KINDS: ProviderErrorKind[] = ['quota_daily', 'bad_key', 'no_permission', 'browser_blocked'];
+const NO_RETRY_KINDS: ProviderErrorKind[] = ['quota_daily', 'bad_key', 'no_permission', 'browser_blocked', 'limit', 'practice_edit'];
 
 function WarnIcon() {
   return (

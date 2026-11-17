@@ -76,8 +76,8 @@ export interface SettingsState {
   set_lang: (lang: Lang) => void;
   /** Adds (or refills) a connection for a checked key and makes it the text or picture connection. */
   connect_key: (key: string, role: 'text' | 'image') => void;
-  /** Picks the text or picture connection by id, or practice mode. */
-  choose_connection: (role: 'text' | 'image', id: string | 'practice') => void;
+  /** Picks the text or picture connection by id, or practice mode; null for pictures means "same as text". */
+  choose_connection: (role: 'text' | 'image', id: string | null) => void;
   set_text_model: (model: string) => void;
   set_image_model: (model: string) => void;
   /** Forgets every key; connections stay in the list as "needs a key". */
@@ -277,6 +277,10 @@ export const useSettings = create<SettingsState>((set, get) => {
         update({ practice: true });
         return;
       }
+      if (id === null) {
+        if (role === 'image') update({ practice: false, image_connection: null });
+        return;
+      }
       if (!get().connections.some((item) => item.id === id)) return;
       update({ practice: false, ...(role === 'text' ? { text_connection: id } : { image_connection: id }) });
     },
@@ -341,6 +345,19 @@ export function ai_status(state: Pick<SettingsState, 'practice' | 'text_key' | '
 /** True when a connection is remembered but its key is gone (after a reload or the away timer): ask for it again. */
 export function needs_key(state: Pick<SettingsState, 'practice' | 'text_key' | 'image_key' | 'connections'>): boolean {
   return !state.practice && !state.text_key && !state.image_key && state.connections.length > 0;
+}
+
+/** Share of the picture limit at which the usage chip starts warning. */
+export const IMAGE_LIMIT_WARN_SHARE = 0.8;
+
+/** True when today's picture limit on this computer is set and used up. */
+export function image_limit_reached(state: Pick<SettingsState, 'image_limit' | 'usage_today' | 'practice'>): boolean {
+  return !state.practice && state.image_limit !== null && state.usage_today.image >= state.image_limit;
+}
+
+/** True when 80% or more of the picture limit is used. */
+export function image_limit_near(state: Pick<SettingsState, 'image_limit' | 'usage_today' | 'practice'>): boolean {
+  return !state.practice && state.image_limit !== null && state.usage_today.image >= state.image_limit * IMAGE_LIMIT_WARN_SHARE;
 }
 
 /** Name of a connection for lists: its label or the provider name, and the key's last characters when known. */

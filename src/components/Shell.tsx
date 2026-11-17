@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react';
 import di_lab_mark_url from './di_lab_mark.svg';
 import { STEP_SCREENS } from '../constants';
+import { UsageChip } from './UsageChip';
 import { useT } from '../i18n';
 import { go_home } from '../store/navigation';
 import type { Screen } from '../types';
@@ -9,8 +10,14 @@ import type { Screen } from '../types';
 /** Book icon size (px). */
 const BOOK_ICON_SIZE = 32;
 
+/** Right end of every header: the AI usage chip, then the DI Lab badge. */
 export function DiLabBadge() {
-  return <span className="dilab-badge">DI Lab</span>;
+  return (
+    <span className="header-end">
+      <UsageChip />
+      <span className="dilab-badge">DI Lab</span>
+    </span>
+  );
 }
 
 /** Small faint DI Lab mark in the bottom-right corner of the app. It is never part of a book or an export. */

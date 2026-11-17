@@ -954,3 +954,100 @@ legend {
   font-size: 15px;
   box-shadow: 0 10px 30px rgba(23, 35, 58, 0.3);
 }
+
+/* AI usage chip and panel */
+.header-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.usage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.usage-chip.near {
+  border-color: #f0a43a;
+  background: #fff6e6;
+}
+.usage-chip.full {
+  border-color: #b4410e;
+  background: #fdeee6;
+  color: #8a3009;
+}
+.usage-panel {
+  width: 340px;
+  max-width: calc(100vw - 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 10px 30px rgba(23, 35, 58, 0.18);
+  font-size: 14px;
+}
+.usage-title {
+  margin: 0;
+  font-size: 17px;
+}
+.usage-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.usage-section h3 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-sub);
+}
+.usage-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+.usage-row-label {
+  font-weight: 700;
+}
+.usage-note {
+  margin: 0;
+  color: var(--text-sub);
+  line-height: 1.45;
+}
+.usage-note.warn {
+  color: #8a3009;
+  font-weight: 700;
+}
+.text-input.usage-limit {
+  min-height: 40px;
+  font-size: 15px;
+}
+.usage-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+@media (max-width: 599px) {
+  .usage-chip {
+    padding: 0 11px;
+  }
+  .usage-chip .usage-chip-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}

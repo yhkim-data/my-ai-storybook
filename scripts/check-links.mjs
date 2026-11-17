@@ -1,4 +1,5 @@
-// Checks that every relative link and image in README files and docs/ points to an existing file. (npm run check:links)
+// Checks that every relative link and image in README files and docs/ points to an existing file, and that the
+// provider usage pages the app links to still answer. (npm run check:links)
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
@@ -7,6 +8,12 @@ import { dirname, join, normalize } from 'node:path';
 const DOC_PATTERN = /^([^/]+\.md|docs\/.+\.md)$/;
 /** Matches [text](url), ![alt](url), src="url" and href="url". */
 const LINK_PATTERNS = [/!?\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, /\b(?:src|href)="([^"]+)"/g];
+/** Provider usage pages linked from the app's "AI usage" panel. */
+const PROVIDER_PAGES_FILE = 'src/providers/provider_pages.json';
+const EXTERNAL_TIMEOUT_MS = 15000;
+/** A page that answers with one of these is gone. Sign-in redirects (3xx) and sign-in walls (401, 403) are fine. */
+const GONE_STATUSES = [404, 410];
+
 /** Not a file: any URL scheme (http:, mailto:) or an in-page anchor. */
 const EXTERNAL = /^([a-z][a-z0-9+.-]*:|#)/i;
 
@@ -43,15 +50,44 @@ export function find_broken_links(doc_path, text, exists = existsSync) {
   return broken;
 }
 
-function main() {
-  const docs = list_docs();
-  const broken = docs.flatMap((doc_path) => find_broken_links(doc_path, readFileSync(doc_path, 'utf8')));
-  if (broken.length > 0) {
-    console.error(`링크 검사 실패: 없는 파일을 가리키는 링크 ${broken.length}개`);
-    for (const item of broken) console.error(`  ${item.doc}: ${item.target}`);
-    process.exit(1);
-  }
-  console.log(`링크 검사 통과: 문서 ${docs.length}개의 상대 경로 링크와 그림이 모두 있습니다.`);
+/** The usage page addresses the app links to; every one must be https. */
+export function read_provider_pages(text = readFileSync(PROVIDER_PAGES_FILE, 'utf8')) {
+  const urls = Object.values(JSON.parse(text).usage ?? {});
+  return { urls, not_https: urls.filter((url) => typeof url !== 'string' || !url.startsWith('https://')) };
 }
 
-if (process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('scripts/check-links.mjs')) main();
+/** 'gone' for a page that no longer exists, 'ok' for any other answer. */
+export function judge_status(status) {
+  return GONE_STATUSES.includes(status) ? 'gone' : 'ok';
+}
+
+/** Asks each page once. A page that is gone fails the check; no network only prints a warning. */
+async function check_provider_pages(urls) {
+  const gone = [];
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(EXTERNAL_TIMEOUT_MS) });
+      if (judge_status(response.status) === 'gone') gone.push(`${url} (${response.status})`);
+    } catch {
+      console.warn(`경고: ${url}에 접속하지 못해 확인을 건너뜁니다.`);
+    }
+  }
+  return gone;
+}
+
+async function main() {
+  const docs = list_docs();
+  const broken = docs.flatMap((doc_path) => find_broken_links(doc_path, readFileSync(doc_path, 'utf8')));
+  const pages = read_provider_pages();
+  const gone = await check_provider_pages(pages.urls);
+  if (broken.length > 0 || gone.length > 0 || pages.not_https.length > 0) {
+    if (broken.length > 0) console.error(`링크 검사 실패: 없는 파일을 가리키는 링크 ${broken.length}개`);
+    for (const item of broken) console.error(`  ${item.doc}: ${item.target}`);
+    for (const url of pages.not_https) console.error(`  ${PROVIDER_PAGES_FILE}: https가 아닌 주소 ${url}`);
+    for (const url of gone) console.error(`  ${PROVIDER_PAGES_FILE}: 없는 쪽 ${url}`);
+    process.exit(1);
+  }
+  console.log(`링크 검사 통과: 문서 ${docs.length}개의 상대 경로 링크와 그림이 모두 있고, 사용량 화면 주소 ${pages.urls.length}개가 응답합니다.`);
+}
+
+if (process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('scripts/check-links.mjs')) void main();
