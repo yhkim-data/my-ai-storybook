@@ -1,4 +1,5 @@
-// Rights screen: states in both Korean and English that the maker owns the book.
+// Terms of use and rights screen: the site's terms, then the statement in Korean and English that the maker owns the book.
+import { terms_doc_url } from '../components/KeySafety';
 import { DiLabBadge, MadeByLine, Shell } from '../components/Shell';
 import { useT } from '../i18n';
 import { useBook } from '../store/book_store';
@@ -10,6 +11,7 @@ const RIGHTS_DOC_URL_KO = 'https://github.com/yhkim-data/my-ai-storybook/blob/ma
 const RIGHTS_DOC_URL_EN = 'https://github.com/yhkim-data/my-ai-storybook/blob/main/docs/rights.en.md';
 
 const PARAGRAPH_KEYS = ['rights.fonts', 'rights.ai', 'rights.provider', 'rights.others'];
+const TERMS_ITEM_KEYS = ['terms.item1', 'terms.item2', 'terms.item3', 'terms.item4', 'terms.item5', 'terms.item6', 'terms.item7'];
 
 function SideHeader({ title }: { title: string }) {
   const t = useT();
@@ -28,13 +30,31 @@ function SideHeader({ title }: { title: string }) {
   );
 }
 
-/** Rights and licensing notice screen. */
+/** Terms of use, rights and licensing notice screen. */
 export function RightsScreen() {
   const t = useT();
   const lang = useSettings((state) => state.lang);
   return (
     <Shell fit={false} header={<SideHeader title={t('rights.title')} />} footer={<MadeByLine />}>
-      <h1 className="title-lg">{t('rights.heading')}</h1>
+      <h1 className="title-lg">{t('rights.title')}</h1>
+      <section className="card stack" aria-labelledby="terms-heading">
+        <h2 id="terms-heading" className="rights-subheading">
+          {t('terms.heading')}
+        </h2>
+        <p className="hint">{t('terms.effective')}</p>
+        <ol className="terms-list">
+          {TERMS_ITEM_KEYS.map((key) => (
+            <li key={key}>{t(key)}</li>
+          ))}
+        </ol>
+        <div>
+          <a className="btn" href={terms_doc_url(lang)} target="_blank" rel="noopener noreferrer">
+            {t('terms.more')}
+          </a>
+        </div>
+      </section>
+      <h2 className="rights-subheading">{t('terms.rights_heading')}</h2>
+      <p className="lead small">{t('rights.heading')}</p>
       <section className="card stack loose">
         <p lang="ko" className="rights-statement">
           {t('rights.statement.ko')}
