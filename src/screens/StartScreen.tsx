@@ -6,7 +6,7 @@ import { Notice } from '../components/Notice';
 import { load_scene_art } from '../art/scenes';
 import { build_demo_book } from '../data/demo_book';
 import { useT } from '../i18n';
-import { parse_book_file } from '../storage/book_file';
+import { WORK_FILE_MAX_BYTES, parse_book_file } from '../storage/book_file';
 import { delete_current_book, load_current_book } from '../storage/db';
 import { useBook } from '../store/book_store';
 import { ai_status, useSettings } from '../store/settings_store';
@@ -143,6 +143,7 @@ export function StartScreen() {
     const file = input.files?.[0];
     if (!file) return;
     try {
+      if (file.size > WORK_FILE_MAX_BYTES) throw new Error('file too big');
       const book = parse_book_file(await file.text());
       set_has_load_error(false);
       open_book(book);

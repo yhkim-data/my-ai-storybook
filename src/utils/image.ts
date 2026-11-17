@@ -51,6 +51,14 @@ export function load_image(src: string): Promise<HTMLImageElement> {
   });
 }
 
+/** Picture data URLs a work file may hold; anything else (http:, javascript:, other types) is refused. */
+const SAFE_IMAGE_DATA_URL = /^data:image\/(png|jpeg|webp|gif|svg\+xml)[;,]/;
+
+/** True for an inline picture of an allowed type. */
+export function is_safe_image_url(url: unknown): boolean {
+  return typeof url === 'string' && SAFE_IMAGE_DATA_URL.test(url);
+}
+
 /** Picture types every AI provider accepts as input. */
 const RASTER_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 /** Side (px) an SVG picture is drawn at when it has to become a PNG. */

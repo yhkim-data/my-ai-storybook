@@ -50,7 +50,7 @@
 - 키 받는 곳: <https://aistudio.google.com/apikey> ("Create API key" 단추)
 - 키는 `x-goog-api-key` 머리글로 보낸다.
 - 문서의 경고: "Never expose keys client-side in production: Do not hardcode API keys directly in web or mobile apps." / "Never embed API keys directly in client-side code or public repositories." / Google APIs 약관 4b: "Developer credentials may not be embedded in open source projects."
-- 이 도구는 키를 코드에 넣지 않는다. 쓰는 사람이 자기 키를 자기 브라우저에 넣고, 그 브라우저의 localStorage에만 둔다. 그래도 같은 기기를 쓰는 다른 사람이 키를 볼 수 있으므로 "이 기기에서 키 지우기" 단추와 안내를 두었다.
+- 이 도구는 키를 코드에 넣지 않는다. 쓰는 사람이 자기 키를 자기 브라우저에 넣고, 2026-11-17부터는 브라우저 메모리에만 둔다(어디에도 저장하지 않음). 탭을 닫거나 새로 고침하거나 정한 시간 동안 쓰지 않으면 지워지고, "키 지우고 끝내기"로 바로 지울 수 있다. 자세한 것은 [SECURITY.md](../SECURITY.md).
 - 한도는 키가 아니라 프로젝트 단위로 걸린다: "Rate limits are applied per project, not per API key."
 
 ## 4. 모델과 가격

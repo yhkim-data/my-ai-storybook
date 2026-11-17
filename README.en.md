@@ -119,9 +119,14 @@ Legal sources, original terms, and check dates are in the full [Rights and terms
 ## Privacy and API keys
 
 - There is no server. Your book is stored only in this device's browser, and the operator cannot see it.
-- The key is stored only in this device's browser and is sent directly to the provider that issued it (Google, Anthropic, or OpenAI) only when AI is used. It is never sent anywhere else.
-- Other people using the same device may be able to see the key. On a shared device, press [Erase the key from this device] when you finish.
+- The key is never saved. It stays only in the browser's memory and is cleared when you close the tab, reload, or leave the app unused for the set time (20 minutes by default). It is sent directly to the provider that issued it (Google, Anthropic, or OpenAI) only when AI is used.
+- On a shared computer, press [Clear keys and finish] when you are done and close the browser. If the book should not stay, press [Delete the book on this computer] on the start screen.
 - To keep a book long term, save a work file with [Save work file].
+- [AI usage] at the right of the header shows the word requests and pictures this app has used, and sets a picture limit for today on this computer. The money left can be seen only on each company's own pages.
+
+## Security
+
+The key stays only in browser memory, and the site's Content Security Policy (CSP) lets it go only to the AI addresses of Google, OpenAI, and Anthropic. The app does not open inside another site's frame (iframe). How keys are handled, what key owners should do, and how to report a vulnerability privately are in [SECURITY.md](SECURITY.md). The rules for using the site are in the [Terms of use](docs/terms.en.md).
 
 ## Supported devices
 

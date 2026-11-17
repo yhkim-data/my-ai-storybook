@@ -75,7 +75,15 @@ In practice, this means:
 
 - With option C, check the age requirement of the other AI app yourself. This tool does not know that app's terms.
 - To practice without a key, add `?mock=1` to the end of the address. You can click through the AI steps with ready-made sample stories and pictures. It uses no key, so it works well for demos.
-- After a demo on a shared device, press [Erase the key from this device] on the [Connect AI] screen.
+- After a demo on a shared device, press [Clear keys and finish] and close the browser. Keys are never saved, and they are also cleared on a reload or after the set time without use (20 minutes by default).
+
+### How keys are kept, and class settings
+
+- Keys are never saved (from 2026-11-17). Keys an earlier version saved on the computer are removed the first time the new version opens, with the one-time message "A key saved on this computer by an earlier version was removed."
+- When entering a key, students tick "This is my own key, or a key my teacher gave me for this class."
+- **Hand out a class settings file:** On the [Connect AI] screen, set the company and AI kind, a connection name (e.g. Class 3), and the minutes before unused keys are cleared (5 to 60), then press [Save settings file]. Give this file to students; they press [Load settings file] and only enter a key. The settings file never holds keys or book content, and key-like text in a file is thrown away.
+- **Picture limit:** In [AI usage] at the right of the header, set "Picture limit today on this computer". At 80% of the limit a warning shows, and when it is used up the AI picture and Fix the picture buttons stop. The limit is saved in the settings file too. It counts only on that computer, so set the real spending limit on each company's pages as well ([SECURITY.md](../SECURITY.md)).
+- **Finishing on a shared computer:** At the end of class, have students press [Clear keys and finish] and close the browser. To leave no book behind, save it with [Save work file] and tick [Also delete the book on this computer] in the confirm window.
 
 ### 3. Will you print?
 
@@ -147,7 +155,7 @@ The calculation below is for Google Gemini. Claude writes text only; the text fo
 - Anthropic's Commercial Terms of Service state: "Anthropic may not train models on Customer Content from Services." (checked 2026-11-16). Under OpenAI's Services Agreement, OpenAI does not use customer content to develop or improve its services unless the customer explicitly agrees (checked 2026-11-16). Read the provider's terms before use.
 - Paying does not remove the age requirement. It is separate.
 - The book in progress is saved in the browser on that device. This tool has no server. To move a book to another device, save a work file with [Save work file] and move the file.
-- Keys are saved only in the browser on that device. On a shared device, press [Erase the key from this device] when you finish.
+- Keys are never saved; they stay only in browser memory. On a shared device, press [Clear keys and finish] when you finish and close the browser.
 - A work file contains the text and images the student made. Follow your school's rules for storing and sending the file.
 - For permission to publish student work and consent for personal information (legal-representative consent for children under 14 in Korea), see section 5 of [Rights and terms of use](rights.en.md).
 

@@ -105,11 +105,13 @@ The options for changing the AI are in the same place. The available options dep
 - Do not share your key in messages, email, online forums, or screenshots.
 - If someone else learns your key, delete it on the key page (addresses in the table above) and create a new one.
 
-This tool saves the key only in this device's browser (localStorage). It sends the key only to the provider that issued it (Google, Anthropic, or OpenAI), and only when AI is used. It is never sent anywhere else.
+This tool never saves the key. It stays only in the browser's memory and is cleared when you close the tab, reload, or leave the app unused for the set time (20 minutes by default). After a reload, pressing a button that needs AI opens a small window to enter the key again, and your book stays as it is. The key is sent only to the provider that issued it (Google, Anthropic, or OpenAI), and only when AI is used. It is never sent anywhere else.
+
+When you enter a key, tick "This is my own key, or a key my teacher gave me for this class." The rules for which keys may be used are in the [Terms of use](terms.en.md).
 
 ## Shared devices
 
-On a shared device such as a school computer, press [Erase the key from this device] on the [Connect AI] screen when you finish. The message "The key was erased from this device." confirms it.
+On a shared device such as a school computer, press [Clear keys and finish] in [AI usage] in the header or on the start screen when you finish, and close the browser. Ticking [Also delete the book on this computer] in the confirm window deletes the book too.
 
 ## Troubleshooting
 
