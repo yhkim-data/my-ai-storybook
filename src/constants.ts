@@ -80,11 +80,14 @@ export const DEFAULT_TEXT_BOX: Omit<TextBox, 'x' | 'y' | 'w' | 'h'> = {
 
 /** Minimum box size and snap distance, in percent. */
 export const BOX_MIN_SIZE = 12;
+/** Smallest picture box: this percent of the page width, on both sides. */
+export const IMAGE_BOX_MIN_SIZE = 10;
 export const SNAP_DISTANCE = 1.5;
 /** Snap lines: page edges, inner margin, center. */
 export const SNAP_LINES = [0, 5, 50, 95, 100];
-/** Arrow-key move step for a text box, in percent. */
+/** Arrow-key move and resize step for a box, in percent; Shift+arrow uses the big step. */
 export const KEY_MOVE_STEP = 1;
+export const KEY_MOVE_BIG_STEP = 5;
 
 /** Number of undo steps kept. */
 export const HISTORY_LIMIT = 50;

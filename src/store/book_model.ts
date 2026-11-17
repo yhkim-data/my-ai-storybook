@@ -10,9 +10,11 @@ import {
   STYLE_IDS,
   DEFAULT_STYLE_ID,
   DEFAULT_TEXT_BOX,
+  LAYOUT_IDS,
+  LAYOUT_IMAGE_RECT,
   LAYOUT_TEXT_RECT,
 } from '../constants';
-import type { ArtStyle, Book, BookPage, Lang, LayoutId, PageDraft, StorySeed, StyleChoice, TextBox } from '../types';
+import type { ArtStyle, Book, BookPage, Lang, LayoutId, PageDraft, Rect, StorySeed, StyleChoice, TextBox } from '../types';
 
 /** Cover title box position, in percent. */
 const COVER_TEXT_RECT = { x: 8, y: 6, w: 84, h: 22 };
@@ -33,6 +35,11 @@ export function make_text_box(layout: LayoutId, current?: TextBox): TextBox {
   };
 }
 
+/** Picture box for a layout. */
+export function make_image_box(layout: LayoutId): Rect {
+  return { ...LAYOUT_IMAGE_RECT[layout] };
+}
+
 export function make_story_page(text = '', image_prompt = ''): BookPage {
   return {
     id: make_id(),
@@ -42,6 +49,9 @@ export function make_story_page(text = '', image_prompt = ''): BookPage {
     image: null,
     layout: DEFAULT_LAYOUT_ID,
     text_box: make_text_box(DEFAULT_LAYOUT_ID),
+    image_box: make_image_box(DEFAULT_LAYOUT_ID),
+    front: 'text',
+    image_lock: true,
   };
 }
 
@@ -61,6 +71,9 @@ export function make_cover_page(title = '', image_prompt = ''): BookPage {
       align: 'center',
       background: 'white',
     },
+    image_box: make_image_box('full'),
+    front: 'text',
+    image_lock: true,
   };
 }
 
@@ -92,11 +105,29 @@ export function style_key(choice: StyleChoice): string {
   return choice.style_id === 'custom' ? `custom:${choice.custom_style.trim()}` : choice.style_id;
 }
 
-/** Drops a page style that is not valid and cleans its description. */
-function normalize_page_style(page: BookPage): BookPage {
+/** True for a rect whose four numbers are all finite. */
+function is_rect(value: unknown): value is Rect {
+  if (typeof value !== 'object' || value === null) return false;
+  const rect = value as Partial<Rect>;
+  return [rect.x, rect.y, rect.w, rect.h].every((part) => typeof part === 'number' && Number.isFinite(part));
+}
+
+/**
+ * Fills page fields that older books lack: the picture box comes from the layout, the text stays
+ * in front and the picture keeps its proportions. Drops a page style that is not valid.
+ */
+function normalize_page(page: BookPage): BookPage {
   const { style, custom_style, ...rest } = page;
-  if (!is_art_style(style)) return rest;
-  return style === 'custom' ? { ...rest, style, custom_style: clean_custom_style(custom_style) } : { ...rest, style };
+  const layout = LAYOUT_IDS.includes(page.layout) ? page.layout : DEFAULT_LAYOUT_ID;
+  const filled: BookPage = {
+    ...rest,
+    layout,
+    image_box: is_rect(page.image_box) ? page.image_box : make_image_box(layout),
+    front: page.front === 'image' ? 'image' : 'text',
+    image_lock: typeof page.image_lock === 'boolean' ? page.image_lock : true,
+  };
+  if (!is_art_style(style)) return filled;
+  return style === 'custom' ? { ...filled, style, custom_style: clean_custom_style(custom_style) } : { ...filled, style };
 }
 
 /**
@@ -109,7 +140,7 @@ export function normalize_book(book: Book): Book {
     seed: { ...make_seed(), ...book.seed, page_count: clamp_page_count(book.seed?.page_count) },
     style_id: is_art_style(book.style_id) ? book.style_id : DEFAULT_STYLE_ID,
     custom_style: clean_custom_style(book.custom_style),
-    pages: (book.pages ?? []).map(normalize_page_style),
+    pages: (book.pages ?? []).map(normalize_page),
   };
 }
 
@@ -153,9 +184,9 @@ export function resize_pages(pages: BookPage[], page_count: number, title: strin
   return [cover, ...story];
 }
 
-/** Changes a page's layout and moves its text box to the layout's default position. */
+/** Applies a layout: both boxes go to that layout's places, and can be moved freely afterwards. */
 export function apply_layout(page: BookPage, layout: LayoutId): BookPage {
-  return { ...page, layout, text_box: make_text_box(layout, page.text_box) };
+  return { ...page, layout, text_box: make_text_box(layout, page.text_box), image_box: make_image_box(layout) };
 }
 
 /** Book title: the cover text, else the chosen plot title, else ''. */

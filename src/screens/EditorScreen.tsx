@@ -5,6 +5,7 @@ import { PageView } from '../components/PageView';
 import { DiLabBadge, HomeBrand, MadeByLine, Shell } from '../components/Shell';
 import { StyleMenu } from '../components/StyleMenu';
 import { FONT_IDS, FONT_SIZE_MAX, FONT_SIZE_MIN, LAYOUT_IDS, TEXT_COLORS } from '../constants';
+import { EditableImageBox } from '../editor/EditableImageBox';
 import { EditableTextBox } from '../editor/EditableTextBox';
 import { page_name, useT } from '../i18n';
 import { generate_page_image, needs_style_redraw, practice_restyle } from '../providers/make_image';
@@ -12,7 +13,7 @@ import type { ProviderError } from '../providers/types';
 import { apply_layout } from '../store/book_model';
 import { insert_blank_page, move_page, remove_page, useBook } from '../store/book_store';
 import { clean_custom_style } from '../store/book_model';
-import type { ArtStyle, BookPage, BoxBackground, FontId, LayoutId, PageImage, Rect, TextAlign, TextBox } from '../types';
+import type { ArtStyle, BookPage, BoxBackground, BoxKind, FontId, LayoutId, PageImage, Rect, TextAlign, TextBox } from '../types';
 import { prepare_upload_image } from '../utils/image';
 import { useElementSize } from '../utils/use_element_size';
 import './EditorScreen.css';
@@ -46,9 +47,8 @@ function OrderIcon({ kind }: { kind: 'up' | 'down' | 'remove' }) {
 }
 const BACKGROUNDS: BoxBackground[] = ['none', 'white', 'bubble'];
 const ALIGNS: TextAlign[] = ['left', 'center', 'right'];
-/** Settings tabs: the text box, or the picture. */
-type SettingsTab = 'text' | 'image';
-const SETTINGS_TABS: SettingsTab[] = ['text', 'image'];
+/** Settings tabs, one per box. The selected tab is also the selected box on the page. */
+const BOX_KINDS: BoxKind[] = ['text', 'image'];
 /** A page can be removed only when the book (cover included) has more pages than this. */
 const MIN_PAGES_WITH_COVER = 2;
 
@@ -104,7 +104,7 @@ export function EditorScreen() {
   const [is_drawing, set_is_drawing] = useState(false);
   const [ai_error, set_ai_error] = useState<ProviderError | null>(null);
   const [message, set_message] = useState<string | null>(null);
-  const [settings_tab, set_settings_tab] = useState<SettingsTab>('text');
+  const [selected_box, set_selected_box] = useState<BoxKind>('text');
 
   // Ctrl+Z undoes; Ctrl+Shift+Z or Ctrl+Y redoes.
   useEffect(() => {
@@ -137,6 +137,10 @@ export function EditorScreen() {
     change_page((target) => ({ ...target, text_box: { ...target.text_box, ...patch } }), change_key);
   };
   const change_image = (image: PageImage) => change_page((target) => ({ ...target, image }));
+  const change_image_box = (rect: Rect, change_key?: string) => change_page((target) => ({ ...target, image_box: rect }), change_key);
+  /** Puts the selected box in front of the other one, or behind it. */
+  const set_front = (front: BoxKind) => change_page((target) => (target.front === front ? target : { ...target, front }));
+  const other_box: BoxKind = selected_box === 'text' ? 'image' : 'text';
   const clear_notices = () => {
     set_ai_error(null);
     set_message(null);
@@ -146,8 +150,8 @@ export function EditorScreen() {
   const handle_tab_key = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
     event.preventDefault();
-    const next: SettingsTab = settings_tab === 'text' ? 'image' : 'text';
-    set_settings_tab(next);
+    const next: BoxKind = selected_box === 'text' ? 'image' : 'text';
+    set_selected_box(next);
     document.getElementById(`editor-tab-${next}`)?.focus();
   };
 
@@ -215,6 +219,31 @@ export function EditorScreen() {
   };
 
   const is_cover = current_page === 0;
+  const image_box_view = (
+    <EditableImageBox
+      key={`image-${page.id}`}
+      page={page}
+      size={size}
+      placeholder={`${name} ${t('editor.image_placeholder')}`}
+      image_alt={t('pictures.image_alt', { name })}
+      selected={selected_box === 'image'}
+      on_select={() => set_selected_box('image')}
+      on_rect={change_image_box}
+    />
+  );
+  const text_box_view = (
+    <EditableTextBox
+      key={`text-${page.id}`}
+      page={page}
+      size={size}
+      name={name}
+      selected={selected_box === 'text'}
+      on_select={() => set_selected_box('text')}
+      on_text={(text) => change_page((target) => ({ ...target, text }), `text:${page.id}`)}
+      on_rect={(rect: Rect, change_key) => change_box(rect, change_key)}
+      on_edit_end={() => useBook.setState({ last_change_key: null })}
+    />
+  );
   const needs_redraw = needs_style_redraw(book, current_page);
   const can_remove = !is_cover && book.pages.length > MIN_PAGES_WITH_COVER;
 
@@ -316,16 +345,8 @@ export function EditorScreen() {
             </Notice>
           )}
           <div ref={canvas_ref} className="editor-canvas-fit">
-            <PageView page={page} size={size} hide_text placeholder={`${name} ${t('editor.image_placeholder')}`} image_alt={t('pictures.image_alt', { name })} class_name="page-shadow">
-              <EditableTextBox
-                key={page.id}
-                page={page}
-                size={size}
-                name={name}
-                on_text={(text) => change_page((target) => ({ ...target, text }), `text:${page.id}`)}
-                on_rect={(rect: Rect, change_key) => change_box(rect, change_key)}
-                on_edit_end={() => useBook.setState({ last_change_key: null })}
-              />
+            <PageView page={page} size={size} hide_text hide_image class_name="page-shadow">
+              {page.front === 'image' ? [text_box_view, image_box_view] : [image_box_view, text_box_view]}
             </PageView>
           </div>
           <p className="editor-small-hint">{is_cover ? t('editor.cover_hint') : t('editor.box_help')}</p>
@@ -333,24 +354,32 @@ export function EditorScreen() {
 
         <aside className="editor-settings" aria-label={t('editor.settings')}>
           <div className="editor-tabs" role="tablist" aria-label={t('editor.settings')}>
-            {SETTINGS_TABS.map((tab) => (
+            {BOX_KINDS.map((tab) => (
               <button
                 key={tab}
                 type="button"
                 role="tab"
                 id={`editor-tab-${tab}`}
                 className="editor-tab"
-                aria-selected={settings_tab === tab}
+                aria-selected={selected_box === tab}
                 aria-controls={`editor-panel-${tab}`}
-                tabIndex={settings_tab === tab ? 0 : -1}
-                onClick={() => set_settings_tab(tab)}
+                tabIndex={selected_box === tab ? 0 : -1}
+                onClick={() => set_selected_box(tab)}
                 onKeyDown={handle_tab_key}
               >
                 {t(`editor.tab.${tab}`)}
               </button>
             ))}
           </div>
-          {settings_tab === 'text' ? (
+          <div className="editor-order" role="group" aria-label={t(`editor.order_${selected_box}`)}>
+            <button type="button" className="btn small" onClick={() => set_front(selected_box)} disabled={page.front === selected_box}>
+              {t('editor.bring_front')}
+            </button>
+            <button type="button" className="btn small" onClick={() => set_front(other_box)} disabled={page.front !== selected_box}>
+              {t('editor.send_back')}
+            </button>
+          </div>
+          {selected_box === 'text' ? (
             <div className="editor-panel" role="tabpanel" id="editor-panel-text" aria-labelledby="editor-tab-text">
               <div className="stack tight">
                 <label htmlFor="font-pick" className="editor-label">
@@ -442,6 +471,14 @@ export function EditorScreen() {
                   ))}
                 </div>
               </div>
+              <label className="editor-check">
+                <input
+                  type="checkbox"
+                  checked={page.image_lock}
+                  onChange={(event) => change_page((target) => ({ ...target, image_lock: event.target.checked }))}
+                />
+                <span>{t('editor.image_lock')}</span>
+              </label>
               <div className="stack tight">
                 <span className="editor-label">{t('style.page.label')}</span>
                 <StyleMenu

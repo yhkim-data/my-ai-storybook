@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { BOX_MIN_SIZE, SNAP_DISTANCE } from '../constants';
+import { BOX_MIN_SIZE, IMAGE_BOX_MIN_SIZE, SNAP_DISTANCE } from '../constants';
 import type { Rect } from '../types';
-import { move_box, resize_box } from './geometry';
+import { image_min_size, move_box, resize_box, resize_box_keep_ratio } from './geometry';
 
 /** Base box that touches no snap line (edges 20-60, center 40). */
 const BASE: Rect = { x: 20, y: 20, w: 40, h: 40 };
@@ -155,3 +155,67 @@ describe('resize_box', () => {
     expect(result.guide_y).toBeNull();
   });
 });
+
+describe('picture box', () => {
+  /** On-screen width / height of a box on a page whose height is aspect times its width. */
+  const screen_ratio = (rect: Rect, aspect: number) => rect.w / (rect.h * aspect);
+
+  it('keeping proportions: a corner drag scales the box and its shape on screen stays the same', () => {
+    for (const aspect of [1, 4 / 3, 3 / 4]) {
+      const start: Rect = { x: 20, y: 20, w: 40, h: 30 };
+      const before = screen_ratio(start, aspect);
+      for (const corner of ['nw', 'ne', 'sw', 'se'] as const) {
+        const grown = resize_box_keep_ratio(start, corner, 10, 4, aspect, IMAGE_BOX_MIN_SIZE).rect;
+        expect(screen_ratio(grown, aspect)).toBeCloseTo(before);
+      }
+      const se = resize_box_keep_ratio(start, 'se', 10, 0, aspect, IMAGE_BOX_MIN_SIZE).rect;
+      expect(se.x).toBe(start.x);
+      expect(se.y).toBe(start.y);
+      expect(se.w).toBeCloseTo(50);
+      const nw = resize_box_keep_ratio(start, 'nw', -10, 0, aspect, IMAGE_BOX_MIN_SIZE).rect;
+      expect(nw.x + nw.w).toBeCloseTo(start.x + start.w);
+      expect(nw.y + nw.h).toBeCloseTo(start.y + start.h);
+    }
+  });
+
+  it('keeping proportions: never smaller than the minimum width, never outside the page', () => {
+    const start: Rect = { x: 30, y: 30, w: 40, h: 40 };
+    const tiny = resize_box_keep_ratio(start, 'se', -500, -500, 1, IMAGE_BOX_MIN_SIZE).rect;
+    expect(tiny.w).toBeCloseTo(IMAGE_BOX_MIN_SIZE);
+    expect(tiny.h).toBeCloseTo(IMAGE_BOX_MIN_SIZE);
+    const huge = resize_box_keep_ratio(start, 'se', 500, 500, 1, IMAGE_BOX_MIN_SIZE).rect;
+    expect(huge.x + huge.w).toBeLessThanOrEqual(PAGE_MAX + EPSILON);
+    expect(huge.y + huge.h).toBeLessThanOrEqual(PAGE_MAX + EPSILON);
+    expect(huge.w).toBeCloseTo(huge.h);
+  });
+
+  it('a full-page picture can still be made smaller from any corner', () => {
+    const full: Rect = { x: 0, y: 0, w: 100, h: 100 };
+    const smaller = resize_box_keep_ratio(full, 'nw', 20, 20, 1, IMAGE_BOX_MIN_SIZE).rect;
+    expect(smaller.w).toBeCloseTo(80);
+    expect(smaller.x).toBeCloseTo(20);
+  });
+
+  it('free resize uses the picture minimum: 10% of the page width on both sides', () => {
+    const start: Rect = { x: 30, y: 30, w: 40, h: 40 };
+    const min = image_min_size(4 / 3);
+    const tiny = resize_box(start, 'se', -500, -500, min).rect;
+    expect(tiny.w).toBeCloseTo(IMAGE_BOX_MIN_SIZE);
+    expect(tiny.h * (4 / 3)).toBeCloseTo(IMAGE_BOX_MIN_SIZE);
+    // A picture can touch the page edges (full bleed) but not leave the page.
+    const edge = move_box({ x: 0, y: 0, w: 100, h: 100 }, 30, 30).rect;
+    expect(edge).toEqual({ x: 0, y: 0, w: 100, h: 100 });
+  });
+});
+
+describe('keyboard moves', () => {
+  it('move_box without snapping moves by exactly the step, even next to a snap line', () => {
+    const near_center: Rect = { x: 20, y: 19, w: 40, h: 60 };
+    expect(move_box(near_center, 0, 1, false).rect.y).toBe(20);
+    expect(move_box(near_center, 0, -1, false).rect.y).toBe(18);
+    expect(move_box(near_center, 0, -1, false).guide_y).toBeNull();
+    // Still kept inside the page.
+    expect(move_box(near_center, -50, 0, false).rect.x).toBe(0);
+  });
+});
+

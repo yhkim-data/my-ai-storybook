@@ -1,6 +1,6 @@
 // Renders one book page; shared by the editor, the flip-through preview and PDF export.
 import type { CSSProperties, ReactNode } from 'react';
-import { BLEED_MM, FONTS, LAYOUT_IMAGE_RECT, PAGE_MM, PAGE_REF_SIZE } from '../constants';
+import { BLEED_MM, FONTS, PAGE_MM, PAGE_REF_SIZE } from '../constants';
 import { translate } from '../i18n';
 import { MOCK_IMAGE_MODEL } from '../providers/mock_image';
 import { get_ai_model_names, get_book_title } from '../store/book_model';
@@ -30,13 +30,13 @@ export function page_frame(size: number, bleed: boolean): { outer: number; offse
   return { outer: size + offset * 2, offset };
 }
 
-/** Converts a percent rect to absolute px position styles. */
-export function rect_style(rect: Rect, size: number): CSSProperties {
+/** Converts a percent rect to absolute px position styles on a page of the given width and height. */
+export function rect_style(rect: Rect, width: number, height = width): CSSProperties {
   return {
-    left: (rect.x * size) / PERCENT,
-    top: (rect.y * size) / PERCENT,
-    width: (rect.w * size) / PERCENT,
-    height: (rect.h * size) / PERCENT,
+    left: (rect.x * width) / PERCENT,
+    top: (rect.y * height) / PERCENT,
+    width: (rect.w * width) / PERCENT,
+    height: (rect.h * height) / PERCENT,
   };
 }
 
@@ -67,43 +67,53 @@ interface PageViewProps {
   /** Placeholder text shown when there is no image (editor only). */
   placeholder?: string;
   image_alt?: string;
-  /** Skip the text box; the editor draws its own. */
+  /** Skip the text box and the picture; the editor draws its own editable ones. */
   hide_text?: boolean;
-  /** Overlay content, e.g. the editor's editable text box. */
+  hide_image?: boolean;
+  /** Overlay content, e.g. the editor's editable boxes. */
   children?: ReactNode;
   class_name?: string;
 }
 
-/** Renders a page: the image follows the layout, the text box uses its saved position. */
-export function PageView({ page, size, bleed = false, placeholder, image_alt = '', hide_text = false, children, class_name = '' }: PageViewProps) {
+/**
+ * Picture position in px. A side that touches the page edge reaches into the print bleed, and only a
+ * picture that touches no edge gets rounded corners.
+ */
+export function image_box_style(box: Rect, width: number, offset: number, height = width): CSSProperties {
+  const left = box.x <= 0 ? -offset : (box.x * width) / PERCENT;
+  const top = box.y <= 0 ? -offset : (box.y * height) / PERCENT;
+  const right = box.x + box.w >= PERCENT ? width + offset : ((box.x + box.w) * width) / PERCENT;
+  const bottom = box.y + box.h >= PERCENT ? height + offset : ((box.y + box.h) * height) / PERCENT;
+  const touches_edge = box.x <= 0 || box.y <= 0 || box.x + box.w >= PERCENT || box.y + box.h >= PERCENT;
+  return { left, top, width: right - left, height: bottom - top, borderRadius: touches_edge ? 0 : width * IMAGE_RADIUS_RATIO };
+}
+
+/** Renders a page: picture and text box at their saved places, the `front` one on top. */
+export function PageView({ page, size, bleed = false, placeholder, image_alt = '', hide_text = false, hide_image = false, children, class_name = '' }: PageViewProps) {
   const { outer, offset } = page_frame(size, bleed);
-  const image_rect = LAYOUT_IMAGE_RECT[page.layout];
-  const is_full = page.layout === 'full';
-  // The full layout extends the image into the bleed.
-  const image_style: CSSProperties = is_full
-    ? { left: -offset, top: -offset, width: outer, height: outer }
-    : { ...rect_style(image_rect, size), borderRadius: size * IMAGE_RADIUS_RATIO };
+  const image_style = image_box_style(page.image_box, size, offset);
+
+  const image_part = hide_image ? null : page.image ? (
+    <div key="image" className="page-image" style={image_style}>
+      <img src={page.image.data_url} alt={image_alt} draggable={false} />
+    </div>
+  ) : placeholder !== undefined ? (
+    <div key="image" className="page-image empty" style={{ ...image_style, fontSize: (PLACEHOLDER_FONT_SIZE * size) / PAGE_REF_SIZE }}>
+      {placeholder}
+    </div>
+  ) : null;
+  const text_part =
+    !hide_text && page.text.trim().length > 0 ? (
+      <div key="text" className={text_box_class(page.text_box)} style={{ ...rect_style(page.text_box, size), ...text_box_style(page.text_box, size) }}>
+        {page.text}
+        {page.text_box.background === 'bubble' && <span className="bubble-tail" aria-hidden="true" />}
+      </div>
+    ) : null;
 
   return (
     <div className={`book-page ${class_name}`} style={{ width: outer, height: outer }} data-page-id={page.id}>
       <div className="page-inner" style={{ left: offset, top: offset, width: size, height: size }}>
-        {page.image ? (
-          <div className="page-image" style={image_style}>
-            <img src={page.image.data_url} alt={image_alt} draggable={false} />
-          </div>
-        ) : (
-          placeholder !== undefined && (
-            <div className="page-image empty" style={{ ...image_style, fontSize: (PLACEHOLDER_FONT_SIZE * size) / PAGE_REF_SIZE }}>
-              {placeholder}
-            </div>
-          )
-        )}
-        {!hide_text && page.text.trim().length > 0 && (
-          <div className={text_box_class(page.text_box)} style={{ ...rect_style(page.text_box, size), ...text_box_style(page.text_box, size) }}>
-            {page.text}
-            {page.text_box.background === 'bubble' && <span className="bubble-tail" aria-hidden="true" />}
-          </div>
-        )}
+        {page.front === 'image' ? [text_part, image_part] : [image_part, text_part]}
         {children}
       </div>
     </div>
