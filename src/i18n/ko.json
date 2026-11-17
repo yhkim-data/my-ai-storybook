@@ -5,6 +5,7 @@
   "common.prev": "이전",
   "common.next": "다음",
   "common.home": "처음으로",
+  "common.home_aria": "처음 화면으로 가기",
   "common.autosave": "쓰는 동안 자동으로 저장돼요",
   "common.made_by": "만든 곳",
   "common.step_label": "{n} / 8 {name}",

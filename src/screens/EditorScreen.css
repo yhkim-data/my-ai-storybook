@@ -327,6 +327,13 @@
     flex-basis: 100%;
     font-size: 19px;
   }
+  /* The tool row is full, so the logo keeps only its icon. */
+  .editor-tools .brand-home .brand-text {
+    display: none;
+  }
+  .editor-tools .brand-home .brand-icon {
+    display: block;
+  }
   .editor-badge {
     display: none;
   }

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { PageView } from '../components/PageView';
-import { DiLabBadge, MadeByLine, Shell } from '../components/Shell';
+import { DiLabBadge, HomeBrand, MadeByLine, Shell } from '../components/Shell';
 import { FONT_IDS, FONT_SIZE_MAX, FONT_SIZE_MIN, LAYOUT_IDS, TEXT_COLORS } from '../constants';
 import { EditableTextBox } from '../editor/EditableTextBox';
 import { page_name, useT } from '../i18n';
@@ -171,6 +171,7 @@ export function EditorScreen() {
       header={
         <>
           <div className="row editor-tools">
+            <HomeBrand />
             <h1 className="editor-title">{t('common.step_label', { n: 7, name: t('step.editor') })}</h1>
             <button type="button" className="btn small" onClick={undo} disabled={!can_undo}>
               <UndoIcon />

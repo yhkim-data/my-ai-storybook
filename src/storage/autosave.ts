@@ -9,24 +9,34 @@ type SaveState = 'idle' | 'saving' | 'saved';
 
 let save_timer: ReturnType<typeof setTimeout> | null = null;
 let pending_book: Book | null = null;
+/** Saves run one after another; a flush waits for any save that has already started. */
+let save_chain: Promise<void> = Promise.resolve();
 
 function mark_save_state(state: SaveState): void {
   if (typeof document !== 'undefined') document.body.dataset.saveState = state;
 }
 
-/** Saves any pending book immediately. */
-export async function flush_autosave(): Promise<void> {
-  if (save_timer) clearTimeout(save_timer);
-  save_timer = null;
-  const book = pending_book;
-  pending_book = null;
-  if (!book) return;
+async function write_book(book: Book): Promise<void> {
   try {
     await save_current_book(book);
     useBook.getState().set_has_saved_book(true);
   } catch {
     // Storage full or blocked: skip this save. The user can still download the work file.
   }
+}
+
+/** Saves any pending book immediately and waits until every started save has finished. */
+export async function flush_autosave(): Promise<void> {
+  if (save_timer) clearTimeout(save_timer);
+  save_timer = null;
+  const book = pending_book;
+  pending_book = null;
+  if (!book) {
+    await save_chain;
+    return;
+  }
+  save_chain = save_chain.then(() => write_book(book));
+  await save_chain;
   if (!pending_book) mark_save_state('saved');
 }
 

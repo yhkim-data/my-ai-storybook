@@ -1,12 +1,13 @@
 // Step 8 finish screen: book viewer, author name, and PDF / image zip / project file downloads.
 import { useState, type KeyboardEvent } from 'react';
-import { Brand, DiLabBadge, Shell, StepDots } from '../components/Shell';
+import { DiLabBadge, HomeBrand, Shell, StepDots } from '../components/Shell';
 import { Busy, Notice } from '../components/Notice';
 import { CreditsPageView, PageView } from '../components/PageView';
 import type { ProgressFn } from '../export/export_book';
 import { page_name, useT } from '../i18n';
 import { book_file_name, book_file_stem, download_blob, serialize_book } from '../storage/book_file';
 import { useBook } from '../store/book_store';
+import { go_home } from '../store/navigation';
 import type { Book } from '../types';
 import { useElementWidth } from '../utils/use_element_width';
 import './FinishScreen.css';
@@ -94,7 +95,6 @@ export function FinishScreen() {
   const book = useBook((s) => s.book);
   const is_demo = useBook((s) => s.is_demo);
   const go = useBook((s) => s.go);
-  const close_book = useBook((s) => s.close_book);
   const set_author = useBook((s) => s.set_author);
   const [progress, set_progress] = useState<Progress | null>(null);
   const [is_done, set_is_done] = useState(false);
@@ -134,18 +134,18 @@ export function FinishScreen() {
       width="wide"
       header={
         <>
-          <Brand />
+          <HomeBrand />
           <StepDots screen="finish" />
           <DiLabBadge />
         </>
       }
       footer={
         <>
-          <button type="button" className="btn footer-prev" onClick={() => (is_demo ? close_book() : go('editor'))}>
+          <button type="button" className="btn footer-prev" onClick={() => (is_demo ? void go_home() : go('editor'))}>
             {t('common.prev')}
           </button>
           <span className="footer-hint">{t('start.rights_line')}</span>
-          <button type="button" className="btn" onClick={close_book}>
+          <button type="button" className="btn" onClick={() => void go_home()}>
             {t('common.home')}
           </button>
         </>
@@ -155,7 +155,7 @@ export function FinishScreen() {
         <Notice
           kind="ok"
           action={
-            <button type="button" className="btn small" onClick={close_book}>
+            <button type="button" className="btn small" onClick={() => void go_home()}>
               {t('finish.demo_start')}
             </button>
           }
