@@ -85,6 +85,8 @@ export interface SettingsState {
   /** Replaces the connection list and limits from a settings file (no keys in it). */
   load_settings: (settings: Partial<SavedSettings>) => void;
   set_image_limit: (limit: number | null) => void;
+  /** Names a connection, e.g. "3반 수업용". */
+  set_connection_label: (id: string, label: string) => void;
   set_idle_minutes: (minutes: number) => void;
   add_usage: (kind: keyof UsageCounts) => void;
   dismiss_removed_key: () => void;
@@ -305,6 +307,8 @@ export const useSettings = create<SettingsState>((set, get) => {
       if (typeof document !== 'undefined') document.documentElement.lang = settings.lang;
     },
     set_image_limit: (limit) => update({ image_limit: clean_image_limit(limit) }),
+    set_connection_label: (id, label) =>
+      update({ connections: get().connections.map((item) => (item.id === id ? { ...item, label: label.slice(0, CONNECTION_LABEL_MAX_LENGTH) } : item)) }),
     set_idle_minutes: (minutes) => update({ idle_minutes: clamp_idle_minutes(minutes) }),
     add_usage: (kind) => {
       const today = read_usage();

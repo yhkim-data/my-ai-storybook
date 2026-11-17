@@ -1,13 +1,16 @@
 // Connect screen. The key is kept only in this window's memory (never saved) and only its last 4 characters are shown.
-import { useState, type KeyboardEvent } from 'react';
+import { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { OwnKeyCheck, useKeyCheck, type KeyMessage } from '../components/KeySafety';
 import { DiLabBadge, Shell } from '../components/Shell';
 import { Notice } from '../components/Notice';
 import { useT } from '../i18n';
 import { DEFAULT_IMAGE_MODEL, DEFAULT_TEXT_MODEL } from '../providers/gemini_config';
 import { PROVIDER_INFO, PROVIDER_ORDER, detect_provider, resolve_image_model, resolve_text_model } from '../providers/provider_kinds';
+import { IDLE_MINUTES_MAX, IDLE_MINUTES_MIN } from '../constants';
+import { SETTINGS_FILE_NAMES, SettingsFileError, build_settings_file, parse_settings_file } from '../storage/settings_file';
+import { download_blob } from '../storage/book_file';
 import { useBook } from '../store/book_store';
-import { effective_image_key, key_tail, useSettings } from '../store/settings_store';
+import { CONNECTION_LABEL_MAX_LENGTH, effective_image_key, key_tail, useSettings } from '../store/settings_store';
 import './ConnectScreen.css';
 
 /** SVG viewBox size of the step illustrations. */
@@ -86,6 +89,12 @@ export function ConnectScreen() {
   const set_image_model = useSettings((state) => state.set_image_model);
   const clear_keys = useSettings((state) => state.clear_keys);
   const { check, is_checking } = useKeyCheck();
+  const text_connection = useSettings((state) => state.connections.find((item) => item.id === state.text_connection));
+  const idle_minutes = useSettings((state) => state.idle_minutes);
+  const settings_input_ref = useRef<HTMLInputElement>(null);
+  const [file_message, set_file_message] = useState<KeyMessage[]>([]);
+  /** The minutes box keeps what is typed and keeps it in range when the box is left. */
+  const [idle_draft, set_idle_draft] = useState<string | null>(null);
 
   const [key_input, set_key_input] = useState('');
   const [image_key_input, set_image_key_input] = useState('');
@@ -116,6 +125,31 @@ export function ConnectScreen() {
     clear_keys();
     set_message({ kind: 'ok', text: t('connect.cleared') });
     set_image_message(null);
+  };
+
+  /** Saves language, connections (no keys), the picture limit and the away time to a file. */
+  const handle_save_settings = () => {
+    const state = useSettings.getState();
+    download_blob(new Blob([build_settings_file(state)], { type: 'application/json' }), SETTINGS_FILE_NAMES[state.lang]);
+    set_file_message([]);
+  };
+
+  /** Loads a settings file; any key in it is thrown away and the user is told. */
+  const handle_load_settings = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.target;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    try {
+      const { settings, had_key } = parse_settings_file(await file.text());
+      useSettings.getState().load_settings(settings);
+      const messages: KeyMessage[] = [{ kind: 'ok', text: t('settings_file.loaded') }];
+      if (had_key) messages.push({ kind: 'warn', text: t('settings_file.had_key') });
+      set_file_message(messages);
+    } catch (cause) {
+      const too_big = cause instanceof SettingsFileError && cause.message === 'too_big';
+      set_file_message([{ kind: 'warn', text: t(too_big ? 'settings_file.too_big' : 'settings_file.bad') }]);
+    }
   };
 
   const handle_reset_kinds = () => {
@@ -206,6 +240,21 @@ export function ConnectScreen() {
         <details className="connect-details">
           <summary>{t('connect.details')}</summary>
           <div className="connect-details-body">
+            {text_connection && (
+              <div className="connect-field">
+                <label htmlFor="connection-label" className="field-label small">
+                  {t('connect.label_label')}
+                </label>
+                <input
+                  id="connection-label"
+                  type="text"
+                  className="text-input"
+                  maxLength={CONNECTION_LABEL_MAX_LENGTH}
+                  value={text_connection.label}
+                  onChange={(event) => useSettings.getState().set_connection_label(text_connection.id, event.target.value)}
+                />
+              </div>
+            )}
             <div className="connect-field">
               <label htmlFor="image-key-input" className="field-label small">
                 {t('connect.image_key_label')}
@@ -269,8 +318,52 @@ export function ConnectScreen() {
                 {t('connect.kind_reset')}
               </button>
             </div>
+            <div className="connect-field">
+              <label htmlFor="idle-minutes" className="field-label small">
+                {t('connect.idle_label', { min: IDLE_MINUTES_MIN, max: IDLE_MINUTES_MAX })}
+              </label>
+              <input
+                id="idle-minutes"
+                type="number"
+                className="text-input connect-idle"
+                min={IDLE_MINUTES_MIN}
+                max={IDLE_MINUTES_MAX}
+                value={idle_draft ?? String(idle_minutes)}
+                onChange={(event) => set_idle_draft(event.target.value)}
+                onBlur={() => {
+                  if (idle_draft !== null) useSettings.getState().set_idle_minutes(Number(idle_draft));
+                  set_idle_draft(null);
+                }}
+              />
+            </div>
           </div>
         </details>
+      </section>
+
+      <section className="card connect-file-card">
+        <strong>{t('settings_file.title')}</strong>
+        <p className="hint">{t('settings_file.desc')}</p>
+        <div className="row">
+          <button type="button" className="btn" onClick={handle_save_settings}>
+            {t('settings_file.save')}
+          </button>
+          <button type="button" className="btn" onClick={() => settings_input_ref.current?.click()}>
+            {t('settings_file.load')}
+          </button>
+          <input
+            ref={settings_input_ref}
+            type="file"
+            accept=".json,application/json"
+            hidden
+            data-testid="settings-file-input"
+            onChange={(event) => void handle_load_settings(event)}
+          />
+        </div>
+        {file_message.map((item) => (
+          <Notice key={item.text} kind={item.kind} role={item.kind === 'warn' ? 'alert' : 'status'}>
+            {item.text}
+          </Notice>
+        ))}
       </section>
 
       <div className="row spread">
