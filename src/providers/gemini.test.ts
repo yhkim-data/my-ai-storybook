@@ -142,6 +142,18 @@ describe('text provider', () => {
   });
 });
 
+describe('picture shape', () => {
+  it('a model whose docs list 3:4 and 4:3 is asked for the page shape; the default model stays square', async () => {
+    const mock = stub_fetch(json_response(IMAGE_BODY), json_response(IMAGE_BODY), json_response(IMAGE_BODY));
+    await create_gemini_image(TEST_KEY, 'gemini-nano-banana-2.1').generate({ ...IMAGE_REQ, shape: 'portrait' });
+    expect(body_of(mock, 0).response_format.aspect_ratio).toBe('3:4');
+    await create_gemini_image(TEST_KEY, 'gemini-3.1-flash-image').generate({ ...IMAGE_REQ, shape: 'landscape' });
+    expect(body_of(mock, 1).response_format.aspect_ratio).toBe('4:3');
+    await create_gemini_image(TEST_KEY, DEFAULT_IMAGE_MODEL).generate({ ...IMAGE_REQ, shape: 'portrait' });
+    expect(body_of(mock, 2).response_format.aspect_ratio).toBe('1:1');
+  });
+});
+
 describe('ask AI for help', () => {
   it('sends the assist prompt with a text schema and the same safety rules, and reads the text', async () => {
     const body = { status: 'completed', steps: [{ type: 'model_output', content: [{ type: 'text', text: '{"text":"보리"}' }] }] };

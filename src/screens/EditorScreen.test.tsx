@@ -59,12 +59,15 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('header and footer', () => {
-  it('shows the step title, undo/redo/regenerate buttons, the no-AI badge and DI Lab', () => {
+  it('shows the step title, undo/redo and book shape buttons, the no-AI badge and DI Lab; picture buttons are on the picture tab', () => {
     setup();
     expect(screen.getByText('7 / 8 꾸미기')).toBeInTheDocument();
     expect(button(ko('editor.undo'))).toBeInTheDocument();
     expect(button(ko('editor.redo'))).toBeInTheDocument();
+    expect(button(ko('editor.shape_aria', { name: ko('editor.shape.square') }))).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
     expect(button(ko('editor.regen'))).toBeInTheDocument();
+    expect(button(ko('editor.change_image'))).toBeInTheDocument();
     expect(screen.getByText(ko('editor.no_ai_badge'))).toBeInTheDocument();
     expect(screen.getAllByText('DI Lab').length).toBeGreaterThanOrEqual(2);
   });
@@ -279,6 +282,7 @@ describe('regenerating one image', () => {
   it('without a connection shows a notice and makes no call', async () => {
     setup();
     const before = pages_now();
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
     fireEvent.click(button(ko('editor.regen')));
     expect(await screen.findByText(ko('editor.regen_need'))).toBeInTheDocument();
     expect(pages_now()).toBe(before);
@@ -288,6 +292,7 @@ describe('regenerating one image', () => {
   it('in practice mode replaces only that page image with exactly one call, and undo restores it', async () => {
     setup({ practice: true });
     const before = pages_now();
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
     fireEvent.click(button(ko('editor.regen')));
     await waitFor(() => expect(page_one().image?.source).toBe('ai'));
     expect(page_one().image?.model_name).toBe('mock-image');

@@ -6,6 +6,7 @@ import { CreditsPageView, PageView } from '../components/PageView';
 import type { ProgressFn } from '../export/export_book';
 import { page_name, useT } from '../i18n';
 import { book_file_name, book_file_stem, download_blob, serialize_book } from '../storage/book_file';
+import { page_aspect } from '../store/book_model';
 import { useBook } from '../store/book_store';
 import { go_home } from '../store/navigation';
 import type { Book } from '../types';
@@ -55,7 +56,7 @@ function BookViewer({ book }: { book: Book }) {
   const t = useT();
   const [index, set_index] = useState(0);
   const [wrap_ref, wrap_box] = useElementSize<HTMLDivElement>(VIEWER_INITIAL);
-  const size = Math.min(wrap_box.width, wrap_box.height, VIEWER_MAX_SIZE);
+  const size = Math.min(wrap_box.width, wrap_box.height / page_aspect(book.page_shape), VIEWER_MAX_SIZE);
   const total = book.pages.length + 1;
   const last = total - 1;
   const page = index < book.pages.length ? book.pages[index] : undefined;
@@ -69,7 +70,7 @@ function BookViewer({ book }: { book: Book }) {
     <section className="finish-viewer" aria-label={t('finish.viewer_aria')} tabIndex={0} onKeyDown={handle_key}>
       <div className="finish-viewer-page" ref={wrap_ref}>
         {page ? (
-          <PageView page={page} size={size} image_alt={page_name(t, index)} class_name="page-shadow" />
+          <PageView page={page} size={size} shape={book.page_shape} image_alt={page_name(t, index)} class_name="page-shadow" />
         ) : (
           <CreditsPageView book={book} size={size} class_name="page-shadow" />
         )}

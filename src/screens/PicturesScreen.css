@@ -82,10 +82,11 @@
   display: flex;
   gap: clamp(14px, 2vw, 24px);
 }
+/* The frame has the book's shape: --page-ratio is width / height, --page-aspect is height / width. */
 .pic-frame {
   flex: none;
-  width: min(100cqh, 56cqw);
-  height: min(100cqh, 56cqw);
+  height: min(100cqh, 56cqw * var(--page-aspect, 1));
+  aspect-ratio: var(--page-ratio, 1 / 1);
   border-radius: 16px;
   overflow: hidden;
   background: var(--card);
@@ -169,8 +170,7 @@
     flex-direction: column;
   }
   .pic-frame {
-    width: min(100cqw, 100cqh - 300px);
-    height: min(100cqw, 100cqh - 300px);
+    height: min(100cqw * var(--page-aspect, 1), 100cqh - 300px);
     align-self: center;
   }
 }
@@ -191,6 +191,5 @@
   .pic-frame {
     width: 100%;
     height: auto;
-    aspect-ratio: 1 / 1;
   }
 }

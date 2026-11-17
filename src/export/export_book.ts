@@ -6,7 +6,7 @@ import { createElement } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { CreditsPageView, PageView, page_frame } from '../components/PageView';
-import { BLEED_MM, FONTS, FONT_IDS, PAGE_MM } from '../constants';
+import { BLEED_MM, FONTS, FONT_IDS, PAGE_SHAPE_MM } from '../constants';
 import { get_book_title } from '../store/book_model';
 import type { Book, FontId } from '../types';
 import { blob_to_data_url } from '../utils/image';
@@ -17,7 +17,7 @@ export type ProgressFn = (done: number, total: number) => void;
 const MM_PER_INCH = 25.4;
 const POINTS_PER_INCH = 72;
 const PRINT_DPI = 300;
-/** Page side length (px) for the screen PDF and the image zip. */
+/** Page width (px) for the screen PDF and the image zip; the height follows the book shape. */
 const SCREEN_PDF_PX = 1200;
 const ZIP_IMAGE_PX = 1600;
 /** Layout size (px) pages are rendered at; pixelRatio scales it to the target size. */
@@ -29,7 +29,7 @@ const PAGE_NUMBER_DIGITS = 2;
 
 interface RenderOptions {
   bleed: boolean;
-  /** Output side length (px), including bleed. */
+  /** Output width (px), including bleed; the height follows the book shape. */
   target_px: number;
   mime_type: 'image/jpeg' | 'image/png';
 }
@@ -99,9 +99,9 @@ async function render_book_pages(book: Book, options: RenderOptions, on_progress
   const total = book.pages.length + 1;
   on_progress?.(0, total);
   const font_css = await prepare_fonts();
-  const { outer } = page_frame(RENDER_BASE_PX, options.bleed);
+  const { outer_w, outer_h } = page_frame(RENDER_BASE_PX, book.page_shape, options.bleed);
   const host = document.createElement('div');
-  host.style.cssText = `position:fixed;left:${OFFSCREEN_LEFT_PX}px;top:0;width:${outer}px;height:${outer}px;`;
+  host.style.cssText = `position:fixed;left:${OFFSCREEN_LEFT_PX}px;top:0;width:${outer_w}px;height:${outer_h}px;`;
   host.setAttribute('aria-hidden', 'true');
   document.body.appendChild(host);
   const root = createRoot(host);
@@ -110,16 +110,16 @@ async function render_book_pages(book: Book, options: RenderOptions, on_progress
     for (let index = 0; index < total; index += 1) {
       const page = book.pages[index];
       const view = page
-        ? createElement(PageView, { page, size: RENDER_BASE_PX, bleed: options.bleed })
+        ? createElement(PageView, { page, size: RENDER_BASE_PX, shape: book.page_shape, bleed: options.bleed })
         : createElement(CreditsPageView, { book, size: RENDER_BASE_PX, bleed: options.bleed });
       flushSync(() => root.render(view));
       const node = host.firstElementChild as HTMLElement | null;
       if (!node) throw new Error('page render failed');
       await wait_for_images(node);
       const canvas = await toCanvas(node, {
-        width: outer,
-        height: outer,
-        pixelRatio: options.target_px / outer,
+        width: outer_w,
+        height: outer_h,
+        pixelRatio: options.target_px / outer_w,
         backgroundColor: '#ffffff',
         fontEmbedCSS: font_css,
         skipAutoScale: true,
@@ -134,10 +134,16 @@ async function render_book_pages(book: Book, options: RenderOptions, on_progress
   return results;
 }
 
-/** Exports a PDF. With print, pages get a 3 mm bleed on each side and are rendered at 300 dpi. */
+/**
+ * Exports a PDF with pages of the book's shape. With print, pages get a 3 mm bleed on each side and are
+ * rendered at 300 dpi.
+ */
 export async function export_pdf(book: Book, print: boolean, on_progress?: ProgressFn): Promise<Blob> {
-  const page_mm = print ? PAGE_MM + BLEED_MM * 2 : PAGE_MM;
-  const target_px = print ? Math.round((page_mm / MM_PER_INCH) * PRINT_DPI) : SCREEN_PDF_PX;
+  const trim = PAGE_SHAPE_MM[book.page_shape];
+  const extra_mm = print ? BLEED_MM * 2 : 0;
+  const page_w_mm = trim.w + extra_mm;
+  const page_h_mm = trim.h + extra_mm;
+  const target_px = print ? Math.round((page_w_mm / MM_PER_INCH) * PRINT_DPI) : SCREEN_PDF_PX;
   const images = await render_book_pages(book, { bleed: print, target_px, mime_type: 'image/jpeg' }, on_progress);
   const pdf = await PDFDocument.create();
   // The book belongs to its author, so the metadata does not name this app.
@@ -145,16 +151,16 @@ export async function export_pdf(book: Book, print: boolean, on_progress?: Progr
   pdf.setAuthor(book.author.trim());
   pdf.setProducer('');
   pdf.setCreator('');
-  const page_points = mm_to_points(page_mm);
+  const width_points = mm_to_points(page_w_mm);
+  const height_points = mm_to_points(page_h_mm);
   const bleed_points = mm_to_points(BLEED_MM);
-  const trim_points = mm_to_points(PAGE_MM);
   for (const bytes of images) {
     const image = await pdf.embedJpg(bytes);
-    const page = pdf.addPage([page_points, page_points]);
-    page.drawImage(image, { x: 0, y: 0, width: page_points, height: page_points });
+    const page = pdf.addPage([width_points, height_points]);
+    page.drawImage(image, { x: 0, y: 0, width: width_points, height: height_points });
     if (print) {
-      page.setBleedBox(0, 0, page_points, page_points);
-      page.setTrimBox(bleed_points, bleed_points, trim_points, trim_points);
+      page.setBleedBox(0, 0, width_points, height_points);
+      page.setTrimBox(bleed_points, bleed_points, mm_to_points(trim.w), mm_to_points(trim.h));
     }
   }
   const pdf_bytes = await pdf.save();

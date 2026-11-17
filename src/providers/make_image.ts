@@ -2,7 +2,7 @@
 // A page's own art style, if it has one, is used instead of the book's style.
 import { effective_style, style_key } from '../store/book_model';
 import { useSettings } from '../store/settings_store';
-import type { Book, PageImage } from '../types';
+import type { Book, PageImage, PageShape } from '../types';
 import { blob_to_data_url } from '../utils/image';
 import { get_image_provider } from './index';
 import { build_hero_card, build_image_prompt } from './prompts';
@@ -30,8 +30,14 @@ export async function generate_page_image(book: Book, page_index: number): Promi
     reference_image: provider.supportsReferenceImage ? find_reference_image(book, page_index) : null,
     page_index,
     lang: book.lang,
+    shape: request_shape(book, page_index),
   });
   return { data_url: await blob_to_data_url(blob), source: 'ai', model_name: provider.model_name, style_key: style_key(style) };
+}
+
+/** A full-page picture is asked for in the book's shape; other pictures are square. */
+export function request_shape(book: Book, page_index: number): PageShape | undefined {
+  return book.pages[page_index]?.layout === 'full' ? book.page_shape : undefined;
 }
 
 /** True when the page has an AI image made in a different style than the page now uses. */

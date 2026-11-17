@@ -147,3 +147,34 @@ describe('picture box on the page', () => {
     expect(Number(inside.borderRadius)).toBeGreaterThan(0);
   });
 });
+
+describe('page shapes', () => {
+  it('a tall page is 4/3 as high as it is wide, a wide page 3/4, with the bleed added around', () => {
+    const page = story_page();
+    const size_of = (shape: 'square' | 'portrait' | 'landscape', bleed: boolean) => {
+      const { container, unmount } = render(<PageView page={page} size={SIZE} shape={shape} bleed={bleed} />);
+      const outer = container.querySelector<HTMLElement>('.book-page')!;
+      const result = { w: parseFloat(outer.style.width), h: parseFloat(outer.style.height) };
+      unmount();
+      return result;
+    };
+    const tall_plain = size_of('portrait', false);
+    expect(tall_plain.w).toBe(SIZE);
+    expect(tall_plain.h).toBeCloseTo((SIZE * 4) / 3);
+    const wide_plain = size_of('landscape', false);
+    expect(wide_plain.w).toBe(SIZE);
+    expect(wide_plain.h).toBeCloseTo((SIZE * 3) / 4);
+    // Tall pages are 180 x 240 mm, so 3 mm of bleed is SIZE * 3 / 180 px on each side.
+    const tall = size_of('portrait', true);
+    const bleed = (SIZE * 3) / 180;
+    expect(tall.w).toBeCloseTo(SIZE + bleed * 2);
+    expect(tall.h).toBeCloseTo((SIZE * 4) / 3 + bleed * 2);
+  });
+
+  it('the credits page follows the book shape', () => {
+    const book = { ...build_demo_book('ko'), page_shape: 'landscape' as const };
+    const { container } = render(<CreditsPageView book={book} size={SIZE} />);
+    const outer = container.querySelector<HTMLElement>('.book-page')!;
+    expect(parseFloat(outer.style.height)).toBeCloseTo((SIZE * 3) / 4);
+  });
+});

@@ -2,8 +2,14 @@
 import { create } from 'zustand';
 import { HISTORY_LIMIT, STEP_SCREENS } from '../constants';
 import { build_cover_description } from '../providers/prompts';
-import type { ArtStyle, Book, BookPage, Lang, PageDraft, PageImage, Plot, Screen, StorySeed, WriteMode } from '../types';
-import { build_pages, clean_custom_style, create_book, make_story_page, normalize_book, resize_pages } from './book_model';
+import type { ArtStyle, Book, BookPage, Lang, PageDraft, PageImage, PageShape, Plot, Screen, StorySeed, WriteMode } from '../types';
+import { build_pages, clean_custom_style, create_book, make_story_page, normalize_book, reshape_pages, resize_pages } from './book_model';
+
+/** One undo step: the pages and the book shape (the shape changes every page at once). */
+export interface HistoryEntry {
+  pages: BookPage[];
+  page_shape: PageShape;
+}
 
 /** Side screens that are not wizard steps. */
 export type SideScreen = 'connect' | 'rights';
@@ -19,8 +25,8 @@ export interface BookState {
   has_saved_book: boolean;
   /** Page shown on the pictures, editor and finish screens. */
   current_page: number;
-  undo_stack: BookPage[][];
-  redo_stack: BookPage[][];
+  undo_stack: HistoryEntry[];
+  redo_stack: HistoryEntry[];
   last_change_key: string | null;
 
   go: (screen: Screen) => void;
@@ -46,12 +52,18 @@ export interface BookState {
   set_author: (author: string) => void;
   set_current_page: (index: number) => void;
   edit_pages: (mutator: (pages: BookPage[]) => BookPage[], change_key?: string) => void;
+  /** Changes the shape of every page as one undo step. */
+  set_page_shape: (shape: PageShape) => void;
   undo: () => void;
   redo: () => void;
 }
 
 function clamp_page_index(index: number, pages: BookPage[]): number {
   return Math.max(0, Math.min(index, pages.length - 1));
+}
+
+function history_of(book: Book): HistoryEntry {
+  return { pages: book.pages, page_shape: book.page_shape };
 }
 
 function cover_description_of(book: Book): string {
@@ -154,7 +166,7 @@ export const useBook = create<BookState>((set, get) => {
       if (next_pages === book.pages) return;
       // Consecutive changes with the same key (typing, dragging) form one undo step.
       const is_same_change = change_key !== undefined && change_key === last_change_key;
-      const next_undo = is_same_change ? undo_stack : [...undo_stack, book.pages].slice(-HISTORY_LIMIT);
+      const next_undo = is_same_change ? undo_stack : [...undo_stack, history_of(book)].slice(-HISTORY_LIMIT);
       set({
         book: { ...book, pages: next_pages, updated_at: Date.now() },
         undo_stack: next_undo,
@@ -163,16 +175,26 @@ export const useBook = create<BookState>((set, get) => {
         current_page: clamp_page_index(get().current_page, next_pages),
       });
     },
+    set_page_shape: (shape) => {
+      const { book, undo_stack } = get();
+      if (!book || book.page_shape === shape) return;
+      set({
+        book: { ...book, page_shape: shape, pages: reshape_pages(book.pages, book.page_shape, shape), updated_at: Date.now() },
+        undo_stack: [...undo_stack, history_of(book)].slice(-HISTORY_LIMIT),
+        redo_stack: [],
+        last_change_key: null,
+      });
+    },
     undo: () => {
       const { book, undo_stack, redo_stack } = get();
       const previous = undo_stack[undo_stack.length - 1];
       if (!book || !previous) return;
       set({
-        book: { ...book, pages: previous, updated_at: Date.now() },
+        book: { ...book, ...previous, updated_at: Date.now() },
         undo_stack: undo_stack.slice(0, -1),
-        redo_stack: [...redo_stack, book.pages],
+        redo_stack: [...redo_stack, history_of(book)],
         last_change_key: null,
-        current_page: clamp_page_index(get().current_page, previous),
+        current_page: clamp_page_index(get().current_page, previous.pages),
       });
     },
     redo: () => {
@@ -180,11 +202,11 @@ export const useBook = create<BookState>((set, get) => {
       const next = redo_stack[redo_stack.length - 1];
       if (!book || !next) return;
       set({
-        book: { ...book, pages: next, updated_at: Date.now() },
-        undo_stack: [...undo_stack, book.pages],
+        book: { ...book, ...next, updated_at: Date.now() },
+        undo_stack: [...undo_stack, history_of(book)],
         redo_stack: redo_stack.slice(0, -1),
         last_change_key: null,
-        current_page: clamp_page_index(get().current_page, next),
+        current_page: clamp_page_index(get().current_page, next.pages),
       });
     },
   };

@@ -93,7 +93,8 @@
 
 - 주소: `POST https://generativelanguage.googleapis.com/v1beta/interactions` (Interactions API). 예전 `generateContent`는 "legacy"지만 "remains fully supported"라고 되어 있다. 새로 만드는 것이라 Interactions API를 쓴다.
 - 글을 JSON으로 받기: `"response_format": {"type": "text", "mime_type": "application/json", "schema": {...}}`
-- 그림 받기: `"response_format": {"type": "image", "mime_type": "image/png", "aspect_ratio": "1:1", "image_size": "1K"}`. 이미지 생성 문서의 REST 예시에는 아직 `Api-Revision: 2026-05-20` 머리글이 붙어 있다. 하지만 이 도구는 이 머리글을 **보내지 않는다.**
+- 그림 받기: `"response_format": {"type": "image", "mime_type": "image/png", "aspect_ratio": "1:1", "image_size": "1K"}`.
+- 책 모양(2026-11-17 추가): 틀이 "그림 가득"인 쪽은 책 모양에 맞춰 세로로 긴 책은 `"aspect_ratio": "3:4"`, 가로로 긴 책은 `"4:3"`으로 요청한다. 이미지 생성 문서의 모델별 비율 표에 3:4와 4:3이 나오는 `gemini-nano-banana-2.1`, `gemini-3.1-flash-image`에서만 그렇게 하고, 기본 모델 `gemini-3.1-flash-lite-image`는 그 표에서 찾지 못해 정사각형(`1:1`) 그대로 둔다(`gemini_config.ts`의 `SHAPE_ASPECT_MODELS`). 문서 원문: "New aspect ratios: Gemini Nano Banana 2.1 and Gemini 3.1 Flash Image add 1:4, 4:1, 1:8, and 8:1 aspect ratios." 실제 키로 3:4, 4:3 그림을 받아 보지는 않았다. 이미지 생성 문서의 REST 예시에는 아직 `Api-Revision: 2026-05-20` 머리글이 붙어 있다. 하지만 이 도구는 이 머리글을 **보내지 않는다.**
 - `Api-Revision` 머리글을 뺀 까닭: Google 서버가 브라우저의 사전 확인(CORS preflight)에서 이 머리글을 거절했다. 같은 주소에 `content-type,x-goog-api-key,api-revision`을 물으면 403이고, `content-type,x-goog-api-key`만 물으면 200과 `Access-Control-Allow-Origin`이 온다(2026-11-14). 머리글을 붙이면 브라우저에서 그림 요청이 "Failed to fetch"로 실패한다.
 - 이 머리글은 2026년 5월 Interactions API 응답 모양 변경(`outputs`에서 `steps`로)의 옮겨 가기용 스위치다. 출처: <https://aistudio.google.com/docs/interactions-breaking-changes-may-2026>, <https://aistudio.google.com/docs/changelog>. 원문: "Add the `Api-Revision: 2026-05-20` header to your requests to opt in to the new schema now. After **May 26**, the new schema becomes the default for all requests." 일정표: "June 8: Legacy schema removed for Interactions API. `Api-Revision` header ignored." 그래서 지금은 머리글 없이도 새 모양(`steps`)이 기본이고 머리글은 무시된다. 문서에 "필수"라는 말은 없다.
 - 그래서 머리글만 빼고 Interactions API를 그대로 쓴다(`generateContent`로 바꾸지 않았다).
@@ -216,6 +217,7 @@
 | `gpt-image-2.6-sunburst` | 고를 수 있음 |
 
 - 요청: `POST https://api.openai.com/v1/images/generations`. 크기 1024x1024, `quality` medium, `output_format` png, `moderation` auto(`openai_image.ts`).
+- 책 모양(2026-11-17 추가): 틀이 "그림 가득"인 쪽은 세로로 긴 책이면 `1024x1536`, 가로로 긴 책이면 `1536x1024`로 요청한다. 이미지 생성 안내서(<https://developers.openai.com/api/docs/guides/image-generation>)의 크기 목록에 세 크기가 함께 나온다. 실제 키로 받아 보지는 않았다.
 - 2026-11-14에 다시 확인한 것. 출처: <https://developers.openai.com/api/reference/resources/images/methods/generate>, <https://developers.openai.com/api/docs/guides/image-generation>, <https://developers.openai.com/api/docs/models/gpt-image-2.6-flare> (`-sunburst`도 같은 쪽 모양).
   - `/v1/images/generations`에는 reasoning effort 값이 **없다.** `reasoning.effort`는 `svg` 출력(`svg.reasoning.effort`, `output_format=svg`) 안에만 있다: "Reasoning settings for the SVG author, independent of image complexity."
   - 그림 품질은 `quality`로 정한다(값 `low`, `medium`, `high`, `xhigh`, `max`, `auto`. 기본 `auto`). 2.6 종류에서 `quality`가 폐기되거나 거절된다는 말은 문서에 없다.

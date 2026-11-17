@@ -5,16 +5,19 @@ import {
   DEFAULT_AGE_BAND,
   DEFAULT_LAYOUT_ID,
   DEFAULT_PAGE_COUNT,
-  PAGE_COUNT_MAX,
-  PAGE_COUNT_MIN,
-  STYLE_IDS,
+  DEFAULT_PAGE_SHAPE,
   DEFAULT_STYLE_ID,
   DEFAULT_TEXT_BOX,
   LAYOUT_IDS,
   LAYOUT_IMAGE_RECT,
   LAYOUT_TEXT_RECT,
+  PAGE_COUNT_MAX,
+  PAGE_COUNT_MIN,
+  PAGE_SHAPES,
+  PAGE_SHAPE_MM,
+  STYLE_IDS,
 } from '../constants';
-import type { ArtStyle, Book, BookPage, Lang, LayoutId, PageDraft, Rect, StorySeed, StyleChoice, TextBox } from '../types';
+import type { ArtStyle, Book, BookPage, Lang, LayoutId, PageDraft, PageShape, Rect, StorySeed, StyleChoice, TextBox } from '../types';
 
 /** Cover title box position, in percent. */
 const COVER_TEXT_RECT = { x: 8, y: 6, w: 84, h: 22 };
@@ -94,6 +97,37 @@ export function is_art_style(value: unknown): value is ArtStyle {
   return value === 'custom' || STYLE_IDS.some((style_id) => style_id === value);
 }
 
+/** Page height divided by page width for a book shape. */
+export function page_aspect(shape: PageShape): number {
+  const size = PAGE_SHAPE_MM[shape];
+  return size.h / size.w;
+}
+
+const FULL = 100;
+
+/**
+ * Pages after the book shape changes. Boxes are in percent, so they follow the new shape; a picture that keeps
+ * its proportions gets a new height so its shape on screen stays the same. A picture filling the whole page still does.
+ */
+export function reshape_pages(pages: BookPage[], from: PageShape, to: PageShape): BookPage[] {
+  const scale = page_aspect(from) / page_aspect(to);
+  return pages.map((page) => {
+    const box = page.image_box;
+    const fills_page = box.x <= 0 && box.y <= 0 && box.w >= FULL && box.h >= FULL;
+    if (!page.image_lock || fills_page || scale === 1) return page;
+    let h = box.h * scale;
+    let w = box.w;
+    // Too tall for the new page: shrink both sides so the shape stays the same.
+    if (h > FULL) {
+      w = (w * FULL) / h;
+      h = FULL;
+    }
+    const x = Math.min(box.x, FULL - w);
+    const y = Math.max(0, Math.min(box.y, FULL - h));
+    return { ...page, image_box: { x, y, w, h } };
+  });
+}
+
 /** The style a page is drawn in: its own style if it has one, else the book's style. */
 export function effective_style(book: Book, page: BookPage | undefined): StyleChoice {
   if (page?.style) return { style_id: page.style, custom_style: page.custom_style ?? '' };
@@ -140,6 +174,7 @@ export function normalize_book(book: Book): Book {
     seed: { ...make_seed(), ...book.seed, page_count: clamp_page_count(book.seed?.page_count) },
     style_id: is_art_style(book.style_id) ? book.style_id : DEFAULT_STYLE_ID,
     custom_style: clean_custom_style(book.custom_style),
+    page_shape: PAGE_SHAPES.includes(book.page_shape) ? book.page_shape : DEFAULT_PAGE_SHAPE,
     pages: (book.pages ?? []).map(normalize_page),
   };
 }
@@ -163,6 +198,7 @@ export function create_book(lang: Lang): Book {
     pages_key: '',
     style_id: DEFAULT_STYLE_ID,
     custom_style: '',
+    page_shape: DEFAULT_PAGE_SHAPE,
     pages: [],
     step: 'seed',
     updated_at: Date.now(),

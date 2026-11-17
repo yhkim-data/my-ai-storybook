@@ -1,10 +1,10 @@
 // Renders one book page; shared by the editor, the flip-through preview and PDF export.
 import type { CSSProperties, ReactNode } from 'react';
-import { BLEED_MM, FONTS, PAGE_MM, PAGE_REF_SIZE } from '../constants';
+import { BLEED_MM, FONTS, PAGE_REF_SIZE, PAGE_SHAPE_MM } from '../constants';
 import { translate } from '../i18n';
 import { MOCK_IMAGE_MODEL } from '../providers/mock_image';
-import { get_ai_model_names, get_book_title } from '../store/book_model';
-import type { Book, BookPage, Rect, TextBox } from '../types';
+import { get_ai_model_names, get_book_title, page_aspect } from '../store/book_model';
+import type { Book, BookPage, PageShape, Rect, TextBox } from '../types';
 
 const PERCENT = 100;
 /** Text box padding as a fraction of page width. */
@@ -23,11 +23,21 @@ const CREDITS_PADDING_RATIO = 0.12;
 /** Placeholder font size, in px at PAGE_REF_SIZE. */
 const PLACEHOLDER_FONT_SIZE = 16;
 
-/** Outer frame size and inner page offset when a print bleed is added. */
-export function page_frame(size: number, bleed: boolean): { outer: number; offset: number } {
-  if (!bleed) return { outer: size, offset: 0 };
-  const offset = (size * BLEED_MM) / PAGE_MM;
-  return { outer: size + offset * 2, offset };
+export interface PageFrame {
+  /** Page height in px. */
+  height: number;
+  /** Size with the print bleed added on every side. */
+  outer_w: number;
+  outer_h: number;
+  /** Bleed width in px (0 without bleed). */
+  offset: number;
+}
+
+/** Page height, outer size and bleed for a page `width` px wide in the given shape. */
+export function page_frame(width: number, shape: PageShape, bleed: boolean): PageFrame {
+  const height = width * page_aspect(shape);
+  const offset = bleed ? (width * BLEED_MM) / PAGE_SHAPE_MM[shape].w : 0;
+  return { height, outer_w: width + offset * 2, outer_h: height + offset * 2, offset };
 }
 
 /** Converts a percent rect to absolute px position styles on a page of the given width and height. */
@@ -60,8 +70,9 @@ export function text_box_class(box: TextBox): string {
 
 interface PageViewProps {
   page: BookPage;
-  /** Page side length (px); the bleed is added on top. */
+  /** Page width (px); the height follows the shape, and the bleed is added on top. */
   size: number;
+  shape?: PageShape;
   /** Add the print bleed. */
   bleed?: boolean;
   /** Placeholder text shown when there is no image (editor only). */
@@ -89,9 +100,20 @@ export function image_box_style(box: Rect, width: number, offset: number, height
 }
 
 /** Renders a page: picture and text box at their saved places, the `front` one on top. */
-export function PageView({ page, size, bleed = false, placeholder, image_alt = '', hide_text = false, hide_image = false, children, class_name = '' }: PageViewProps) {
-  const { outer, offset } = page_frame(size, bleed);
-  const image_style = image_box_style(page.image_box, size, offset);
+export function PageView({
+  page,
+  size,
+  shape = 'square',
+  bleed = false,
+  placeholder,
+  image_alt = '',
+  hide_text = false,
+  hide_image = false,
+  children,
+  class_name = '',
+}: PageViewProps) {
+  const { height, outer_w, outer_h, offset } = page_frame(size, shape, bleed);
+  const image_style = image_box_style(page.image_box, size, offset, height);
 
   const image_part = hide_image ? null : page.image ? (
     <div key="image" className="page-image" style={image_style}>
@@ -104,15 +126,15 @@ export function PageView({ page, size, bleed = false, placeholder, image_alt = '
   ) : null;
   const text_part =
     !hide_text && page.text.trim().length > 0 ? (
-      <div key="text" className={text_box_class(page.text_box)} style={{ ...rect_style(page.text_box, size), ...text_box_style(page.text_box, size) }}>
+      <div key="text" className={text_box_class(page.text_box)} style={{ ...rect_style(page.text_box, size, height), ...text_box_style(page.text_box, size) }}>
         {page.text}
         {page.text_box.background === 'bubble' && <span className="bubble-tail" aria-hidden="true" />}
       </div>
     ) : null;
 
   return (
-    <div className={`book-page ${class_name}`} style={{ width: outer, height: outer }} data-page-id={page.id}>
-      <div className="page-inner" style={{ left: offset, top: offset, width: size, height: size }}>
+    <div className={`book-page ${class_name}`} style={{ width: outer_w, height: outer_h }} data-page-id={page.id}>
+      <div className="page-inner" style={{ left: offset, top: offset, width: size, height }}>
         {page.front === 'image' ? [text_part, image_part] : [image_part, text_part]}
         {children}
       </div>
@@ -122,6 +144,7 @@ export function PageView({ page, size, bleed = false, placeholder, image_alt = '
 
 interface CreditsPageViewProps {
   book: Book;
+  /** Page width (px); the height follows the book shape. */
   size: number;
   bleed?: boolean;
   class_name?: string;
@@ -132,21 +155,21 @@ interface CreditsPageViewProps {
  * No app name or DI Lab branding: the book belongs to its author.
  */
 export function CreditsPageView({ book, size, bleed = false, class_name = '' }: CreditsPageViewProps) {
-  const { outer, offset } = page_frame(size, bleed);
+  const { height, outer_w, outer_h, offset } = page_frame(size, book.page_shape, bleed);
   const scale = size / PAGE_REF_SIZE;
   const model_names = get_ai_model_names(book).map((name) =>
     name === MOCK_IMAGE_MODEL ? translate(book.lang, 'credits.practice_name') : name,
   );
   const author = book.author.trim();
   return (
-    <div className={`book-page ${class_name}`} style={{ width: outer, height: outer }} data-page-id="credits">
+    <div className={`book-page ${class_name}`} style={{ width: outer_w, height: outer_h }} data-page-id="credits">
       <div
         className="page-inner"
         style={{
           left: offset,
           top: offset,
           width: size,
-          height: size,
+          height,
           padding: size * CREDITS_PADDING_RATIO,
           display: 'flex',
           flexDirection: 'column',
