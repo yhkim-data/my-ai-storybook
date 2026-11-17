@@ -26,7 +26,8 @@ describe('exports carry no DI Lab mark', () => {
       rendered.push(node.outerHTML);
       return { toBlob: (done: (blob: Blob) => void) => done(new Blob([new Uint8Array([1])])) } as unknown as HTMLCanvasElement;
     });
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(new Blob([new Uint8Array([0])]))));
+    // A plain object, not a Response: jsdom's Blob cannot go into Node's Response on every Node version.
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, blob: async () => new Blob([new Uint8Array([0])]) })));
   });
   afterEach(() => {
     vi.unstubAllGlobals();
