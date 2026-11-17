@@ -101,6 +101,23 @@ export function build_image_prompt(description: string, style_id: ArtStyle, hero
     .join('\n');
 }
 
+/** Fixed rule for "Fix the picture": change only what was asked, keep everything else. */
+const EDIT_KEEP_RULES: Record<Lang, string> = {
+  ko: '요청한 부분만 바꾸고 인물·구도·배경·그림체·글자 없음은 그대로 둔다.',
+  en: 'Change only the part asked for, and keep the characters, composition, background, art style and the no-text rule exactly as they are.',
+};
+const EDIT_LABEL: Record<Lang, string> = { ko: '이 그림에서 고칠 것:', en: 'Change in this picture:' };
+
+/**
+ * Builds the "Fix the picture" prompt sent together with the picture in use: the change, the keep-everything-else rule,
+ * the hero card, the style sentence and the safety sentence.
+ */
+export function build_edit_prompt(note: string, style_id: ArtStyle, hero_card: string, lang: Lang, custom_style = ''): string {
+  return [`${EDIT_LABEL[lang]} ${note.trim()}`, EDIT_KEEP_RULES[lang], hero_card, build_style_phrase(style_id, custom_style, lang), IMAGE_SAFETY_RULES[lang]]
+    .filter((part) => part.length > 0)
+    .join('\n');
+}
+
 /**
  * Builds the cover image description from the title and summary, without calling the AI.
  */

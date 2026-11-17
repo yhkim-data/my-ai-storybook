@@ -44,9 +44,14 @@ function with_image_usage(provider: ImageProvider): ImageProvider {
     id: provider.id,
     model_name: provider.model_name,
     supportsReferenceImage: provider.supportsReferenceImage,
+    supportsEdit: provider.supportsEdit,
     generate: (req) => {
       count_usage();
       return provider.generate(req);
+    },
+    edit: (req) => {
+      count_usage();
+      return provider.edit(req);
     },
     testConnection: () => {
       count_usage();
@@ -106,4 +111,14 @@ export function create_text_provider_for_key(api_key: string): TextProvider {
 }
 
 export { ProviderError } from './types';
-export type { AssistKind, AssistRequest, AssistResult, ConnectionResult, ImageProvider, ImageRequest, ProviderErrorKind, TextProvider } from './types';
+export type {
+  AssistKind,
+  AssistRequest,
+  AssistResult,
+  ConnectionResult,
+  ImageEditRequest,
+  ImageProvider,
+  ImageRequest,
+  ProviderErrorKind,
+  TextProvider,
+} from './types';

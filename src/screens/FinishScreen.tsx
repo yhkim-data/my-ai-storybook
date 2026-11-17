@@ -3,10 +3,12 @@ import { useState, type KeyboardEvent } from 'react';
 import { DiLabBadge, HomeBrand, Shell, StepDots } from '../components/Shell';
 import { Busy, Notice } from '../components/Notice';
 import { CreditsPageView, PageView } from '../components/PageView';
+import { WORK_FILE_LARGE_BYTES } from '../constants';
 import type { ProgressFn } from '../export/export_book';
 import { page_name, useT } from '../i18n';
 import { book_file_name, book_file_stem, download_blob, serialize_book } from '../storage/book_file';
 import { page_aspect } from '../store/book_model';
+import { without_unused_versions } from '../store/image_versions';
 import { useBook } from '../store/book_store';
 import { go_home } from '../store/navigation';
 import type { Book } from '../types';
@@ -20,6 +22,7 @@ const VIEWER_INITIAL = { width: 420, height: 420 };
 /** In characters. */
 const AUTHOR_MAX_LENGTH = 30;
 const BOOK_FILE_MIME = 'application/json';
+const BYTES_PER_MB = 1024 * 1024;
 
 type ExportKind = 'pdf' | 'print' | 'zip' | 'file';
 interface Progress {
@@ -100,28 +103,41 @@ export function FinishScreen() {
   const [progress, set_progress] = useState<Progress | null>(null);
   const [is_done, set_is_done] = useState(false);
   const [has_error, set_has_error] = useState(false);
+  /** Size in MB of a work file big enough to ask whether to leave out the pictures not in use. */
+  const [large_file_mb, set_large_file_mb] = useState<number | null>(null);
 
   if (!book) return null;
   const total_pages = book.pages.length + 1;
   const is_busy = progress !== null;
 
+  /** Downloads the work file; with in_use_only, only the pictures in use go in (no fixed versions). */
+  const download_work_file = (in_use_only: boolean) => {
+    set_large_file_mb(null);
+    const blob = new Blob([serialize_book(in_use_only ? without_unused_versions(book) : book)], { type: BOOK_FILE_MIME });
+    download_blob(blob, book_file_name(book));
+    set_is_done(true);
+  };
+
   /** Builds and downloads the file; buttons stay disabled while it runs. */
   const run_export = async (kind: ExportKind) => {
     set_is_done(false);
     set_has_error(false);
+    set_large_file_mb(null);
+    if (kind === 'file') {
+      const size = new Blob([serialize_book(book)]).size;
+      if (size > WORK_FILE_LARGE_BYTES) set_large_file_mb(Math.round(size / BYTES_PER_MB));
+      else download_work_file(false);
+      return;
+    }
     set_progress({ done: 0, total: total_pages });
     const on_progress: ProgressFn = (done, total) => set_progress({ done, total });
     try {
       const stem = book_file_stem(book);
-      if (kind === 'file') {
-        download_blob(new Blob([serialize_book(book)], { type: BOOK_FILE_MIME }), book_file_name(book));
-      } else {
-        // The export code is large, so it is loaded on first use to keep the initial load fast.
-        const { export_image_zip, export_pdf } = await import('../export/export_book');
-        if (kind === 'pdf') download_blob(await export_pdf(book, false, on_progress), `${stem}.pdf`);
-        else if (kind === 'print') download_blob(await export_pdf(book, true, on_progress), `${stem}-print.pdf`);
-        else download_blob(await export_image_zip(book, on_progress), `${stem}-pages.zip`);
-      }
+      // The export code is large, so it is loaded on first use to keep the initial load fast.
+      const { export_image_zip, export_pdf } = await import('../export/export_book');
+      if (kind === 'pdf') download_blob(await export_pdf(book, false, on_progress), `${stem}.pdf`);
+      else if (kind === 'print') download_blob(await export_pdf(book, true, on_progress), `${stem}-print.pdf`);
+      else download_blob(await export_image_zip(book, on_progress), `${stem}-pages.zip`);
       set_is_done(true);
     } catch {
       set_has_error(true);
@@ -186,6 +202,23 @@ export function FinishScreen() {
           <DownloadChoice test_id="download-print" title={t('finish.pdf_print.title')} desc={t('finish.pdf_print.desc')} disabled={is_busy} on_click={() => void run_export('print')} />
           <DownloadChoice test_id="download-zip" title={t('finish.zip.title')} desc={t('finish.zip.desc')} disabled={is_busy} on_click={() => void run_export('zip')} />
           <DownloadChoice test_id="download-file" title={t('finish.file.title')} desc={t('finish.file.desc')} disabled={is_busy} on_click={() => void run_export('file')} />
+          {large_file_mb !== null && (
+            <Notice
+              kind="warn"
+              action={
+                <span className="finish-file-choice">
+                  <button type="button" className="btn small" onClick={() => download_work_file(false)}>
+                    {t('finish.file_all')}
+                  </button>
+                  <button type="button" className="btn small primary" onClick={() => download_work_file(true)}>
+                    {t('finish.file_in_use')}
+                  </button>
+                </span>
+              }
+            >
+              {t('finish.file_large', { mb: large_file_mb })}
+            </Notice>
+          )}
           {progress && <Busy>{t('finish.working', { n: progress.done, total: progress.total })}</Busy>}
           {is_done && <Notice kind="ok">{t('finish.done')}</Notice>}
           {has_error && (

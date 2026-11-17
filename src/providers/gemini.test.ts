@@ -142,6 +142,49 @@ describe('text provider', () => {
   });
 });
 
+describe('fix the picture', () => {
+  const EDIT_REQ = {
+    image: 'data:image/png;base64,QUJD',
+    note: '목도리를 파랗게',
+    style_id: 'crayon' as const,
+    custom_style: '',
+    hero_card: '주인공 "토리": 작은 여우.',
+    lang: 'ko' as const,
+  };
+
+  it('sends the instruction with the keep-the-rest rule, the hero card and the style, then the picture in use', async () => {
+    const mock = stub_fetch(json_response(IMAGE_BODY));
+    const provider = create_gemini_image(TEST_KEY, 'gemini-nano-banana-2.1');
+    expect(provider.supportsEdit).toBe(true);
+    const blob = await provider.edit(EDIT_REQ);
+    expect(blob.type).toBe('image/png');
+    const body = body_of(mock, 0) as unknown as { model: string; input: { type: string; text?: string; mime_type?: string; data?: string }[] };
+    expect(body.model).toBe('gemini-nano-banana-2.1');
+    const text = body.input[0]?.text ?? '';
+    expect(text).toContain('목도리를 파랗게');
+    expect(text).toContain('요청한 부분만 바꾸고 인물·구도·배경·그림체·글자 없음은 그대로 둔다.');
+    expect(text).toContain('주인공 "토리"');
+    expect(text).toContain('크레용');
+    expect(body.input[1]).toEqual({ type: 'image', mime_type: 'image/png', data: 'QUJD' });
+  });
+
+  it('the default model is not listed for editing, so the button is off and no request goes out', async () => {
+    const mock = stub_fetch();
+    const provider = create_gemini_image(TEST_KEY, DEFAULT_IMAGE_MODEL);
+    expect(provider.supportsEdit).toBe(false);
+    await expect(provider.edit(EDIT_REQ)).rejects.toBeInstanceOf(ProviderError);
+    expect(mock).not.toHaveBeenCalled();
+  });
+
+  it('a daily quota error on a fix keeps its retry time', async () => {
+    stub_fetch(json_response(error_body('quota_exceeded'), 429));
+    const error = await create_gemini_image(TEST_KEY, 'gemini-3.1-flash-image').edit(EDIT_REQ).catch((cause: unknown) => cause);
+    expect(error).toBeInstanceOf(ProviderError);
+    expect((error as ProviderError).kind).toBe('quota_daily');
+    expect((error as ProviderError).retry_at).not.toBeNull();
+  });
+});
+
 describe('picture shape', () => {
   it('a model whose docs list 3:4 and 4:3 is asked for the page shape; the default model stays square', async () => {
     const mock = stub_fetch(json_response(IMAGE_BODY), json_response(IMAGE_BODY), json_response(IMAGE_BODY));

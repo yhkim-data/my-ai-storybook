@@ -95,6 +95,13 @@ export const SNAP_LINES = [0, 5, 50, 95, 100];
 export const KEY_MOVE_STEP = 1;
 export const KEY_MOVE_BIG_STEP = 5;
 
+/** Pictures kept per page for "Fix the picture": the original plus five fixed ones. */
+export const IMAGE_VERSIONS_MAX = 6;
+/** "What to change" box length, in characters. */
+export const EDIT_NOTE_MAX_LENGTH = 120;
+/** A work file bigger than this (bytes) offers to leave out the pictures not in use. */
+export const WORK_FILE_LARGE_BYTES = 80 * 1024 * 1024;
+
 /** Number of undo steps kept. */
 export const HISTORY_LIMIT = 50;
 /** Autosave debounce (ms). */

@@ -2,8 +2,8 @@
 // A page's own art style, if it has one, is used instead of the book's style.
 import { effective_style, style_key } from '../store/book_model';
 import { useSettings } from '../store/settings_store';
-import type { Book, PageImage, PageShape } from '../types';
-import { blob_to_data_url } from '../utils/image';
+import type { Book, BookPage, PageImage, PageShape } from '../types';
+import { blob_to_data_url, to_raster_data_url } from '../utils/image';
 import { get_image_provider } from './index';
 import { build_hero_card, build_image_prompt } from './prompts';
 
@@ -32,7 +32,60 @@ export async function generate_page_image(book: Book, page_index: number): Promi
     lang: book.lang,
     shape: request_shape(book, page_index),
   });
-  return { data_url: await blob_to_data_url(blob), source: 'ai', model_name: provider.model_name, style_key: style_key(style) };
+  return {
+    data_url: await blob_to_data_url(blob),
+    source: 'ai',
+    model_name: provider.model_name,
+    style_key: style_key(style),
+    created_at: Date.now(),
+  };
+}
+
+/** Why "Fix the picture" cannot be used on a page right now; 'ok' when it can. */
+export type EditAvailability = 'ok' | 'no_image' | 'no_ai' | 'no_edit_model' | 'practice_upload';
+
+const SVG_DATA_URL_PREFIX = 'data:image/svg+xml';
+
+/** Checks whether the picture on this page can be fixed with the AI connected now. */
+export function edit_availability(page: BookPage | undefined): EditAvailability {
+  if (!page?.image) return 'no_image';
+  const provider = get_image_provider();
+  if (!provider) return 'no_ai';
+  if (!provider.supportsEdit) return 'no_edit_model';
+  // Practice mode can only recolor its own sample pictures.
+  if (useSettings.getState().practice && !page.image.data_url.startsWith(SVG_DATA_URL_PREFIX)) return 'practice_upload';
+  return 'ok';
+}
+
+/**
+ * "Fix the picture": makes a new picture from the picture in use with only the note's change, in one AI call.
+ * Returns null if no AI is connected or the page has no picture; throws ProviderError on failure.
+ */
+export async function edit_page_image(book: Book, page_index: number, note: string): Promise<PageImage | null> {
+  const provider = get_image_provider();
+  const page = book.pages[page_index];
+  const base = page?.image;
+  if (!provider || !page || !base) return null;
+  const style = effective_style(book, page);
+  const practice = useSettings.getState().practice;
+  const blob = await provider.edit({
+    image: practice ? base.data_url : await to_raster_data_url(base.data_url),
+    note: note.trim(),
+    style_id: style.style_id,
+    custom_style: style.custom_style,
+    hero_card: build_hero_card(book.seed, book.lang),
+    shape: request_shape(book, page_index),
+    lang: book.lang,
+  });
+  return {
+    data_url: await blob_to_data_url(blob),
+    source: 'ai',
+    model_name: provider.model_name,
+    style_key: style_key(style),
+    edit_note: note.trim(),
+    created_at: Date.now(),
+    based_on: base.created_at,
+  };
 }
 
 /** A full-page picture is asked for in the book's shape; other pictures are square. */

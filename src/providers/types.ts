@@ -11,6 +11,8 @@ export type ProviderErrorKind =
   | 'no_permission'
   /** The key is valid but the organization has disabled browser access. */
   | 'browser_blocked'
+  /** Practice mode could not tell which thing and color a "Fix the picture" note asks for. */
+  | 'practice_edit'
   | 'unknown';
 
 /** Error thrown by providers. retry_at is when the user may try again (epoch ms). */
@@ -44,6 +46,20 @@ export interface ImageRequest {
    * Shape to draw in, for a page whose picture fills the whole page. Providers that cannot draw that shape,
    * and pages without it, get a square picture.
    */
+  shape?: PageShape;
+  lang: Lang;
+}
+
+/** One "Fix the picture" request: change only what the note asks for in the picture in use. */
+export interface ImageEditRequest {
+  /** The picture in use, as a data URL. */
+  image: string;
+  /** What to change, in the user's words. */
+  note: string;
+  style_id: ArtStyle;
+  custom_style: string;
+  hero_card: string;
+  /** Shape of the picture, as for ImageRequest. */
   shape?: PageShape;
   lang: Lang;
 }
@@ -90,6 +106,10 @@ export interface ImageProvider {
   /** Name shown in the AI credit on the book's last page. */
   model_name: string;
   supportsReferenceImage: boolean;
+  /** Whether "Fix the picture" works with this provider and model. */
+  supportsEdit: boolean;
   generate(req: ImageRequest): Promise<Blob>;
+  /** Makes a new picture from the picture in use with only the note's change. Providers without supportsEdit reject. */
+  edit(req: ImageEditRequest): Promise<Blob>;
   testConnection(): Promise<ConnectionResult>;
 }

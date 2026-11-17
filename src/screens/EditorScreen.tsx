@@ -1,5 +1,6 @@
 // Step 7 editor: text, text box, layout and page order are edited locally without calling the AI.
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { EditPicture } from '../components/EditPicture';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { PageView } from '../components/PageView';
 import { DiLabBadge, HomeBrand, MadeByLine, Shell } from '../components/Shell';
@@ -13,6 +14,7 @@ import type { ProviderError } from '../providers/types';
 import { apply_layout } from '../store/book_model';
 import { insert_blank_page, move_page, remove_page, useBook } from '../store/book_store';
 import { clean_custom_style, page_aspect } from '../store/book_model';
+import { with_new_image } from '../store/image_versions';
 import type { ArtStyle, BookPage, BoxBackground, BoxKind, FontId, LayoutId, PageImage, PageShape, Rect, TextAlign, TextBox } from '../types';
 import { prepare_upload_image } from '../utils/image';
 import { useElementSize } from '../utils/use_element_size';
@@ -115,6 +117,7 @@ export function EditorScreen() {
   const [ai_error, set_ai_error] = useState<ProviderError | null>(null);
   const [message, set_message] = useState<string | null>(null);
   const [selected_box, set_selected_box] = useState<BoxKind>('text');
+  const [is_fixing, set_is_fixing] = useState(false);
 
   // Ctrl+Z undoes; Ctrl+Shift+Z or Ctrl+Y redoes.
   useEffect(() => {
@@ -152,7 +155,8 @@ export function EditorScreen() {
   const change_box = (patch: Partial<TextBox>, change_key?: string) => {
     change_page((target) => ({ ...target, text_box: { ...target.text_box, ...patch } }), change_key);
   };
-  const change_image = (image: PageImage) => change_page((target) => ({ ...target, image }));
+  /** A new picture (drawn again or uploaded) starts the picture's versions over; undo brings the old list back. */
+  const change_image = (image: PageImage) => change_page((target) => with_new_image(target, image));
   const change_image_box = (rect: Rect, change_key?: string) => change_page((target) => ({ ...target, image_box: rect }), change_key);
   /** Puts the selected box in front of the other one, or behind it. */
   const set_front = (front: BoxKind) => change_page((target) => (target.front === front ? target : { ...target, front }));
@@ -180,7 +184,7 @@ export function EditorScreen() {
     );
     const latest = useBook.getState().book;
     const image = latest ? await practice_restyle(latest, current_page) : null;
-    if (image) change_page((target) => ({ ...target, image }), change_key);
+    if (image) change_page((target) => with_new_image(target, image), change_key);
   };
 
   const select_page = (index: number) => {
@@ -210,7 +214,7 @@ export function EditorScreen() {
     if (!file) return;
     clear_notices();
     try {
-      change_image({ data_url: await prepare_upload_image(file), source: 'upload' });
+      change_image({ data_url: await prepare_upload_image(file), source: 'upload', created_at: Date.now() });
     } catch {
       set_message(t('pictures.upload_error'));
     }
@@ -464,14 +468,15 @@ export function EditorScreen() {
                   type="button"
                   className={needs_redraw ? 'btn small primary attention' : 'btn small'}
                   onClick={() => void handle_regenerate()}
-                  disabled={is_drawing}
+                  disabled={is_drawing || is_fixing}
                 >
                   {t(needs_redraw ? 'pictures.redo_style' : 'editor.regen')}
                 </button>
-                <button type="button" className="btn small" onClick={() => file_input_ref.current?.click()} disabled={is_drawing}>
+                <button type="button" className="btn small" onClick={() => file_input_ref.current?.click()} disabled={is_drawing || is_fixing}>
                   {t('editor.change_image')}
                 </button>
               </div>
+              <EditPicture key={page.id} page_index={current_page} compact busy_elsewhere={is_drawing} on_busy={set_is_fixing} />
               <div className="stack tight">
                 <span id="layout-label" className="editor-label">
                   {t('editor.layout')}

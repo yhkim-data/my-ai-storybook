@@ -5,6 +5,7 @@ import { ProviderError, type ConnectionResult } from './types';
 export const OPENAI_ORIGIN = 'https://api.openai.com';
 export const OPENAI_RESPONSES_URL = `${OPENAI_ORIGIN}/v1/responses`;
 export const OPENAI_IMAGES_URL = `${OPENAI_ORIGIN}/v1/images/generations`;
+export const OPENAI_IMAGE_EDITS_URL = `${OPENAI_ORIGIN}/v1/images/edits`;
 export const OPENAI_MODELS_URL = `${OPENAI_ORIGIN}/v1/models`;
 
 const MS_PER_SECOND = 1000;

@@ -14,6 +14,11 @@ export const TEXT_MODEL_CHOICES = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
 export const IMAGE_MODEL_CHOICES = ['gemini-3.1-flash-lite-image', 'gemini-nano-banana-2.1', 'gemini-3.1-flash-image'];
 /** Image models whose official docs confirm reference image input. */
 export const REFERENCE_IMAGE_MODELS = ['gemini-nano-banana-2.1', 'gemini-3.1-flash-image'];
+/**
+ * Image models whose docs show editing a picture sent with a text instruction (checked 2026-11-17).
+ * The docs do not say whether gemini-3.1-flash-lite-image can, so "Fix the picture" is off for it.
+ */
+export const EDIT_IMAGE_MODELS = ['gemini-nano-banana-2.1', 'gemini-3.1-flash-image'];
 
 export const IMAGE_ASPECT_RATIO = '1:1';
 /** Image models whose docs list the 3:4 and 4:3 ratios (checked 2026-11-17); other models stay square. */

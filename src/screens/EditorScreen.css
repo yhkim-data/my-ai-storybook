@@ -254,8 +254,10 @@
 }
 
 /* Text box settings */
+/* The settings column scrolls inside itself when the picture tab holds more than the window. */
 .editor-settings {
   min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.8vh, 20px);
