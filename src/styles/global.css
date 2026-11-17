@@ -140,6 +140,26 @@ button:disabled {
 .shell-footer strong {
   color: var(--text);
 }
+/* Faint DI Lab mark. It sits in the footer's right padding, so it never covers a control. */
+.shell {
+  position: relative;
+}
+.dilab-watermark {
+  position: fixed;
+  right: calc(12px + env(safe-area-inset-right, 0px));
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  height: 15px;
+  width: auto;
+  opacity: 0.28;
+  pointer-events: none;
+  user-select: none;
+}
+@media print {
+  .dilab-watermark {
+    display: none;
+  }
+}
 
 /* Header parts */
 .brand {
@@ -672,7 +692,11 @@ legend {
     gap: 22px;
   }
   .shell-footer {
-    padding: 12px 16px;
+    padding: 12px 40px 12px 16px;
+  }
+  /* The page scrolls on phones, so the mark stays at the end of the page instead of over content. */
+  .dilab-watermark {
+    position: absolute;
   }
   .title-xl {
     font-size: 32px;
