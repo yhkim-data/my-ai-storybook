@@ -135,3 +135,12 @@
     font-size: 19px;
   }
 }
+
+.connect-file-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.text-input.connect-idle {
+  max-width: 120px;
+}
