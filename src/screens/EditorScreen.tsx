@@ -3,9 +3,8 @@ import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type Key
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { PageView } from '../components/PageView';
 import { DiLabBadge, HomeBrand, MadeByLine, Shell } from '../components/Shell';
-import { ShapeMenu } from '../components/ShapeMenu';
 import { StyleMenu } from '../components/StyleMenu';
-import { FONT_IDS, FONT_SIZE_MAX, FONT_SIZE_MIN, LAYOUT_IDS, PAGE_SHAPE_MM, TEXT_COLORS } from '../constants';
+import { FONT_IDS, FONT_SIZE_MAX, FONT_SIZE_MIN, LAYOUT_IDS, PAGE_SHAPES, PAGE_SHAPE_MM, TEXT_COLORS } from '../constants';
 import { EditableImageBox } from '../editor/EditableImageBox';
 import { EditableTextBox } from '../editor/EditableTextBox';
 import { page_name, useT } from '../i18n';
@@ -14,7 +13,7 @@ import type { ProviderError } from '../providers/types';
 import { apply_layout } from '../store/book_model';
 import { insert_blank_page, move_page, remove_page, useBook } from '../store/book_store';
 import { clean_custom_style, page_aspect } from '../store/book_model';
-import type { ArtStyle, BookPage, BoxBackground, BoxKind, FontId, LayoutId, PageImage, Rect, TextAlign, TextBox } from '../types';
+import type { ArtStyle, BookPage, BoxBackground, BoxKind, FontId, LayoutId, PageImage, PageShape, Rect, TextAlign, TextBox } from '../types';
 import { prepare_upload_image } from '../utils/image';
 import { useElementSize } from '../utils/use_element_size';
 import './EditorScreen.css';
@@ -87,6 +86,16 @@ function LayoutIcon({ layout }: { layout: LayoutId }) {
     <span className={is_column ? 'layout-icon column' : 'layout-icon'}>
       <span className={image_first ? 'image-part' : 'text-part'} />
       <span className={image_first ? 'text-part' : 'image-part'} />
+    </span>
+  );
+}
+
+/** Book shape button icon: an outline of the page, drawn to scale like the layout icons. */
+function ShapeIcon({ shape }: { shape: PageShape }) {
+  const size = PAGE_SHAPE_MM[shape];
+  return (
+    <span className="shape-icon">
+      <span className={size.h > size.w ? 'shape-icon-page tall' : 'shape-icon-page wide'} style={{ aspectRatio: `${size.w} / ${size.h}` }} />
     </span>
   );
 }
@@ -272,7 +281,6 @@ export function EditorScreen() {
               <UndoIcon flipped />
               <span className="btn-text">{t('editor.redo')}</span>
             </button>
-            <ShapeMenu value={book.page_shape} on_change={(shape) => useBook.getState().set_page_shape(shape)} />
           </div>
           <div className="header-right">
             <span className="pill ok editor-badge">{t('editor.no_ai_badge')}</span>
@@ -479,6 +487,26 @@ export function EditorScreen() {
                       onClick={() => change_page((target) => apply_layout(target, layout))}
                     >
                       <LayoutIcon layout={layout} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="stack tight">
+                <span id="shape-label" className="editor-label">
+                  {t('editor.shape')}
+                </span>
+                <div role="group" aria-labelledby="shape-label" className="editor-layouts">
+                  {PAGE_SHAPES.map((shape) => (
+                    <button
+                      key={shape}
+                      type="button"
+                      className="editor-layout-btn"
+                      aria-label={t(`editor.shape.${shape}`)}
+                      title={t(`editor.shape.${shape}`)}
+                      aria-pressed={book.page_shape === shape}
+                      onClick={() => useBook.getState().set_page_shape(shape)}
+                    >
+                      <ShapeIcon shape={shape} />
                     </button>
                   ))}
                 </div>
