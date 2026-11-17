@@ -641,12 +641,17 @@ legend {
   gap: 6px;
   font-weight: 500;
 }
+/* A pop-up list placed by use_popover.ts: fixed to the window, so it never makes the page taller. */
+.popover-layer {
+  position: fixed;
+  z-index: 60;
+  top: 0;
+  left: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .style-menu-list {
-  position: absolute;
-  z-index: 30;
-  top: calc(100% + 6px);
-  right: 0;
-  width: max(100%, 260px);
+  width: 260px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -655,10 +660,6 @@ legend {
   border-radius: 12px;
   background: var(--card);
   box-shadow: 0 10px 30px rgba(23, 35, 58, 0.18);
-}
-.style-menu-list.up {
-  top: auto;
-  bottom: calc(100% + 6px);
 }
 .style-menu-item {
   min-height: 40px;
