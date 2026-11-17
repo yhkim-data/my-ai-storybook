@@ -114,7 +114,7 @@ The rights to the book you make belong to you. This tool and DI Lab claim no rig
 - 책에 쓰는 글꼴은 모두 SIL Open Font License이므로 책을 인쇄, 배포, 판매할 수 있습니다. AI 그림이 있으면 책에 AI 사용 표시가 자동으로 들어갑니다.
 - 학교나 기관이 학생 작품을 공개하려면 학생과 보호자의 이용 허락과 개인정보 동의가 필요합니다(만 14세 미만은 법정대리인 동의).
 
-근거 법령과 약관 원문, 확인일은 [권리와 이용 조건 전체 안내](docs/rights.ko.md)에 있습니다.
+근거 법령과 약관 원문, 확인일은 [권리와 이용 조건 전체 안내](docs/rights.ko.md)에 있습니다. 사이트를 쓰는 규칙(키, 요금, 공용 컴퓨터, 금지 행위)은 [이용 약관](docs/terms.ko.md)에 있습니다.
 
 ## 개인정보와 키 관리
 
@@ -150,6 +150,7 @@ npm run dev
 
 - [키 발급 방법](docs/key-guide.ko.md) ([English](docs/key-guide.en.md))
 - [선생님 안내서](docs/teacher-guide.ko.md) ([English](docs/teacher-guide.en.md))
+- [이용 약관](docs/terms.ko.md) ([English](docs/terms.en.md))
 - [권리와 이용 조건](docs/rights.ko.md) ([English](docs/rights.en.md))
 - [AI 제공사 조건 확인 기록](docs/PROVIDER_NOTES.md)
 - [개발 문서](docs/DEVELOPMENT.ko.md)

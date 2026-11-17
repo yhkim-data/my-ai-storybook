@@ -14,6 +14,18 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('RightsScreen', () => {
+  it('shows the seven terms with the effective date and links the full terms in the screen language', () => {
+    render(<RightsScreen />);
+    expect(screen.getByRole('heading', { level: 1, name: translate('ko', 'rights.title') })).toBeInTheDocument();
+    expect(screen.getByText(translate('ko', 'terms.effective'))).toBeInTheDocument();
+    const items = screen.getAllByRole('listitem').map((item) => item.textContent);
+    expect(items).toEqual([1, 2, 3, 4, 5, 6, 7].map((n) => translate('ko', `terms.item${n}`)));
+    expect(screen.getByRole('link', { name: translate('ko', 'terms.more') })).toHaveAttribute(
+      'href',
+      'https://github.com/yhkim-data/my-ai-storybook/blob/main/docs/terms.ko.md',
+    );
+  });
+
   it('shows both the Korean and English rights statements', () => {
     render(<RightsScreen />);
     expect(screen.getByText(translate('ko', 'rights.statement.ko'))).toBeInTheDocument();

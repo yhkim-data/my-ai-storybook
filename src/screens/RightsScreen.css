@@ -18,3 +18,16 @@
     font-size: 19px;
   }
 }
+
+.rights-subheading {
+  margin: 0;
+  font-size: 20px;
+}
+.terms-list {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  line-height: 1.6;
+}

@@ -114,7 +114,7 @@ The rights to the book you make belong to you. This tool and DI Lab claim no rig
 - All fonts used in books are under the SIL Open Font License, so books can be printed, shared, and sold. If a book has AI images, an AI notice is added to it automatically.
 - Schools and organizations need permission from students and parents, and consent for personal information, to publish student work (legal-representative consent for children under 14 in Korea).
 
-Legal sources, original terms, and check dates are in the full [Rights and terms of use](docs/rights.en.md) guide.
+Legal sources, original terms, and check dates are in the full [Rights and terms of use](docs/rights.en.md) guide. The rules for using the site (keys, charges, shared computers, prohibited acts) are in the [Terms of use](docs/terms.en.md).
 
 ## Privacy and API keys
 
@@ -150,6 +150,7 @@ Documents:
 
 - [How to get a key](docs/key-guide.en.md) ([Korean](docs/key-guide.ko.md))
 - [Teacher guide](docs/teacher-guide.en.md) ([Korean](docs/teacher-guide.ko.md))
+- [Terms of use](docs/terms.en.md) ([Korean](docs/terms.ko.md))
 - [Rights and terms of use](docs/rights.en.md) ([Korean](docs/rights.ko.md))
 - [Record of AI provider terms](docs/PROVIDER_NOTES.md) (Korean)
 - [Development guide](docs/DEVELOPMENT.ko.md) (Korean)
