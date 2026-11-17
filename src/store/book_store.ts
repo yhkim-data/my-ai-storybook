@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { HISTORY_LIMIT, STEP_SCREENS } from '../constants';
 import { build_cover_description } from '../providers/prompts';
 import type { Book, BookPage, Lang, PageDraft, PageImage, Plot, Screen, StorySeed, StyleId, WriteMode } from '../types';
-import { build_pages, create_book, make_story_page, resize_pages } from './book_model';
+import { build_pages, create_book, make_story_page, normalize_book, resize_pages } from './book_model';
 
 /** Side screens that are not wizard steps. */
 export type SideScreen = 'connect' | 'rights';
@@ -91,7 +91,8 @@ export const useBook = create<BookState>((set, get) => {
         redo_stack: [],
         last_change_key: null,
       }),
-    open_book: (book, is_demo = false) =>
+    open_book: (raw_book, is_demo = false) => {
+      const book = normalize_book(raw_book);
       set({
         book,
         is_demo,
@@ -100,7 +101,8 @@ export const useBook = create<BookState>((set, get) => {
         undo_stack: [],
         redo_stack: [],
         last_change_key: null,
-      }),
+      });
+    },
     close_book: () => set({ book: null, is_demo: false, screen: 'start', undo_stack: [], redo_stack: [] }),
     set_has_saved_book: (value) => set({ has_saved_book: value }),
 

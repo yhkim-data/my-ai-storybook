@@ -3,8 +3,8 @@
 export type Lang = 'ko' | 'en';
 /** Reader age band. */
 export type AgeBand = '5-7' | '8-10' | '11-13';
-/** Number of story pages (excluding the cover). */
-export type PageCount = 4 | 6 | 8;
+/** Number of story pages (excluding the cover), PAGE_COUNT_MIN to PAGE_COUNT_MAX. */
+export type PageCount = number;
 /** Illustration style. */
 export type StyleId = 'watercolor' | 'crayon' | 'clay' | 'papercut' | 'pencil' | 'pixel';
 /** Text and image layout. */

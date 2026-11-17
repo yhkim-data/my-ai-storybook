@@ -5,8 +5,15 @@ import type { AgeBand, FontId, LayoutId, PageCount, Rect, Screen, StyleId, TextB
 export const STEP_SCREENS: Screen[] = ['start', 'seed', 'plot', 'pages', 'style', 'pictures', 'editor', 'finish'];
 
 export const AGE_BANDS: AgeBand[] = ['5-7', '8-10', '11-13'];
+/** Page counts offered as buttons; any count from PAGE_COUNT_MIN to PAGE_COUNT_MAX can also be set. */
 export const PAGE_COUNTS: PageCount[] = [4, 6, 8];
 export const DEFAULT_PAGE_COUNT: PageCount = 8;
+export const PAGE_COUNT_MIN = 2;
+export const PAGE_COUNT_MAX = 20;
+/** First value when the user switches to setting the page count. */
+export const CUSTOM_PAGE_COUNT_START: PageCount = 10;
+/** Above this many pages the seed screen warns that pictures take longer. */
+export const MANY_PAGES_FROM = 9;
 export const DEFAULT_AGE_BAND: AgeBand = '8-10';
 export const STYLE_IDS: StyleId[] = ['watercolor', 'crayon', 'clay', 'papercut', 'pencil', 'pixel'];
 export const DEFAULT_STYLE_ID: StyleId = 'watercolor';

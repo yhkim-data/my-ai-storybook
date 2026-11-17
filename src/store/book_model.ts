@@ -4,6 +4,8 @@ import {
   DEFAULT_AGE_BAND,
   DEFAULT_LAYOUT_ID,
   DEFAULT_PAGE_COUNT,
+  PAGE_COUNT_MAX,
+  PAGE_COUNT_MIN,
   DEFAULT_STYLE_ID,
   DEFAULT_TEXT_BOX,
   LAYOUT_TEXT_RECT,
@@ -58,6 +60,20 @@ export function make_cover_page(title = '', image_prompt = ''): BookPage {
       background: 'white',
     },
   };
+}
+
+/** Rounds a page count and keeps it in PAGE_COUNT_MIN..PAGE_COUNT_MAX; anything not a number becomes the default. */
+export function clamp_page_count(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULT_PAGE_COUNT;
+  return Math.max(PAGE_COUNT_MIN, Math.min(Math.round(value), PAGE_COUNT_MAX));
+}
+
+/**
+ * Fills fields that older saved books may lack and fixes out-of-range values.
+ * Used for every book that is opened (saved on this device, loaded from a file, or the demo).
+ */
+export function normalize_book(book: Book): Book {
+  return { ...book, seed: { ...make_seed(), ...book.seed, page_count: clamp_page_count(book.seed?.page_count) } };
 }
 
 export function make_seed(): StorySeed {

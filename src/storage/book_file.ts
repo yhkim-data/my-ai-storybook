@@ -1,6 +1,6 @@
 // Save and load the work file (.storybook.json), images included.
 import { BOOK_FILE_EXTENSION, LAYOUT_IDS, STEP_SCREENS } from '../constants';
-import { get_book_title } from '../store/book_model';
+import { get_book_title, normalize_book } from '../store/book_model';
 import type { Book, BookPage } from '../types';
 
 /** Characters not allowed in file names (whitespace too). */
@@ -42,7 +42,7 @@ export function parse_book_file(raw: string): Book {
     typeof data.step === 'string' &&
     STEP_SCREENS.includes(data.step);
   if (!is_valid) throw new Error('not a storybook file');
-  return data as Book;
+  return normalize_book(data as Book);
 }
 
 /** File name stem derived from the book title. */

@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { CUSTOM_PAGE_COUNT_START, PAGE_COUNT_MAX, PAGE_COUNT_MIN } from '../constants';
 import { translate } from '../i18n';
 import { create_book } from '../store/book_model';
 import { useBook } from '../store/book_store';
@@ -88,5 +89,47 @@ describe('SeedScreen', () => {
     useBook.getState().update_seed({ topic: '바다 속 모험담' });
     render(<SeedScreen />);
     expect(screen.getByLabelText(ko('seed.topic.custom_label'))).toHaveValue('바다 속 모험담');
+  });
+
+  it('"custom" page count shows a stepper that starts at 10 and stays within 2-20', async () => {
+    const user = userEvent.setup();
+    render(<SeedScreen />);
+    expect(screen.queryByLabelText(ko('seed.pages.decrease'))).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: ko('seed.pages.custom') }));
+    expect(current_seed().page_count).toBe(CUSTOM_PAGE_COUNT_START);
+    expect(screen.getByRole('button', { name: ko('seed.pages.custom') })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: '8쪽' })).toHaveAttribute('aria-pressed', 'false');
+
+    await user.click(screen.getByRole('button', { name: ko('seed.pages.increase') }));
+    expect(current_seed().page_count).toBe(CUSTOM_PAGE_COUNT_START + 1);
+    const input = screen.getByRole('spinbutton', { name: ko('seed.pages.count_aria') });
+    fireEvent.change(input, { target: { value: '20' } });
+    expect(current_seed().page_count).toBe(PAGE_COUNT_MAX);
+    expect(screen.getByRole('button', { name: ko('seed.pages.increase') })).toBeDisabled();
+    fireEvent.change(input, { target: { value: '99' } });
+    fireEvent.blur(input);
+    expect(current_seed().page_count).toBe(PAGE_COUNT_MAX);
+    fireEvent.change(input, { target: { value: '1' } });
+    fireEvent.blur(input);
+    expect(current_seed().page_count).toBe(PAGE_COUNT_MIN);
+    expect(screen.getByRole('button', { name: ko('seed.pages.decrease') })).toBeDisabled();
+  });
+
+  it('more than 8 pages shows the "takes longer" hint, and a preset button turns the stepper off', async () => {
+    const user = userEvent.setup();
+    render(<SeedScreen />);
+    expect(screen.queryByText(ko('seed.pages.many'))).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: ko('seed.pages.custom') }));
+    expect(screen.getByText(ko('seed.pages.many'))).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '6쪽' }));
+    expect(current_seed().page_count).toBe(6);
+    expect(screen.queryByText(ko('seed.pages.many'))).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(ko('seed.pages.decrease'))).not.toBeInTheDocument();
+  });
+
+  it('a saved count that is not a preset opens with the stepper', () => {
+    useBook.getState().update_seed({ page_count: 13 });
+    render(<SeedScreen />);
+    expect(screen.getByRole('spinbutton', { name: ko('seed.pages.count_aria') })).toHaveValue(13);
   });
 });

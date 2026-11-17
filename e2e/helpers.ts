@@ -4,8 +4,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export type Lang = 'ko' | 'en';
-/** Story page counts the user can pick. */
-export type PageCount = 4 | 6 | 8;
+/** Story page count: 4, 6 and 8 are buttons; any other count from 2 to 20 is set with the stepper. */
+export type PageCount = number;
+const PRESET_PAGE_COUNTS = [4, 6, 8];
 
 /** localStorage keys; must match src/store/settings_store.ts. */
 export const SETTINGS_KEY = 'storybook.settings';
@@ -124,8 +125,14 @@ export async function fill_seed(page: Page, lang: Lang, options: SeedOptions = {
   await exact_button(page, tr(lang, 'seed.topic.adventure')).click();
   await page.locator('#hero-name').fill(input.hero_name);
   await page.locator('#hero-look').fill(input.hero_look);
-  if (options.page_count) {
+  if (options.page_count && PRESET_PAGE_COUNTS.includes(options.page_count)) {
     await exact_button(page, tr(lang, 'seed.pages.option', { n: options.page_count })).click();
+  } else if (options.page_count) {
+    await exact_button(page, tr(lang, 'seed.pages.custom')).click();
+    const count_input = page.getByRole('spinbutton', { name: tr(lang, 'seed.pages.count_aria') });
+    await count_input.fill(String(options.page_count));
+    await count_input.blur();
+    await expect(count_input).toHaveValue(String(options.page_count));
   }
   await exact_button(page, tr(lang, 'common.next')).click();
   await expect(page.getByRole('heading', { name: tr(lang, 'plot.heading') })).toBeVisible();
