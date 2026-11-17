@@ -7,11 +7,31 @@
 .seed-field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: clamp(6px, 1.2vh, 10px);
+}
+.seed-field legend {
+  margin-bottom: clamp(6px, 1.2vh, 12px);
+}
+.seed-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(14px, 2.6vh, 24px);
+}
+.seed-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2.6vh, 24px);
+}
+/* Wide windows show the story choices and the hero side by side. */
+@media (min-width: 700px) {
+  .seed-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(24px, 3vw, 40px);
+  }
 }
 .seed-seg-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
   gap: 8px;
 }
 .seed-seg-grid .seg {
@@ -28,7 +48,7 @@
   font-size: 24px;
   line-height: 1;
 }
-.seed-step-input {
+.text-input.seed-step-input {
   width: 96px;
   text-align: center;
   padding: 0 8px;

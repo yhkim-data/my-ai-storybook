@@ -13,6 +13,7 @@ import {
   fill_seed,
   make_all_pictures,
   open_start,
+  open_story_page,
   pass_editor,
   pass_pages,
   pass_pictures,
@@ -43,7 +44,7 @@ async function run_flow(page: Page, lang: Lang, page_count: PageCount): Promise<
   await expect_no_h_scroll(page);
   await choose_first_plot(page, lang);
   await expect_no_h_scroll(page);
-  await expect(page.locator(`#page-text-${page_count}`)).toBeVisible();
+  await open_story_page(page, page_count);
   await pass_pages(page, lang);
   await expect_no_h_scroll(page);
   await pass_style(page, lang);

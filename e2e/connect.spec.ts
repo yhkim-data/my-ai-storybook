@@ -9,6 +9,7 @@ import {
   fill_seed,
   flip_pages,
   open_start,
+  open_story_page,
   pass_editor,
   pass_pages,
   pass_pictures,
@@ -231,6 +232,7 @@ test.describe('Real provider (fake network)', () => {
 
     // Page split returns text for the requested page count.
     await expect(page.locator('#page-text-1')).toHaveValue('가짜 1쪽 글');
+    await open_story_page(page, PAGE_COUNT);
     await expect(page.locator(`#page-text-${PAGE_COUNT}`)).toHaveValue(`가짜 ${PAGE_COUNT}쪽 글`);
     await pass_pages(page, LANG);
     await pass_style(page, LANG);

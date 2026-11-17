@@ -19,8 +19,11 @@ const LANG: Lang = 'ko';
 /** The demo book must appear within this time (ms) after opening the start screen. */
 const DEMO_DEADLINE_MS = 30_000;
 
+/** Counts images without alt text; images hidden from screen readers on purpose (the DI Lab corner mark) are skipped. */
 async function count_images_without_alt(page: Page): Promise<number> {
-  return page.locator('img').evaluateAll((images) => images.filter((image) => !(image.getAttribute('alt') ?? '').trim()).length);
+  return page
+    .locator('img:not([aria-hidden="true"])')
+    .evaluateAll((images) => images.filter((image) => !(image.getAttribute('alt') ?? '').trim()).length);
 }
 
 test.describe('Demo book', () => {

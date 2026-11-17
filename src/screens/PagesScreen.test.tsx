@@ -1,6 +1,6 @@
 // Step 4 page split screen tests.
 import { StrictMode } from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { get_sample_plots } from '../data/sample_story';
 import { translate } from '../i18n';
@@ -32,6 +32,11 @@ function prepare_store(patch: Partial<Book> = {}): void {
 
 const usage = () => useSettings.getState().usage_count;
 
+/** Buttons in the page list on the left. */
+function list_items(): HTMLElement[] {
+  return within(screen.getByRole('navigation', { name: ko('pages.list') })).getAllByRole('button');
+}
+
 function current_book(): Book {
   const book = useBook.getState().book;
   if (!book) throw new Error('책이 없어요');
@@ -57,8 +62,10 @@ describe('PagesScreen', () => {
         <PagesScreen />
       </StrictMode>,
     );
-    expect(await screen.findAllByLabelText(TEXT_LABEL)).toHaveLength(PAGE_COUNT);
-    expect(screen.getAllByLabelText(DESC_LABEL)).toHaveLength(PAGE_COUNT);
+    expect(await screen.findByLabelText(ko('pages.text_label').replace('{n}', '1'))).toBeInTheDocument();
+    expect(list_items()).toHaveLength(PAGE_COUNT);
+    expect(screen.getAllByLabelText(TEXT_LABEL)).toHaveLength(1);
+    expect(screen.getAllByLabelText(DESC_LABEL)).toHaveLength(1);
     expect(usage() - before).toBe(1);
     expect(current_book().pages).toHaveLength(PAGE_COUNT + 1);
   });
@@ -71,29 +78,54 @@ describe('PagesScreen', () => {
     const kept_text = current_book().pages[1]?.text;
     first.unmount();
     render(<PagesScreen />);
-    expect(screen.getAllByLabelText(TEXT_LABEL)).toHaveLength(PAGE_COUNT);
+    expect(list_items()).toHaveLength(PAGE_COUNT);
     expect(usage() - before).toBe(0);
     expect(current_book().pages[1]?.text).toBe(kept_text);
   });
 
-  it('editing updates the text in book.pages', async () => {
+  it('editing updates the text of the page chosen in the list', async () => {
     prepare_store();
     render(<PagesScreen />);
-    const inputs = await screen.findAllByLabelText(TEXT_LABEL);
-    fireEvent.change(inputs[1] as HTMLElement, { target: { value: '새로 쓴 글' } });
-    expect(current_book().pages[2]?.text).toBe('새로 쓴 글');
-    const descs = screen.getAllByLabelText(DESC_LABEL);
-    fireEvent.change(descs[0] as HTMLElement, { target: { value: '새 그림 설명' } });
+    await screen.findAllByLabelText(TEXT_LABEL);
+    fireEvent.change(screen.getByLabelText(DESC_LABEL), { target: { value: '새 그림 설명' } });
     expect(current_book().pages[1]?.image_prompt).toBe('새 그림 설명');
+    fireEvent.click(list_items()[1] as HTMLElement);
+    expect(list_items()[1]).toHaveAttribute('aria-current', 'true');
+    fireEvent.change(screen.getByLabelText(TEXT_LABEL), { target: { value: '새로 쓴 글' } });
+    expect(current_book().pages[2]?.text).toBe('새로 쓴 글');
+  });
+
+  it('previous and next page buttons move through the pages and stop at the ends', async () => {
+    prepare_store();
+    render(<PagesScreen />);
+    await screen.findAllByLabelText(TEXT_LABEL);
+    const prev = screen.getByRole('button', { name: ko('pages.prev_page') });
+    const next = screen.getByRole('button', { name: ko('pages.next_page') });
+    expect(prev).toBeDisabled();
+    for (let step = 1; step < PAGE_COUNT; step += 1) fireEvent.click(next);
+    expect(screen.getByLabelText(TEXT_LABEL)).toHaveAttribute('id', `page-text-${PAGE_COUNT}`);
+    expect(next).toBeDisabled();
+    fireEvent.click(prev);
+    expect(screen.getByLabelText(TEXT_LABEL)).toHaveAttribute('id', `page-text-${PAGE_COUNT - 1}`);
+  });
+
+  it('the words and the picture note inputs have the same rows, so they are the same height', async () => {
+    prepare_store();
+    render(<PagesScreen />);
+    const text = (await screen.findAllByLabelText(TEXT_LABEL))[0] as HTMLTextAreaElement;
+    const desc = screen.getByLabelText(DESC_LABEL) as HTMLTextAreaElement;
+    expect(text.rows).toBe(desc.rows);
+    expect(text.parentElement).toBe(desc.parentElement);
   });
 
   it('self-writing mode shows one empty field per page without a call', () => {
     prepare_store({ write_mode: 'self' });
     const before = usage();
     render(<PagesScreen />);
-    const inputs = screen.getAllByLabelText(TEXT_LABEL);
-    expect(inputs).toHaveLength(PAGE_COUNT);
-    inputs.forEach((input) => expect(input).toHaveValue(''));
+    expect(list_items()).toHaveLength(PAGE_COUNT);
+    // No page has words yet, so no list item is marked as filled.
+    expect(screen.queryByText(ko('pages.filled'))).not.toBeInTheDocument();
+    expect(screen.getByLabelText(TEXT_LABEL)).toHaveValue('');
     expect(screen.getByText(ko('pages.self_hint'))).toBeInTheDocument();
     expect(usage() - before).toBe(0);
   });

@@ -183,7 +183,7 @@ export function ConnectScreen() {
   const has_no_image_ai = text_key !== '' && shown_image_model === null;
 
   return (
-    <Shell width="wide" header={<SideHeader title={t('connect.title')} />}>
+    <Shell width="wide" fit={false} header={<SideHeader title={t('connect.title')} />}>
       <div className="stack tight">
         <h1 className="title-lg">{t('connect.heading')}</h1>
         <p className="lead small">{t('connect.lead')}</p>

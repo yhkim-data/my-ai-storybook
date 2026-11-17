@@ -2,13 +2,13 @@
 
 .shell:has(.editor-layout) .shell-main {
   max-width: 1400px;
-  padding: 24px 32px;
+  padding: clamp(10px, 2.4vh, 24px) 32px;
 }
 .shell:has(.editor-layout) .shell-footer {
-  padding: 16px 32px;
+  padding: clamp(8px, 1.6vh, 16px) 32px;
 }
 .shell:has(.editor-layout) .shell-footer .btn {
-  min-height: 52px;
+  min-height: clamp(44px, 6.4vh, 52px);
   font-size: 17px;
 }
 .editor-tools {
@@ -23,11 +23,14 @@
 .editor-badge {
   padding: 8px 14px;
 }
+/* Page order | page preview | settings. The preview takes all the room that is left. */
 .editor-layout {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  align-items: flex-start;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 172px minmax(0, 1fr) minmax(260px, 300px);
+  grid-template-rows: minmax(0, 1fr);
+  gap: clamp(14px, 1.8vw, 24px);
 }
 .editor-side-title,
 .editor-label {
@@ -46,16 +49,14 @@
 
 /* Page order */
 .editor-pages {
-  flex: 1 1 120px;
-  max-width: 150px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: clamp(6px, 1.2vh, 10px);
 }
 .editor-thumbs {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  gap: 6px;
 }
 .editor-thumb {
   position: relative;
@@ -69,17 +70,18 @@
   background-position: center;
   color: var(--text-sub);
   font-weight: 500;
-  font-size: 15px;
+  font-size: 12px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   overflow: hidden;
 }
 .editor-thumb .thumb-label {
-  margin: 6px;
-  padding: 2px 10px;
+  margin: 3px;
+  padding: 1px 5px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
 }
 .editor-thumb[aria-current='true'] {
   border: 3px solid var(--primary);
@@ -92,29 +94,37 @@
   border-color: var(--line-input);
 }
 .editor-page-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.btn.icon-btn {
+  padding: 0;
 }
 
 /* Page preview */
 .editor-canvas {
-  flex: 999 1 480px;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 16px;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px;
   border-radius: 16px;
   background: var(--canvas-bg);
 }
+/* Measured by the editor to pick the page size; the page sits below the room left for the move handle. */
 .editor-canvas-fit {
-  width: 100%;
-  max-width: 560px;
+  flex: 1 1 0;
+  min-height: 0;
+  padding-top: 36px;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
+}
+.editor-canvas > .editor-small-hint {
+  text-align: center;
 }
 .editor-canvas .book-page {
   overflow: visible;
@@ -230,12 +240,11 @@
 
 /* Text box settings */
 .editor-settings {
-  flex: 1 1 280px;
-  max-width: 320px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px;
+  gap: clamp(10px, 1.8vh, 20px);
+  padding: clamp(12px, 2vh, 20px);
   border-radius: 16px;
   background: var(--card);
   border: 1px solid var(--line);
@@ -315,8 +324,38 @@
   background: #ffffff;
 }
 
-/* Small screens: page order becomes a horizontal row, settings move below */
-@media (max-width: 720px) {
+/* Wide screens hide the logo text and the "no AI here" badge only when the tool row would wrap. */
+@media (max-width: 1199px) {
+  .editor-tools .brand-home .brand-text,
+  .editor-badge {
+    display: none;
+  }
+  .editor-tools .brand-home .brand-icon {
+    display: block;
+  }
+}
+/* Medium screens (portrait tablets): settings go under the preview and spread into columns. */
+@media (min-width: 600px) and (max-width: 999px) {
+  .editor-layout {
+    grid-template-columns: 140px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .editor-pages {
+    grid-row: 1 / span 2;
+  }
+  .editor-settings {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+  .editor-layout-btn {
+    aspect-ratio: auto;
+    min-width: 0;
+    padding: 6px 3px;
+  }
+}
+/* Small screens: page order becomes a horizontal row, settings move below, and the page scrolls. */
+@media (max-width: 599px) {
   .shell:has(.editor-layout) .shell-main {
     padding: 16px;
   }
@@ -327,44 +366,23 @@
     flex-basis: 100%;
     font-size: 19px;
   }
-  /* The tool row is full, so the logo keeps only its icon. */
-  .editor-tools .brand-home .brand-text {
-    display: none;
-  }
-  .editor-tools .brand-home .brand-icon {
-    display: block;
-  }
-  .editor-badge {
-    display: none;
-  }
   .editor-layout {
+    display: flex;
+    flex-direction: column;
     gap: 16px;
-  }
-  .editor-pages {
-    flex: 1 1 100%;
-    max-width: none;
-    min-width: 0;
   }
   .editor-thumbs {
     min-width: 0;
-    flex-direction: row;
+    display: flex;
     overflow-x: auto;
     padding: 4px;
   }
   .editor-thumb {
-    flex: 0 0 72px;
-    width: 72px;
+    flex: 0 0 64px;
+    width: 64px;
   }
-  .editor-page-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  .editor-canvas {
-    flex-basis: 100%;
-    padding: 40px 12px 16px;
-  }
-  .editor-settings {
-    flex-basis: 100%;
-    max-width: none;
+  .editor-canvas-fit {
+    flex: none;
+    aspect-ratio: 1 / 1;
   }
 }

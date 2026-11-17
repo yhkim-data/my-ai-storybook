@@ -96,14 +96,19 @@ interface ShellProps {
   /** Content max width (px): normal 960, wide 1120, wider 1200. */
   width?: 'normal' | 'wide' | 'wider';
   compact_header?: boolean;
+  /**
+   * Fit the whole screen into the window (no page scroll) on screens 600px and wider.
+   * Long reading screens such as "Connect AI" turn this off and scroll as usual.
+   */
+  fit?: boolean;
   children: ReactNode;
 }
 
 /** Screen frame with header, main and optional footer. */
-export function Shell({ header, footer, width = 'normal', compact_header = false, children }: ShellProps) {
+export function Shell({ header, footer, width = 'normal', compact_header = false, fit = true, children }: ShellProps) {
   const main_class = width === 'normal' ? 'shell-main' : `shell-main ${width}`;
   return (
-    <div className="shell">
+    <div className={fit ? 'shell fit' : 'shell'}>
       <header className={compact_header ? 'shell-header compact' : 'shell-header'}>{header}</header>
       <main className={main_class}>{children}</main>
       {footer && <footer className="shell-footer">{footer}</footer>}

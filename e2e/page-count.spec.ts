@@ -7,6 +7,7 @@ import {
   fill_seed,
   make_all_pictures,
   open_start,
+  open_story_page,
   pass_editor,
   pass_pages,
   pass_pictures,
@@ -27,8 +28,8 @@ for (const count of COUNTS) {
     await start_new_book(page, LANG);
     await fill_seed(page, LANG, { page_count: count });
     await choose_first_plot(page, LANG);
-    await expect(page.locator(`#page-text-${count}`)).toBeAttached();
-    await expect(page.locator(`#page-text-${count + 1}`)).toHaveCount(0);
+    await expect(page.locator('.pages-item')).toHaveCount(count);
+    await open_story_page(page, count);
     await pass_pages(page, LANG);
     await pass_style(page, LANG);
     await expect(page.locator('.pic-item')).toHaveCount(count + 1);

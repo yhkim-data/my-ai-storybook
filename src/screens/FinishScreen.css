@@ -1,23 +1,25 @@
-/* Finish screen styles */
+/* Finish screen: the book viewer takes the room that is left; downloads sit beside it (below it on narrow screens). */
 .finish-body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 32px;
-  align-items: flex-start;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  gap: clamp(16px, 2.6vw, 32px);
 }
 .finish-viewer {
-  flex: 1 1 420px;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  align-items: center;
+  gap: clamp(8px, 1.6vh, 16px);
 }
+/* Measured by the viewer to pick the page size. */
 .finish-viewer-page {
-  width: 100%;
-  max-width: 560px;
+  flex: 1 1 0;
+  min-height: 0;
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 .finish-viewer-bar {
   display: flex;
@@ -25,32 +27,60 @@
   justify-content: center;
   gap: 16px;
 }
+.finish-viewer-bar .btn {
+  min-height: clamp(44px, 6.4vh, 52px);
+}
 .finish-page-of {
   min-width: 80px;
   text-align: center;
   font-weight: 700;
 }
 .finish-actions {
-  flex: 1 1 320px;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: clamp(8px, 1.6vh, 14px);
+}
+.finish-actions .choice.medium {
+  min-height: clamp(60px, 9.4vh, 112px);
+  padding: clamp(8px, 1.4vh, 18px) 16px;
+}
+.finish-actions .choice.medium .choice-title {
+  font-size: clamp(18px, 2.6vh, 21px);
+}
+.finish-actions .choice.medium .choice-desc {
+  font-size: 14px;
 }
 .finish-author {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
-
-@media (max-width: 720px) {
+/* Portrait tablets: the viewer on top, the download buttons in two columns below. */
+@media (min-width: 600px) and (max-width: 899px) {
   .finish-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .finish-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .finish-author,
+  .finish-actions > .busy,
+  .finish-actions > .notice {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 599px) {
+  .finish-body {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
   }
-  .finish-viewer,
-  .finish-actions {
-    flex: 0 0 auto;
-    width: 100%;
+  .finish-viewer-page {
+    flex: none;
+    aspect-ratio: 1 / 1;
   }
 }
