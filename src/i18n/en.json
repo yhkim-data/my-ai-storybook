@@ -122,6 +122,8 @@
   "delete_book.body": "The book you were making is deleted from this computer's browser. It cannot be brought back. To keep it, save it first with [Save work file].",
   "delete_book.confirm": "Delete book",
   "delete_book.done": "The book was deleted.",
+  "frame.blocked": "This page cannot be opened inside another site.",
+  "frame.open": "Open in a new window",
   "usage.chip": "{n} pictures",
   "usage.chip_limit": "{n} / {max} pictures",
   "usage.chip_off": "AI not connected",

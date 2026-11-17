@@ -93,8 +93,10 @@ npm run dev
 저장 위치는 이렇게 달라요.
 
 - 만들던 책: 브라우저의 IndexedDB (`src/storage/db.ts`)
-- 키와 설정, 오늘 쓴 횟수: localStorage (`storybook.settings`, `storybook.usage`)
-- 서버는 없어요.
+- 설정(언어, 연결 목록, 그림 한도, 자리 비움 시간)과 오늘 쓴 양: localStorage (`storybook.settings`, `storybook.usage`). 키는 들어가지 않아요.
+- 키: 자바스크립트 메모리(`src/store/settings_store.ts`의 `connections[].key`)에만 있어요. 어디에도 저장하지 않아요. 자리 비움 타이머는 `src/components/KeySafety.tsx`의 `IdleGuard`예요.
+- 환경 설정 파일: `src/storage/settings_file.ts` (키 없음, 64KB 이하)
+- 서버는 없어요. 빌드한 `index.html`에는 `vite.config.ts`의 `security_meta`가 CSP와 `no-referrer` 메타 태그를 넣어요.
 
 ## AI 연결부 구조
 
