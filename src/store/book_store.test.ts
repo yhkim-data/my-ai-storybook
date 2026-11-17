@@ -281,3 +281,24 @@ describe('book helpers', () => {
     expect(text_left.text_box.background).toBe('none');
   });
 });
+
+describe('book shape and undo', () => {
+  it('changing the shape is one undo step that also restores the picture boxes', () => {
+    useBook.setState({ book: build_demo_book('ko'), undo_stack: [], redo_stack: [], last_change_key: null });
+    const before = useBook.getState().book!;
+    useBook.getState().set_page_shape('landscape');
+    expect(useBook.getState().book?.page_shape).toBe('landscape');
+    expect(useBook.getState().undo_stack).toHaveLength(1);
+    useBook.getState().undo();
+    expect(useBook.getState().book?.page_shape).toBe('square');
+    expect(useBook.getState().book?.pages).toEqual(before.pages);
+    useBook.getState().redo();
+    expect(useBook.getState().book?.page_shape).toBe('landscape');
+  });
+
+  it('choosing the same shape again changes nothing', () => {
+    useBook.setState({ book: build_demo_book('ko'), undo_stack: [], redo_stack: [] });
+    useBook.getState().set_page_shape('square');
+    expect(useBook.getState().undo_stack).toHaveLength(0);
+  });
+});

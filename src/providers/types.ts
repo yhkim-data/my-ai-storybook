@@ -1,5 +1,5 @@
 // Provider interfaces, so text and image providers can be swapped.
-import type { ArtStyle, Lang, PageDraft, Plot, StorySeed } from '../types';
+import type { ArtStyle, Lang, PageDraft, PageShape, Plot, StorySeed } from '../types';
 
 /** The on-screen message comes from the error.<kind> translation key. */
 export type ProviderErrorKind =
@@ -40,6 +40,11 @@ export interface ImageRequest {
   reference_image: string | null;
   /** 0 is the cover; story pages start at 1. */
   page_index: number;
+  /**
+   * Shape to draw in, for a page whose picture fills the whole page. Providers that cannot draw that shape,
+   * and pages without it, get a square picture.
+   */
+  shape?: PageShape;
   lang: Lang;
 }
 

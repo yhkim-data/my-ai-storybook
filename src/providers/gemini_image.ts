@@ -1,4 +1,4 @@
-// Gemini image provider. Returns one square image as a Blob.
+// Gemini image provider. Returns one image as a Blob: square, or in the page's shape on models that support it.
 import { base64_to_blob, split_data_url } from '../utils/image';
 import { call_interactions, check_api_key } from './gemini_client';
 import {
@@ -7,6 +7,8 @@ import {
   IMAGE_SIZE,
   REFERENCE_IMAGE_MODELS,
   SAFETY_SETTINGS,
+  SHAPE_ASPECT_MODELS,
+  SHAPE_ASPECT_RATIOS,
 } from './gemini_config';
 import { build_image_prompt } from './prompts';
 import { ProviderError, type ImageProvider, type ImageRequest } from './types';
@@ -35,6 +37,7 @@ function build_input(req: ImageRequest, use_reference: boolean): object[] {
 /** Creates a Gemini image provider for the given key and model. */
 export function create_gemini_image(api_key: string, model: string): ImageProvider {
   const supports_reference = REFERENCE_IMAGE_MODELS.includes(model);
+  const supports_shape = SHAPE_ASPECT_MODELS.includes(model);
 
   /**
    * Sends one image request without the Api-Revision header: Google rejects it in the browser's
@@ -47,7 +50,7 @@ export function create_gemini_image(api_key: string, model: string): ImageProvid
       response_format: {
         type: 'image',
         mime_type: IMAGE_MIME_TYPE,
-        aspect_ratio: IMAGE_ASPECT_RATIO,
+        aspect_ratio: supports_shape && req.shape ? SHAPE_ASPECT_RATIOS[req.shape] : IMAGE_ASPECT_RATIO,
         image_size: IMAGE_SIZE,
       },
       ...(with_safety_settings ? { safety_settings: SAFETY_SETTINGS } : {}),

@@ -3,8 +3,9 @@ import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type Key
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { PageView } from '../components/PageView';
 import { DiLabBadge, HomeBrand, MadeByLine, Shell } from '../components/Shell';
+import { ShapeMenu } from '../components/ShapeMenu';
 import { StyleMenu } from '../components/StyleMenu';
-import { FONT_IDS, FONT_SIZE_MAX, FONT_SIZE_MIN, LAYOUT_IDS, TEXT_COLORS } from '../constants';
+import { FONT_IDS, FONT_SIZE_MAX, FONT_SIZE_MIN, LAYOUT_IDS, PAGE_SHAPE_MM, TEXT_COLORS } from '../constants';
 import { EditableImageBox } from '../editor/EditableImageBox';
 import { EditableTextBox } from '../editor/EditableTextBox';
 import { page_name, useT } from '../i18n';
@@ -12,7 +13,7 @@ import { generate_page_image, needs_style_redraw, practice_restyle } from '../pr
 import type { ProviderError } from '../providers/types';
 import { apply_layout } from '../store/book_model';
 import { insert_blank_page, move_page, remove_page, useBook } from '../store/book_store';
-import { clean_custom_style } from '../store/book_model';
+import { clean_custom_style, page_aspect } from '../store/book_model';
 import type { ArtStyle, BookPage, BoxBackground, BoxKind, FontId, LayoutId, PageImage, Rect, TextAlign, TextBox } from '../types';
 import { prepare_upload_image } from '../utils/image';
 import { useElementSize } from '../utils/use_element_size';
@@ -125,7 +126,13 @@ export function EditorScreen() {
 
   const page = book?.pages[current_page];
   if (!book || !page) return null;
-  const size = Math.max(0, Math.min(canvas_box.width - CANVAS_EDGE_SPACE * 2, canvas_box.height - CANVAS_TOP_SPACE - CANVAS_EDGE_SPACE, PREVIEW_MAX_WIDTH));
+  const aspect = page_aspect(book.page_shape);
+  const shape_mm = PAGE_SHAPE_MM[book.page_shape];
+  // Page width: as large as fits both the width and the height left for the preview.
+  const size = Math.max(
+    0,
+    Math.min(canvas_box.width - CANVAS_EDGE_SPACE * 2, (canvas_box.height - CANVAS_TOP_SPACE - CANVAS_EDGE_SPACE) / aspect, PREVIEW_MAX_WIDTH),
+  );
   const name = page_name(t, current_page);
   const box = page.text_box;
 
@@ -224,6 +231,7 @@ export function EditorScreen() {
       key={`image-${page.id}`}
       page={page}
       size={size}
+      aspect={aspect}
       placeholder={`${name} ${t('editor.image_placeholder')}`}
       image_alt={t('pictures.image_alt', { name })}
       selected={selected_box === 'image'}
@@ -236,6 +244,7 @@ export function EditorScreen() {
       key={`text-${page.id}`}
       page={page}
       size={size}
+      aspect={aspect}
       name={name}
       selected={selected_box === 'text'}
       on_select={() => set_selected_box('text')}
@@ -263,18 +272,7 @@ export function EditorScreen() {
               <UndoIcon flipped />
               <span className="btn-text">{t('editor.redo')}</span>
             </button>
-            <button
-              type="button"
-              className={needs_redraw ? 'btn small primary attention' : 'btn small'}
-              onClick={() => void handle_regenerate()}
-              disabled={is_drawing}
-            >
-              {t(needs_redraw ? 'pictures.redo_style' : 'editor.regen')}
-            </button>
-            <button type="button" className="btn small" onClick={() => file_input_ref.current?.click()} disabled={is_drawing}>
-              {t('editor.change_image')}
-            </button>
-            <input ref={file_input_ref} type="file" accept="image/*" hidden onChange={(event) => void handle_upload(event)} data-testid="editor-upload-input" />
+            <ShapeMenu value={book.page_shape} on_change={(shape) => useBook.getState().set_page_shape(shape)} />
           </div>
           <div className="header-right">
             <span className="pill ok editor-badge">{t('editor.no_ai_badge')}</span>
@@ -313,7 +311,7 @@ export function EditorScreen() {
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={(event) => handle_drop(event, index)}
                 onClick={() => select_page(index)}
-                style={item.image ? { backgroundImage: `url("${item.image.data_url}")` } : undefined}
+                style={{ aspectRatio: `${shape_mm.w} / ${shape_mm.h}`, ...(item.image ? { backgroundImage: `url("${item.image.data_url}")` } : {}) }}
               >
                 <span className="thumb-label">{page_name(t, index)}</span>
               </button>
@@ -345,7 +343,7 @@ export function EditorScreen() {
             </Notice>
           )}
           <div ref={canvas_ref} className="editor-canvas-fit">
-            <PageView page={page} size={size} hide_text hide_image class_name="page-shadow">
+            <PageView page={page} size={size} shape={book.page_shape} hide_text hide_image class_name="page-shadow">
               {page.front === 'image' ? [text_box_view, image_box_view] : [image_box_view, text_box_view]}
             </PageView>
           </div>
@@ -353,6 +351,7 @@ export function EditorScreen() {
         </section>
 
         <aside className="editor-settings" aria-label={t('editor.settings')}>
+          <input ref={file_input_ref} type="file" accept="image/*" hidden onChange={(event) => void handle_upload(event)} data-testid="editor-upload-input" />
           <div className="editor-tabs" role="tablist" aria-label={t('editor.settings')}>
             {BOX_KINDS.map((tab) => (
               <button
@@ -452,6 +451,19 @@ export function EditorScreen() {
             </div>
           ) : (
             <div className="editor-panel" role="tabpanel" id="editor-panel-image" aria-labelledby="editor-tab-image">
+              <div className="editor-picture-actions">
+                <button
+                  type="button"
+                  className={needs_redraw ? 'btn small primary attention' : 'btn small'}
+                  onClick={() => void handle_regenerate()}
+                  disabled={is_drawing}
+                >
+                  {t(needs_redraw ? 'pictures.redo_style' : 'editor.regen')}
+                </button>
+                <button type="button" className="btn small" onClick={() => file_input_ref.current?.click()} disabled={is_drawing}>
+                  {t('editor.change_image')}
+                </button>
+              </div>
               <div className="stack tight">
                 <span id="layout-label" className="editor-label">
                   {t('editor.layout')}

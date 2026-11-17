@@ -4,7 +4,17 @@ import { CUSTOM_STYLE_MAX_LENGTH, DEFAULT_PAGE_COUNT, LAYOUT_IMAGE_RECT, LAYOUT_
 import { build_demo_book } from '../data/demo_book';
 import { parse_book_file, serialize_book } from '../storage/book_file';
 import type { Book } from '../types';
-import { apply_layout, clamp_page_count, clean_custom_style, effective_style, make_story_page, normalize_book, style_key } from './book_model';
+import {
+  apply_layout,
+  clamp_page_count,
+  clean_custom_style,
+  effective_style,
+  make_story_page,
+  normalize_book,
+  page_aspect,
+  reshape_pages,
+  style_key,
+} from './book_model';
 
 describe('clamp_page_count', () => {
   it('keeps counts in range and rounds them', () => {
@@ -122,5 +132,41 @@ describe('picture boxes', () => {
     const placed = apply_layout(page, 'text_left');
     expect(placed.image_box).toEqual(LAYOUT_IMAGE_RECT.text_left);
     expect(placed.text_box).toMatchObject(LAYOUT_TEXT_RECT.text_left);
+  });
+});
+
+describe('book shape', () => {
+  it('older books open as square; the shape survives save and load', () => {
+    const { page_shape: _shape, ...older } = build_demo_book('ko');
+    expect(parse_book_file(JSON.stringify(older)).page_shape).toBe('square');
+    const tall = { ...build_demo_book('ko'), page_shape: 'portrait' as const };
+    expect(parse_book_file(serialize_book(tall)).page_shape).toBe('portrait');
+    expect(normalize_book({ ...tall, page_shape: 'round' as unknown as 'square' }).page_shape).toBe('square');
+  });
+
+  it('a picture that keeps its shape gets a new height so it looks the same on the new page', () => {
+    const page = { ...make_story_page(), image_box: { x: 10, y: 10, w: 60, h: 40 } };
+    const [tall] = reshape_pages([page], 'square', 'portrait');
+    const on_screen = (box: { w: number; h: number }, shape: 'square' | 'portrait') => box.w / (box.h * page_aspect(shape));
+    expect(on_screen(tall!.image_box, 'portrait')).toBeCloseTo(on_screen(page.image_box, 'square'));
+    expect(tall!.image_box.w).toBe(60);
+  });
+
+  it('a picture filling the page, a free picture, and text boxes keep their percent boxes', () => {
+    const full = { ...make_story_page(), image_box: { x: 0, y: 0, w: 100, h: 100 } };
+    const free = { ...make_story_page(), image_box: { x: 10, y: 10, w: 60, h: 40 }, image_lock: false };
+    const [full_after, free_after] = reshape_pages([full, free], 'square', 'landscape');
+    expect(full_after!.image_box).toEqual(full.image_box);
+    expect(free_after!.image_box).toEqual(free.image_box);
+    expect(free_after!.text_box).toEqual(free.text_box);
+  });
+
+  it('a picture that would grow past the page shrinks and stays on the page', () => {
+    const page = { ...make_story_page(), image_box: { x: 5, y: 20, w: 90, h: 80 } };
+    const [wide] = reshape_pages([page], 'portrait', 'landscape');
+    const box = wide!.image_box;
+    expect(box.y + box.h).toBeLessThanOrEqual(100 + 1e-9);
+    expect(box.x + box.w).toBeLessThanOrEqual(100 + 1e-9);
+    expect(box.w / (box.h * page_aspect('landscape'))).toBeCloseTo(90 / (80 * page_aspect('portrait')));
   });
 });

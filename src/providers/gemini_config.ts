@@ -1,4 +1,5 @@
 // Gemini connection settings. Sources for these values are in docs/PROVIDER_NOTES.md (checked 2026-11-14).
+import type { PageShape } from '../types';
 
 /** The real providers send requests to this origin only. */
 export const GEMINI_ORIGIN = 'https://generativelanguage.googleapis.com';
@@ -15,6 +16,9 @@ export const IMAGE_MODEL_CHOICES = ['gemini-3.1-flash-lite-image', 'gemini-nano-
 export const REFERENCE_IMAGE_MODELS = ['gemini-nano-banana-2.1', 'gemini-3.1-flash-image'];
 
 export const IMAGE_ASPECT_RATIO = '1:1';
+/** Image models whose docs list the 3:4 and 4:3 ratios (checked 2026-11-17); other models stay square. */
+export const SHAPE_ASPECT_MODELS = ['gemini-nano-banana-2.1', 'gemini-3.1-flash-image'];
+export const SHAPE_ASPECT_RATIOS: Record<PageShape, string> = { square: '1:1', portrait: '3:4', landscape: '4:3' };
 export const IMAGE_SIZE = '1K';
 export const IMAGE_MIME_TYPE = 'image/png';
 

@@ -1,14 +1,15 @@
 // Step 6 pictures: each page gets an AI image, an uploaded image, or a copied image prompt.
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ChangeEvent } from 'react';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { StepShell } from '../components/Shell';
-import { BATCH_IMAGE_GAP_MS } from '../constants';
+import { BATCH_IMAGE_GAP_MS, PAGE_SHAPE_MM } from '../constants';
 import { page_name, useT } from '../i18n';
 import { get_image_provider } from '../providers';
 import { StyleMenu } from '../components/StyleMenu';
 import { full_image_prompt, generate_page_image, needs_style_redraw, practice_restyle } from '../providers/make_image';
 import type { ProviderError } from '../providers/types';
 import type { ArtStyle } from '../types';
+import { page_aspect } from '../store/book_model';
 import { useBook } from '../store/book_store';
 import { useSettings } from '../store/settings_store';
 import { prepare_upload_image } from '../utils/image';
@@ -109,6 +110,7 @@ export function PicturesScreen() {
   const is_compact = columns >= COMPACT_LIST_COLUMNS;
   const current_name = page_name(t, index);
   const needs_redraw = needs_style_redraw(book, index);
+  const shape_mm = PAGE_SHAPE_MM[book.page_shape];
 
   const clear_messages = () => {
     set_notice(null);
@@ -301,7 +303,7 @@ export function PicturesScreen() {
             />
           </div>
 
-          <div className="pic-middle">
+          <div className="pic-middle" style={{ '--page-ratio': `${shape_mm.w} / ${shape_mm.h}`, '--page-aspect': page_aspect(book.page_shape) } as CSSProperties}>
             <div className="pic-middle-row">
               {busy_index === index ? (
                 <div className="pic-frame working">

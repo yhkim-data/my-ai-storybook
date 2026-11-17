@@ -185,6 +185,7 @@ test.describe('Editor', () => {
     const styles_before = await thumbs.evaluateAll((elements) => elements.map((element) => element.getAttribute('style')));
     expect(styles_before.every((style) => (style ?? '').includes('background-image'))).toBe(true);
 
+    await page.getByRole('tab', { name: tr(LANG, 'editor.tab.image') }).click();
     const regen = page.getByRole('button', { name: tr(LANG, 'editor.regen'), exact: true });
     await regen.click();
     await expect(regen).toBeEnabled();

@@ -1,5 +1,5 @@
 // App-wide constants and fixed option lists.
-import type { AgeBand, FontId, LayoutId, PageCount, Rect, Screen, StyleId, TextBox } from './types';
+import type { AgeBand, FontId, LayoutId, PageCount, PageShape, Rect, Screen, StyleId, TextBox } from './types';
 
 /** Order of the step screens (steps 1-8). */
 export const STEP_SCREENS: Screen[] = ['start', 'seed', 'plot', 'pages', 'style', 'pictures', 'editor', 'finish'];
@@ -48,8 +48,14 @@ export const FONT_SIZE_MAX = 48;
 export const DEFAULT_FONT_SIZE = 20;
 export const COVER_FONT_SIZE = 36;
 
-/** Square 200 mm page with a 3 mm print bleed. */
-export const PAGE_MM = 200;
+/** Page trim size in mm for each book shape (square 200 mm; tall and wide keep 3:4 and 4:3), with a 3 mm print bleed. */
+export const PAGE_SHAPES: PageShape[] = ['square', 'portrait', 'landscape'];
+export const DEFAULT_PAGE_SHAPE: PageShape = 'square';
+export const PAGE_SHAPE_MM: Record<PageShape, { w: number; h: number }> = {
+  square: { w: 200, h: 200 },
+  portrait: { w: 180, h: 240 },
+  landscape: { w: 240, h: 180 },
+};
 export const BLEED_MM = 3;
 
 /** Image area per layout, in percent of the page. */

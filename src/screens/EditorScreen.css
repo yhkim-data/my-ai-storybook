@@ -60,7 +60,6 @@
 }
 .editor-thumb {
   position: relative;
-  aspect-ratio: 1 / 1;
   width: 100%;
   padding: 0;
   border: 1px solid var(--line);
@@ -288,6 +287,17 @@
   color: var(--primary-dark);
   box-shadow: 0 1px 4px rgba(23, 35, 58, 0.15);
 }
+/* Picture actions at the top of the picture tab. */
+.editor-picture-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.editor-picture-actions .btn {
+  flex: 1 1 auto;
+  padding: 0 10px;
+  font-size: 14px;
+}
 /* Front/back order for the selected box. */
 .editor-order {
   display: grid;
@@ -460,3 +470,49 @@
     aspect-ratio: 1 / 1;
   }
 }
+/* Book shape menu */
+.shape-menu {
+  position: relative;
+}
+.shape-menu-button {
+  gap: 6px;
+}
+.shape-menu-list {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 200px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: 0 10px 30px rgba(23, 35, 58, 0.18);
+}
+.shape-menu-list:focus-visible {
+  outline: 3px solid var(--primary);
+}
+.shape-menu-list.up {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+.shape-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.shape-menu-option.active {
+  background: var(--bg);
+}
+.shape-menu-option[aria-selected='true'] {
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+

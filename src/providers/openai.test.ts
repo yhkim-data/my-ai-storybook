@@ -150,6 +150,21 @@ describe('OpenAI image', () => {
     expect(JSON.stringify(body)).not.toContain(TEST_KEY);
   });
 
+  it('a full-page picture is asked for in the page shape', async () => {
+    const mock = stub_fetch(
+      json_response({ data: [{ b64_json: PNG_BASE64 }] }),
+      json_response({ data: [{ b64_json: PNG_BASE64 }] }),
+      json_response({ data: [{ b64_json: PNG_BASE64 }] }),
+    );
+    const provider = create_openai_image(TEST_KEY, IMAGE_MODEL);
+    await provider.generate({ ...IMAGE_REQ, shape: 'portrait' });
+    await provider.generate({ ...IMAGE_REQ, shape: 'landscape' });
+    await provider.generate(IMAGE_REQ);
+    expect(read_call(mock, 0).body.size).toBe('1024x1536');
+    expect(read_call(mock, 1).body.size).toBe('1536x1024');
+    expect(read_call(mock, 2).body.size).toBe('1024x1024');
+  });
+
   it('no image is blocked', async () => {
     stub_fetch(json_response({ data: [] }));
     await expect(create_openai_image(TEST_KEY, IMAGE_MODEL).generate(IMAGE_REQ)).rejects.toMatchObject({ kind: 'blocked' });

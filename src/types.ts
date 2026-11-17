@@ -14,6 +14,8 @@ export type LayoutId = 'image_top' | 'text_top' | 'image_left' | 'text_left' | '
 export type FontId = 'round' | 'plain' | 'hand';
 export type BoxBackground = 'none' | 'white' | 'bubble';
 export type TextAlign = 'left' | 'center' | 'right';
+/** Book shape: width to height 1:1, 3:4 (tall) or 4:3 (wide). */
+export type PageShape = 'square' | 'portrait' | 'landscape';
 /** The two boxes on a page. */
 export type BoxKind = 'text' | 'image';
 /** Whether the AI or the user writes the text. */
@@ -122,6 +124,8 @@ export interface Book {
   style_id: ArtStyle;
   /** The user's own style description, used when style_id is 'custom' (one line, at most CUSTOM_STYLE_MAX_LENGTH). */
   custom_style: string;
+  /** Shape of every page, cover included. */
+  page_shape: PageShape;
   /** pages[0] is the cover; its text is the book title. The rest are story pages. */
   pages: BookPage[];
   /** Last step screen the user was on. */

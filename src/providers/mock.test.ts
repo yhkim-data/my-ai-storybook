@@ -7,7 +7,7 @@ import type { ImageRequest, ProviderErrorKind } from './types';
 import { ProviderError } from './types';
 import { blob_to_data_url } from '../utils/image';
 import { get_image_provider, get_text_provider } from './index';
-import { full_image_prompt, generate_page_image, needs_style_redraw } from './make_image';
+import { full_image_prompt, generate_page_image, needs_style_redraw, request_shape } from './make_image';
 import { reset_mock_failures } from './mock_failure';
 import { create_mock_image } from './mock_image';
 import { create_mock_text } from './mock_text';
@@ -233,4 +233,12 @@ describe('page image generation', () => {
     // Each request counts as one AI use.
     expect(useSettings.getState().usage_count).toBe(5);
   });
+
+  it('only full-page pictures ask for the book shape', () => {
+    const book = { ...build_demo_book('ko'), page_shape: 'portrait' as const };
+    expect(book.pages[0]?.layout).toBe('full');
+    expect(request_shape(book, 0)).toBe('portrait');
+    expect(request_shape(book, 1)).toBeUndefined();
+  });
 });
+
