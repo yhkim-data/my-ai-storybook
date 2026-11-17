@@ -55,7 +55,7 @@ for (const { lang, label } of LANG_CASES) {
     await exact_button(page, tr(lang, 'common.home')).click();
 
     await page.getByRole('button', { name: tr(lang, 'start.rights_link') }).click();
-    await expect(page.getByRole('heading', { name: tr(lang, 'rights.heading') })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: tr(lang, 'rights.title') })).toBeVisible();
     await check_screen(page, lang, '권리 안내');
     await exact_button(page, tr(lang, 'common.home')).click();
 
