@@ -4,7 +4,7 @@ import { CUSTOM_STYLE_MAX_LENGTH, DEFAULT_PAGE_COUNT, PAGE_COUNT_MAX, PAGE_COUNT
 import { build_demo_book } from '../data/demo_book';
 import { parse_book_file, serialize_book } from '../storage/book_file';
 import type { Book } from '../types';
-import { clamp_page_count, clean_custom_style, normalize_book } from './book_model';
+import { clamp_page_count, clean_custom_style, effective_style, normalize_book, style_key } from './book_model';
 
 describe('clamp_page_count', () => {
   it('keeps counts in range and rounds them', () => {
@@ -57,5 +57,29 @@ describe('style fields', () => {
   it('clean_custom_style keeps one line', () => {
     expect(clean_custom_style('따뜻한\r\n  파스텔')).toBe('따뜻한 파스텔');
     expect(clean_custom_style(3)).toBe('');
+  });
+});
+
+describe('page styles', () => {
+  it('a page style is kept through save and load; a broken one is dropped', () => {
+    const book = build_demo_book('ko');
+    const styled = {
+      ...book,
+      pages: book.pages.map((page, index) =>
+        index === 1 ? { ...page, style: 'custom' as const, custom_style: '수묵화\n느낌' } : index === 2 ? { ...page, style: 'oil' as unknown as 'clay' } : page,
+      ),
+    };
+    const opened = parse_book_file(serialize_book(styled));
+    expect(opened.pages[1]?.style).toBe('custom');
+    expect(opened.pages[1]?.custom_style).toBe('수묵화 느낌');
+    expect(opened.pages[2]?.style).toBeUndefined();
+    expect(opened.pages[3]?.style).toBeUndefined();
+  });
+
+  it('effective_style uses the page style first, then the book style', () => {
+    const book = { ...build_demo_book('ko'), style_id: 'crayon' as const };
+    expect(effective_style(book, book.pages[1])).toEqual({ style_id: 'crayon', custom_style: '' });
+    expect(effective_style(book, { ...book.pages[1]!, style: 'pixel' })).toEqual({ style_id: 'pixel', custom_style: '' });
+    expect(style_key({ style_id: 'custom', custom_style: ' 파스텔 ' })).toBe('custom:파스텔');
   });
 });
