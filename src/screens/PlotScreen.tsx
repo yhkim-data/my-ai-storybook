@@ -1,4 +1,4 @@
-// Step 3 plot screen: pick and edit one of three AI plots, or write your own.
+// Step 3 plot screen: pick one of three AI plots on the left and edit it on the right, or write your own.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { StepShell } from '../components/Shell';
@@ -98,94 +98,97 @@ export function PlotScreen() {
   );
 
   return (
-    <StepShell screen="plot" on_prev={() => go('seed')} on_next={handle_next}>
+    <StepShell screen="plot" width="wide" on_prev={() => go('seed')} on_next={handle_next}>
       <h1 className="title-lg">{t('plot.heading')}</h1>
 
-      {is_busy && <Busy>{t('plot.loading')}</Busy>}
-      {error && !is_busy && <AiErrorNotice error={error} on_retry={() => void run_suggest()} extra_action={self_button} />}
+      <div className="plot-layout">
+        <div className="plot-col">
+          {is_busy && <Busy>{t('plot.loading')}</Busy>}
+          {error && !is_busy && <AiErrorNotice error={error} on_retry={() => void run_suggest()} extra_action={self_button} />}
 
-      {is_self && (
-        <div className="stack">
-          <p className="hint">{t(has_provider ? 'plot.self_hint' : 'plot.no_ai')}</p>
-          {has_provider && (
-            <div className="row">
-              <button type="button" className="btn" onClick={() => set_write_mode('ai')}>
-                {t('plot.ask_ai')}
-              </button>
+          {is_self && (
+            <div className="stack">
+              <p className="hint">{t(has_provider ? 'plot.self_hint' : 'plot.no_ai')}</p>
+              {has_provider && (
+                <div className="row">
+                  <button type="button" className="btn" onClick={() => set_write_mode('ai')}>
+                    {t('plot.ask_ai')}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!is_self && book.plots.length > 0 && (
+            <div className="stack">
+              <p className="hint">{t('plot.pick_hint')}</p>
+              <div className="plot-cards">
+                {book.plots.map((plot, index) => (
+                  <button
+                    key={plot.id}
+                    type="button"
+                    className="card selectable plot-card"
+                    aria-pressed={chosen?.id === plot.id}
+                    aria-label={t('plot.option_aria', { n: index + 1, title: plot.title })}
+                    onClick={() => {
+                      clear_need_title();
+                      choose_plot({ ...plot });
+                    }}
+                  >
+                    <span className="plot-card-title">{plot.title}</span>
+                    <span className="plot-card-summary">{plot.summary}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="row">
+                <button type="button" className="btn" onClick={() => void run_suggest()} disabled={is_busy}>
+                  {t('plot.again')}
+                </button>
+                <button type="button" className="btn" onClick={switch_to_self}>
+                  {t('plot.self')}
+                </button>
+              </div>
             </div>
           )}
         </div>
-      )}
 
-      {!is_self && book.plots.length > 0 && (
-        <div className="stack">
-          <p className="hint">{t('plot.pick_hint')}</p>
-          <div className="plot-cards">
-            {book.plots.map((plot, index) => (
-              <button
-                key={plot.id}
-                type="button"
-                className="card selectable"
-                aria-pressed={chosen?.id === plot.id}
-                aria-label={t('plot.option_aria', { n: index + 1, title: plot.title })}
-                onClick={() => {
-                  clear_need_title();
-                  choose_plot({ ...plot });
-                }}
-              >
-                <span className="plot-card-title">{plot.title}</span>
-                <span className="plot-card-summary">{plot.summary}</span>
-              </button>
-            ))}
+        {show_editor && (
+          <div className="plot-col plot-editor">
+            <div className="plot-field">
+              <label htmlFor="plot-title" className="field-label">
+                {t('plot.title_label')}
+              </label>
+              <input
+                id="plot-title"
+                type="text"
+                className="text-input"
+                maxLength={TITLE_MAX_LENGTH}
+                placeholder={t('plot.title_placeholder')}
+                value={chosen?.title ?? ''}
+                onChange={(event) => edit_chosen({ title: event.target.value })}
+              />
+            </div>
+            <div className="plot-field plot-field-grow">
+              <label htmlFor="plot-summary" className="field-label">
+                {t('plot.summary_label')}
+              </label>
+              <textarea
+                id="plot-summary"
+                className="text-area plot-summary"
+                rows={SUMMARY_ROWS}
+                placeholder={t('plot.summary_placeholder')}
+                value={chosen?.summary ?? ''}
+                onChange={(event) => edit_chosen({ summary: event.target.value })}
+              />
+            </div>
+            {need_title && (
+              <Notice kind="warn" role="alert">
+                {t('plot.need_title')}
+              </Notice>
+            )}
           </div>
-          <div className="row">
-            <button type="button" className="btn" onClick={() => void run_suggest()} disabled={is_busy}>
-              {t('plot.again')}
-            </button>
-            <button type="button" className="btn" onClick={switch_to_self}>
-              {t('plot.self')}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {show_editor && (
-        <div className="stack loose">
-          <div className="plot-field">
-            <label htmlFor="plot-title" className="field-label">
-              {t('plot.title_label')}
-            </label>
-            <input
-              id="plot-title"
-              type="text"
-              className="text-input"
-              maxLength={TITLE_MAX_LENGTH}
-              placeholder={t('plot.title_placeholder')}
-              value={chosen?.title ?? ''}
-              onChange={(event) => edit_chosen({ title: event.target.value })}
-            />
-          </div>
-          <div className="plot-field">
-            <label htmlFor="plot-summary" className="field-label">
-              {t('plot.summary_label')}
-            </label>
-            <textarea
-              id="plot-summary"
-              className="text-area"
-              rows={SUMMARY_ROWS}
-              placeholder={t('plot.summary_placeholder')}
-              value={chosen?.summary ?? ''}
-              onChange={(event) => edit_chosen({ summary: event.target.value })}
-            />
-          </div>
-        </div>
-      )}
-
-      {need_title && (
-        <Notice kind="warn" role="alert">
-          {t('plot.need_title')}
-        </Notice>
-      )}
+        )}
+      </div>
     </StepShell>
   );
 }

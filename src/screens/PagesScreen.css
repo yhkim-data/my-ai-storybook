@@ -1,23 +1,93 @@
-/* Page split screen styles */
-.pages-card-name {
-  font-size: 18px;
-  font-weight: 700;
-}
-.pages-card-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
-}
-.pages-field {
+/* Page split screen: page list on the left, the chosen page's two inputs on the right. */
+.pages-top {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
-
-/* Wide screens put the text and image description side by side. */
-@media (min-width: 721px) {
-  .pages-card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
+.pages-layout {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  gap: clamp(16px, 2.4vw, 28px);
+}
+.pages-list {
+  display: grid;
+  gap: 6px;
+}
+.pages-item {
+  white-space: nowrap;
+  min-height: clamp(40px, 5.4vh, 48px);
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 500;
+}
+.pages-item svg {
+  flex: none;
+  color: var(--ok-text);
+}
+.pages-item[aria-current='true'] {
+  border: 2px solid var(--primary);
+  background: var(--selected-bg);
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+.pages-main {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 2vh, 16px);
+}
+/* Labels share the first row and inputs the second, so both inputs are always the same height. */
+.pages-fields {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    'text-label desc-label'
+    'text desc';
+  gap: 10px clamp(14px, 2vw, 20px);
+}
+.pages-label-text {
+  grid-area: text-label;
+}
+.pages-label-desc {
+  grid-area: desc-label;
+}
+.pages-input-text {
+  grid-area: text;
+}
+.pages-input-desc {
+  grid-area: desc;
+}
+.text-area.pages-input {
+  height: 100%;
+  min-height: 120px;
+  resize: none;
+}
+@media (max-width: 599px) {
+  .pages-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pages-list {
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)) !important;
+  }
+  .pages-fields {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas: 'text-label' 'text' 'desc-label' 'desc';
+  }
+  .text-area.pages-input {
+    height: auto;
   }
 }

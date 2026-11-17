@@ -9,13 +9,13 @@ import { book_file_name, book_file_stem, download_blob, serialize_book } from '.
 import { useBook } from '../store/book_store';
 import { go_home } from '../store/navigation';
 import type { Book } from '../types';
-import { useElementWidth } from '../utils/use_element_width';
+import { useElementSize } from '../utils/use_element_size';
 import './FinishScreen.css';
 
 /** Max viewer page width in px. */
 const VIEWER_MAX_SIZE = 560;
-/** Width in px used before the container is measured. */
-const VIEWER_INITIAL_SIZE = 420;
+/** Size in px used before the container is measured. */
+const VIEWER_INITIAL = { width: 420, height: 420 };
 /** In characters. */
 const AUTHOR_MAX_LENGTH = 30;
 const BOOK_FILE_MIME = 'application/json';
@@ -54,8 +54,8 @@ function DownloadChoice({ test_id, title, desc, is_primary = false, disabled, on
 function BookViewer({ book }: { book: Book }) {
   const t = useT();
   const [index, set_index] = useState(0);
-  const [wrap_ref, wrap_width] = useElementWidth<HTMLDivElement>(VIEWER_INITIAL_SIZE);
-  const size = Math.min(wrap_width, VIEWER_MAX_SIZE);
+  const [wrap_ref, wrap_box] = useElementSize<HTMLDivElement>(VIEWER_INITIAL);
+  const size = Math.min(wrap_box.width, wrap_box.height, VIEWER_MAX_SIZE);
   const total = book.pages.length + 1;
   const last = total - 1;
   const page = index < book.pages.length ? book.pages[index] : undefined;

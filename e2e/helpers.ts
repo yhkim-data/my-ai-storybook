@@ -155,9 +155,15 @@ export async function write_plot_by_hand(page: Page, lang: Lang, title: string, 
   await expect(page.getByRole('heading', { name: tr(lang, 'pages.heading') })).toBeVisible();
 }
 
+/** Shows story page n (1-based) on the page split screen. */
+export async function open_story_page(page: Page, n: number): Promise<void> {
+  await page.locator('.pages-item').nth(n - 1).click();
+  await expect(page.locator(`#page-text-${n}`)).toBeVisible();
+}
+
 /** Waits for page text, then goes on to the art-style screen. */
 export async function pass_pages(page: Page, lang: Lang): Promise<void> {
-  await expect(page.locator('#page-text-1')).toBeVisible();
+  await expect(page.locator('textarea[id^="page-text-"]')).toBeVisible();
   await exact_button(page, tr(lang, 'common.next')).click();
   await expect(page.getByRole('heading', { name: tr(lang, 'style.heading') })).toBeVisible();
 }

@@ -1,26 +1,60 @@
-/* Plot screen styles */
+/* Plot screen: plot cards on the left, the chosen plot's title and summary on the right. */
+.plot-layout {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(14px, 2.6vh, 24px);
+}
+.plot-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vh, 20px);
+}
 .plot-cards {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+}
+.card.plot-card {
+  padding: clamp(12px, 2vh, 18px) 18px;
 }
 .plot-card-title {
   display: block;
-  margin-bottom: 8px;
-  font-size: 20px;
+  margin-bottom: 6px;
+  font-size: clamp(18px, 2.5vh, 20px);
   font-weight: 700;
 }
+/* Cards show the start of the summary; the chosen plot's full summary is in the editor. */
 .plot-card-summary {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 .plot-field {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
+.plot-field-grow {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.text-area.plot-summary {
+  flex: 1 1 auto;
+  min-height: 84px;
+  resize: none;
+}
+@media (min-width: 700px) {
+  .plot-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(24px, 3vw, 40px);
+  }
+}
 @media (max-width: 720px) {
   .plot-card-title {
     font-size: 19px;

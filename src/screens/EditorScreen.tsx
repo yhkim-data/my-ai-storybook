@@ -12,11 +12,36 @@ import { apply_layout } from '../store/book_model';
 import { insert_blank_page, move_page, remove_page, useBook } from '../store/book_store';
 import type { BookPage, BoxBackground, FontId, LayoutId, PageImage, Rect, TextAlign, TextBox } from '../types';
 import { prepare_upload_image } from '../utils/image';
-import { useElementWidth } from '../utils/use_element_width';
+import { useElementSize } from '../utils/use_element_size';
 import './EditorScreen.css';
 
 /** Max page preview width in px. */
-const PREVIEW_MAX_WIDTH = 560;
+const PREVIEW_MAX_WIDTH = 640;
+/** Preview size used before the canvas is measured. */
+const PREVIEW_INITIAL = { width: 560, height: 560 };
+/** Room (px) kept above the page for the text box move handle, and around it for the corner handles. */
+const CANVAS_TOP_SPACE = 36;
+const CANVAS_EDGE_SPACE = 12;
+const ICON_SIZE = 18;
+
+/** Columns of page thumbnails, so long books still fit on one screen. */
+function thumb_columns(count: number): number {
+  const TWO_COLUMNS_UP_TO = 6;
+  const THREE_COLUMNS_UP_TO = 12;
+  if (count <= TWO_COLUMNS_UP_TO) return 2;
+  return count <= THREE_COLUMNS_UP_TO ? 3 : 4;
+}
+
+/** Small arrow and minus icons for the page order buttons. */
+function OrderIcon({ kind }: { kind: 'up' | 'down' | 'remove' }) {
+  return (
+    <svg aria-hidden="true" width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      {kind === 'up' && <path d="M11 4L6 9l5 5" />}
+      {kind === 'down' && <path d="M7 4l5 5-5 5" />}
+      {kind === 'remove' && <path d="M4 9h10" />}
+    </svg>
+  );
+}
 const BACKGROUNDS: BoxBackground[] = ['none', 'white', 'bubble'];
 const ALIGNS: TextAlign[] = ['left', 'center', 'right'];
 /** A page can be removed only when the book (cover included) has more pages than this. */
@@ -68,7 +93,7 @@ export function EditorScreen() {
   const can_undo = useBook((state) => state.undo_stack.length > 0);
   const can_redo = useBook((state) => state.redo_stack.length > 0);
   const { go, set_current_page, edit_pages, undo, redo } = useBook.getState();
-  const [canvas_ref, canvas_width] = useElementWidth<HTMLDivElement>(PREVIEW_MAX_WIDTH);
+  const [canvas_ref, canvas_box] = useElementSize<HTMLDivElement>(PREVIEW_INITIAL);
   const file_input_ref = useRef<HTMLInputElement | null>(null);
   const drag_from_ref = useRef<number | null>(null);
   const [is_drawing, set_is_drawing] = useState(false);
@@ -94,7 +119,7 @@ export function EditorScreen() {
 
   const page = book?.pages[current_page];
   if (!book || !page) return null;
-  const size = Math.min(canvas_width, PREVIEW_MAX_WIDTH);
+  const size = Math.max(0, Math.min(canvas_box.width - CANVAS_EDGE_SPACE * 2, canvas_box.height - CANVAS_TOP_SPACE - CANVAS_EDGE_SPACE, PREVIEW_MAX_WIDTH));
   const name = page_name(t, current_page);
   const box = page.text_box;
 
@@ -212,7 +237,7 @@ export function EditorScreen() {
       <div className="editor-layout">
         <nav className="editor-pages" aria-label={t('editor.order')}>
           <span className="editor-side-title">{t('editor.order')}</span>
-          <div className="editor-thumbs">
+          <div className="editor-thumbs" style={{ gridTemplateColumns: `repeat(${thumb_columns(book.pages.length)}, minmax(0, 1fr))` }}>
             {book.pages.map((item, index) => (
               <button
                 key={item.id}
@@ -236,14 +261,14 @@ export function EditorScreen() {
             {t('editor.add_page')}
           </button>
           <div className="editor-page-actions">
-            <button type="button" className="btn small" onClick={() => shift_page(-1)} disabled={current_page <= 1}>
-              {t('editor.move_up')}
+            <button type="button" className="btn small icon-btn" aria-label={t('editor.move_up')} title={t('editor.move_up')} onClick={() => shift_page(-1)} disabled={current_page <= 1}>
+              <OrderIcon kind="up" />
             </button>
-            <button type="button" className="btn small" onClick={() => shift_page(1)} disabled={is_cover || current_page >= book.pages.length - 1}>
-              {t('editor.move_down')}
+            <button type="button" className="btn small icon-btn" aria-label={t('editor.move_down')} title={t('editor.move_down')} onClick={() => shift_page(1)} disabled={is_cover || current_page >= book.pages.length - 1}>
+              <OrderIcon kind="down" />
             </button>
-            <button type="button" className="btn small danger" onClick={() => edit_pages((pages) => remove_page(pages, current_page))} disabled={!can_remove}>
-              {t('editor.remove_page')}
+            <button type="button" className="btn small danger icon-btn" aria-label={t('editor.remove_page')} title={t('editor.remove_page')} onClick={() => edit_pages((pages) => remove_page(pages, current_page))} disabled={!can_remove}>
+              <OrderIcon kind="remove" />
             </button>
           </div>
           <span className="editor-small-hint">{t('editor.drag_hint')}</span>

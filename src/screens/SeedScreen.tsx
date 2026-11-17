@@ -111,137 +111,139 @@ export function SeedScreen() {
   };
 
   return (
-    <StepShell screen="seed" on_prev={() => go('start')} on_next={handle_next}>
+    <StepShell screen="seed" width="wide" on_prev={() => go('start')} on_next={handle_next}>
       <h1 className="title-lg">{t('seed.heading')}</h1>
+      <div className="seed-layout">
+        <div className="seed-col">
+          <fieldset className="seed-field">
+            <legend className="field-label">{t('seed.age.legend')}</legend>
+            <div className="seed-chips">
+              {AGE_BANDS.map((band) => (
+                <button
+                  key={band}
+                  type="button"
+                  className="chip"
+                  aria-pressed={seed.age_band === band}
+                  onClick={() => patch_seed({ age_band: band })}
+                >
+                  {t(`seed.age.${band}`)}
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
-      <fieldset className="seed-field">
-        <legend className="field-label">{t('seed.age.legend')}</legend>
-        <div className="seed-chips">
-          {AGE_BANDS.map((band) => (
-            <button
-              key={band}
-              type="button"
-              className="chip"
-              aria-pressed={seed.age_band === band}
-              onClick={() => patch_seed({ age_band: band })}
-            >
-              {t(`seed.age.${band}`)}
-            </button>
-          ))}
-        </div>
-      </fieldset>
-
-      <fieldset className="seed-field">
-        <legend className="field-label">{t('seed.topic.legend')}</legend>
-        <div className="seed-chips">
-          {TOPIC_IDS.map((id, index) => {
-            const word = topic_words[index] ?? '';
-            return (
-              <button
-                key={id}
-                type="button"
-                className="chip"
-                aria-pressed={!is_custom && seed.topic === word}
-                onClick={() => pick_topic(word)}
-              >
-                {word}
+          <fieldset className="seed-field">
+            <legend className="field-label">{t('seed.topic.legend')}</legend>
+            <div className="seed-chips">
+              {TOPIC_IDS.map((id, index) => {
+                const word = topic_words[index] ?? '';
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className="chip"
+                    aria-pressed={!is_custom && seed.topic === word}
+                    onClick={() => pick_topic(word)}
+                  >
+                    {word}
+                  </button>
+                );
+              })}
+              <button type="button" className="chip dashed" aria-pressed={is_custom} onClick={open_custom}>
+                {t('seed.topic.custom')}
               </button>
-            );
-          })}
-          <button type="button" className="chip dashed" aria-pressed={is_custom} onClick={open_custom}>
-            {t('seed.topic.custom')}
-          </button>
-        </div>
-        {is_custom && (
-          <div className="seed-field">
-            <label htmlFor="topic-custom" className="field-label small">
-              {t('seed.topic.custom_label')}
-            </label>
-            <input
-              id="topic-custom"
-              type="text"
-              className="text-input"
-              placeholder={t('seed.topic.custom_placeholder')}
-              value={seed.topic}
-              onChange={(event) => patch_seed({ topic: event.target.value })}
-            />
-          </div>
-        )}
-      </fieldset>
+            </div>
+            {is_custom && (
+              <div className="seed-field">
+                <label htmlFor="topic-custom" className="field-label small">
+                  {t('seed.topic.custom_label')}
+                </label>
+                <input
+                  id="topic-custom"
+                  type="text"
+                  className="text-input"
+                  placeholder={t('seed.topic.custom_placeholder')}
+                  value={seed.topic}
+                  onChange={(event) => patch_seed({ topic: event.target.value })}
+                />
+              </div>
+            )}
+          </fieldset>
 
-      <div className="grid-2">
-        <div className="seed-field">
-          <label htmlFor="hero-name" className="field-label">
-            {t('seed.hero_name.label')}
-          </label>
-          <input
-            id="hero-name"
-            type="text"
-            className="text-input"
-            maxLength={HERO_NAME_MAX_LENGTH}
-            placeholder={t('seed.hero_name.placeholder')}
-            value={seed.hero_name}
-            onChange={(event) => patch_seed({ hero_name: event.target.value })}
-          />
-        </div>
-        <div className="seed-field">
-          <span id="pages-label" className="field-label">
-            {t('seed.pages.label')}
-          </span>
-          <div role="group" aria-labelledby="pages-label" className="seed-seg-grid">
-            {PAGE_COUNTS.map((count) => (
+          <div className="seed-field">
+            <span id="pages-label" className="field-label">
+              {t('seed.pages.label')}
+            </span>
+            <div role="group" aria-labelledby="pages-label" className="seed-seg-grid">
+              {PAGE_COUNTS.map((count) => (
+                <button
+                  key={count}
+                  type="button"
+                  className="seg"
+                  aria-pressed={!is_custom_count && seed.page_count === count}
+                  onClick={() => {
+                    set_custom_count_open(false);
+                    patch_seed({ page_count: count });
+                  }}
+                >
+                  {t('seed.pages.option', { n: count })}
+                </button>
+              ))}
               <button
-                key={count}
                 type="button"
                 className="seg"
-                aria-pressed={!is_custom_count && seed.page_count === count}
+                aria-pressed={is_custom_count}
                 onClick={() => {
-                  set_custom_count_open(false);
-                  patch_seed({ page_count: count });
+                  if (is_custom_count) return;
+                  set_custom_count_open(true);
+                  patch_seed({ page_count: CUSTOM_PAGE_COUNT_START });
                 }}
               >
-                {t('seed.pages.option', { n: count })}
+                {t('seed.pages.custom')}
               </button>
-            ))}
-            <button
-              type="button"
-              className="seg"
-              aria-pressed={is_custom_count}
-              onClick={() => {
-                if (is_custom_count) return;
-                set_custom_count_open(true);
-                patch_seed({ page_count: CUSTOM_PAGE_COUNT_START });
-              }}
-            >
-              {t('seed.pages.custom')}
-            </button>
+            </div>
+            {is_custom_count && <PageCountStepper value={seed.page_count} on_change={(page_count) => patch_seed({ page_count })} />}
+            {seed.page_count >= MANY_PAGES_FROM && <p className="hint">{t('seed.pages.many')}</p>}
           </div>
-          {is_custom_count && <PageCountStepper value={seed.page_count} on_change={(page_count) => patch_seed({ page_count })} />}
-          {seed.page_count >= MANY_PAGES_FROM && <p className="hint">{t('seed.pages.many')}</p>}
+        </div>
+        <div className="seed-col">
+          <div className="seed-field">
+            <label htmlFor="hero-name" className="field-label">
+              {t('seed.hero_name.label')}
+            </label>
+            <input
+              id="hero-name"
+              type="text"
+              className="text-input"
+              maxLength={HERO_NAME_MAX_LENGTH}
+              placeholder={t('seed.hero_name.placeholder')}
+              value={seed.hero_name}
+              onChange={(event) => patch_seed({ hero_name: event.target.value })}
+            />
+          </div>
+          <div className="seed-field">
+            <label htmlFor="hero-look" className="field-label">
+              {t('seed.hero_look.label')}
+            </label>
+            <textarea
+              id="hero-look"
+              className="text-area"
+              rows={HERO_LOOK_ROWS}
+              maxLength={HERO_LOOK_MAX_LENGTH}
+              placeholder={t('seed.hero_look.placeholder')}
+              value={seed.hero_look}
+              onChange={(event) => patch_seed({ hero_look: event.target.value })}
+            />
+          </div>
+
+          <Notice kind="warn">{t('seed.privacy')}</Notice>
+          {problem && (
+            <Notice kind="warn" role="alert">
+              {t(`seed.${problem}`)}
+            </Notice>
+          )}
         </div>
       </div>
-
-      <div className="seed-field">
-        <label htmlFor="hero-look" className="field-label">
-          {t('seed.hero_look.label')}
-        </label>
-        <textarea
-          id="hero-look"
-          className="text-area"
-          rows={HERO_LOOK_ROWS}
-          maxLength={HERO_LOOK_MAX_LENGTH}
-          placeholder={t('seed.hero_look.placeholder')}
-          value={seed.hero_look}
-          onChange={(event) => patch_seed({ hero_look: event.target.value })}
-        />
-      </div>
-
-      <Notice kind="warn">{t('seed.privacy')}</Notice>
-      {problem && (
-        <Notice kind="warn" role="alert">
-          {t(`seed.${problem}`)}
-        </Notice>
-      )}
     </StepShell>
   );
 }

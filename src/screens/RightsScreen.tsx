@@ -33,7 +33,7 @@ export function RightsScreen() {
   const t = useT();
   const lang = useSettings((state) => state.lang);
   return (
-    <Shell header={<SideHeader title={t('rights.title')} />} footer={<MadeByLine />}>
+    <Shell fit={false} header={<SideHeader title={t('rights.title')} />} footer={<MadeByLine />}>
       <h1 className="title-lg">{t('rights.heading')}</h1>
       <section className="card stack loose">
         <p lang="ko" className="rights-statement">

@@ -16,6 +16,16 @@ import './PicturesScreen.css';
 const PLACEHOLDER_ICON_SIZE = 48;
 const DESC_INPUT_ID = 'pic-desc';
 const DESC_ROWS = 3;
+/** Page list rows before it adds a column, so long books still fit on one screen. */
+const LIST_ROWS_MAX = 9;
+
+/** From this many list columns, items show only the page number (the full name stays for screen readers). */
+const COMPACT_LIST_COLUMNS = 3;
+
+/** Number of columns for the page list. */
+function list_columns(count: number): number {
+  return Math.max(1, Math.ceil(count / LIST_ROWS_MAX));
+}
 
 type NoticeKind = 'need_connect' | 'copied' | 'copy_manual' | 'upload_error';
 
@@ -92,6 +102,8 @@ export function PicturesScreen() {
   if (!page) return null;
 
   const is_working = busy_index !== null || batch !== null;
+  const columns = list_columns(page_count);
+  const is_compact = columns >= COMPACT_LIST_COLUMNS;
   const current_name = page_name(t, index);
   const style_name = t(`style.name.${book.style_id}`);
 
@@ -215,7 +227,7 @@ export function PicturesScreen() {
       <div className="pic-layout">
         <nav className="pic-nav" aria-label={t('pictures.list')}>
           <span className="pic-nav-title">{t('pictures.list')}</span>
-          <div className="pic-list">
+          <div className="pic-list" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
             {book.pages.map((item, item_index) => {
               const is_here = item_index === index;
               return (
@@ -226,13 +238,26 @@ export function PicturesScreen() {
                   aria-current={is_here ? 'true' : undefined}
                   onClick={() => choose_page(item_index)}
                 >
-                  <span>{page_name(t, item_index)}</span>
-                  {is_here ? (
-                    <span>{t('pictures.here')}</span>
-                  ) : item.image ? (
-                    <span className="pic-has">{t('pictures.has')}</span>
+                  {is_compact && item_index > 0 ? (
+                    <>
+                      <span aria-hidden="true">{item_index}</span>
+                      <span className="sr-only">{page_name(t, item_index)}</span>
+                    </>
                   ) : (
-                    <span className="pic-none">{t('pictures.none')}</span>
+                    <span>{page_name(t, item_index)}</span>
+                  )}
+                  {is_here ? (
+                    <span className="sr-only">{t('pictures.here')}</span>
+                  ) : item.image ? (
+                    <span className="pic-has">
+                      <span className="pic-mark" aria-hidden="true" />
+                      <span className="sr-only">{t('pictures.has')}</span>
+                    </span>
+                  ) : (
+                    <span className="pic-none">
+                      <span className="pic-mark" aria-hidden="true" />
+                      <span className="sr-only">{t('pictures.none')}</span>
+                    </span>
                   )}
                 </button>
               );
@@ -259,36 +284,38 @@ export function PicturesScreen() {
           </div>
 
           <div className="pic-middle">
-            {busy_index === index ? (
-              <div className="pic-frame working">
-                <Busy>{t('pictures.making')}</Busy>
-              </div>
-            ) : page.image ? (
-              <div className="pic-frame">
-                <img src={page.image.data_url} alt={t('pictures.image_alt', { name: current_name })} />
-              </div>
-            ) : (
-              <div className="pic-frame empty">
-                <PictureIcon />
-                <span>{t('pictures.placeholder', { name: current_name })}</span>
-              </div>
-            )}
-            <div className="pic-side">
-              <div className="pic-field">
-                <span className="pic-label">{t('pictures.text_label')}</span>
-                <p className="pic-text">{page.text.trim() ? page.text : t('pictures.no_text')}</p>
-              </div>
-              <div className="pic-field">
-                <label className="pic-label" htmlFor={DESC_INPUT_ID}>
-                  {t('pictures.desc_label')}
-                </label>
-                <textarea
-                  id={DESC_INPUT_ID}
-                  className="text-area pic-textarea"
-                  rows={DESC_ROWS}
-                  value={page.image_prompt}
-                  onChange={(event) => update_page(index, { image_prompt: event.target.value })}
-                />
+            <div className="pic-middle-row">
+              {busy_index === index ? (
+                <div className="pic-frame working">
+                  <Busy>{t('pictures.making')}</Busy>
+                </div>
+              ) : page.image ? (
+                <div className="pic-frame">
+                  <img src={page.image.data_url} alt={t('pictures.image_alt', { name: current_name })} />
+                </div>
+              ) : (
+                <div className="pic-frame empty">
+                  <PictureIcon />
+                  <span>{t('pictures.placeholder', { name: current_name })}</span>
+                </div>
+              )}
+              <div className="pic-side">
+                <div className="pic-field">
+                  <span className="pic-label">{t('pictures.text_label')}</span>
+                  <p className="pic-text">{page.text.trim() ? page.text : t('pictures.no_text')}</p>
+                </div>
+                <div className="pic-field">
+                  <label className="pic-label" htmlFor={DESC_INPUT_ID}>
+                    {t('pictures.desc_label')}
+                  </label>
+                  <textarea
+                    id={DESC_INPUT_ID}
+                    className="text-area pic-textarea"
+                    rows={DESC_ROWS}
+                    value={page.image_prompt}
+                    onChange={(event) => update_page(index, { image_prompt: event.target.value })}
+                  />
+                </div>
               </div>
             </div>
           </div>

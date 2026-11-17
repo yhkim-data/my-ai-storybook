@@ -9,6 +9,7 @@ import {
   fill_seed,
   flip_pages,
   open_start,
+  open_story_page,
   pass_editor,
   pass_pages,
   pass_pictures,
@@ -42,6 +43,7 @@ test('no key: write text by hand, upload pictures, and make the PDF', async ({ p
 
   await expect(page.getByText(tr(LANG, 'pages.self_hint'))).toBeVisible();
   for (let n = 1; n <= PAGE_COUNT; n += 1) {
+    await open_story_page(page, n);
     await page.locator(`#page-text-${n}`).fill(`${n}쪽 이야기입니다.`);
   }
   await pass_pages(page, LANG);

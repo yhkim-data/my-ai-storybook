@@ -1,4 +1,4 @@
-// Step 4 page split screen: edit each page's text and image description. One AI call splits the pages.
+// Step 4 page split screen: a page list, and the chosen page's text and image description. One AI call splits the pages.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AiErrorNotice, Busy, to_provider_error } from '../components/Notice';
 import { StepShell } from '../components/Shell';
@@ -8,8 +8,27 @@ import { make_input_key } from '../store/book_model';
 import { useBook } from '../store/book_store';
 import './PagesScreen.css';
 
-const TEXT_ROWS = 3;
-const DESC_ROWS = 2;
+/** Both inputs use the same rows so they are always the same height. */
+const FIELD_ROWS = 6;
+/** Page list rows before it adds a column, so long books still fit on one screen. */
+const LIST_ROWS_MAX = 8;
+const CHECK_ICON_SIZE = 16;
+
+/** From this many list columns, items show only the page number (the full name stays for screen readers). */
+const COMPACT_LIST_COLUMNS = 3;
+
+/** Number of columns for the page list. */
+function list_columns(count: number): number {
+  return Math.max(1, Math.ceil(count / LIST_ROWS_MAX));
+}
+
+function CheckIcon() {
+  return (
+    <svg aria-hidden="true" width={CHECK_ICON_SIZE} height={CHECK_ICON_SIZE} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8.5l3.2 3L13 4.5" />
+    </svg>
+  );
+}
 
 function can_split_with_ai(): boolean {
   const book = useBook.getState().book;
@@ -22,6 +41,8 @@ export function PagesScreen() {
   const book = useBook((state) => state.book);
   const go = useBook((state) => state.go);
   const update_page = useBook((state) => state.update_page);
+  /** 1-based story page shown on the right. */
+  const [selected, set_selected] = useState(1);
   const [is_busy, set_busy] = useState(false);
   const [error, set_error] = useState<ProviderError | null>(null);
   // Decide only once on entry, even under StrictMode's double effects.
@@ -63,7 +84,13 @@ export function PagesScreen() {
   if (!book) return null;
 
   const story_pages = book.pages.slice(1);
+  const story_count = story_pages.length;
+  // n is the 1-based story page number; book.pages[n] is that page.
+  const n = Math.max(1, Math.min(selected, story_count));
+  const page = book.pages[n];
   const is_ai = book.write_mode === 'ai' && book.chosen_plot !== null && get_text_provider() !== null;
+  const columns = list_columns(story_count);
+  const is_compact = columns >= COMPACT_LIST_COLUMNS;
 
   /** "Write it myself" from the error notice: switch to self-writing with blank pages. */
   const switch_to_self = () => {
@@ -79,59 +106,92 @@ export function PagesScreen() {
   );
 
   return (
-    <StepShell screen="pages" on_prev={() => go('plot')} on_next={() => go('style')}>
-      <h1 className="title-lg">{t('pages.heading')}</h1>
+    <StepShell screen="pages" width="wider" on_prev={() => go('plot')} on_next={() => go('style')}>
+      <div className="pages-top">
+        <h1 className="title-lg">{t('pages.heading')}</h1>
+        {story_count > 0 && <p className="hint">{t(is_ai ? 'pages.hint' : 'pages.self_hint')}</p>}
+      </div>
 
       {is_busy && <Busy>{t('pages.loading')}</Busy>}
       {error && !is_busy && <AiErrorNotice error={error} on_retry={() => void run_split()} extra_action={self_button} />}
 
-      {story_pages.length > 0 && (
-        <>
-          <p className="hint">{t(is_ai ? 'pages.hint' : 'pages.self_hint')}</p>
-          {story_pages.map((page, index) => {
-            const n = index + 1;
-            return (
-              <div key={page.id} className="card stack">
-                <span className="pages-card-name">{page_name(t, n)}</span>
-                <div className="pages-card-grid">
-                  <div className="pages-field">
-                    <label htmlFor={`page-text-${n}`} className="field-label small">
-                      {t('pages.text_label', { n })}
-                    </label>
-                    <textarea
-                      id={`page-text-${n}`}
-                      className="text-area"
-                      rows={TEXT_ROWS}
-                      placeholder={t('pages.text_placeholder')}
-                      value={page.text}
-                      onChange={(event) => update_page(n, { text: event.target.value })}
-                    />
-                  </div>
-                  <div className="pages-field">
-                    <label htmlFor={`page-desc-${n}`} className="field-label small">
-                      {t('pages.desc_label', { n })}
-                    </label>
-                    <textarea
-                      id={`page-desc-${n}`}
-                      className="text-area"
-                      rows={DESC_ROWS}
-                      placeholder={t('pages.desc_placeholder')}
-                      value={page.image_prompt}
-                      onChange={(event) => update_page(n, { image_prompt: event.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          {is_ai && (
-            <div className="row">
-              <button type="button" className="btn" onClick={() => void run_split()} disabled={is_busy}>
-                {t('pages.rewrite')}
-              </button>
+      {story_count > 0 && page && !is_busy && (
+        <div className="pages-layout">
+          <nav className="pages-nav" aria-label={t('pages.list')}>
+            <div className="pages-list" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+              {story_pages.map((item, index) => {
+                const number = index + 1;
+                const has_text = item.text.trim().length > 0;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="pages-item"
+                    aria-current={number === n ? 'true' : undefined}
+                    onClick={() => set_selected(number)}
+                  >
+                    {is_compact ? (
+                      <>
+                        <span aria-hidden="true">{number}</span>
+                        <span className="sr-only">{page_name(t, number)}</span>
+                      </>
+                    ) : (
+                      <span>{page_name(t, number)}</span>
+                    )}
+                    {has_text && (
+                      <>
+                        <CheckIcon />
+                        <span className="sr-only">{t('pages.filled')}</span>
+                      </>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-          )}
-        </>
+          </nav>
+
+          <section className="pages-main" aria-label={page_name(t, n)}>
+            <div className="pages-fields">
+              <label htmlFor={`page-text-${n}`} className="field-label small pages-label-text">
+                {t('pages.text_label', { n })}
+              </label>
+              <textarea
+                id={`page-text-${n}`}
+                className="text-area pages-input pages-input-text"
+                rows={FIELD_ROWS}
+                placeholder={t('pages.text_placeholder')}
+                value={page.text}
+                onChange={(event) => update_page(n, { text: event.target.value })}
+              />
+              <label htmlFor={`page-desc-${n}`} className="field-label small pages-label-desc">
+                {t('pages.desc_label', { n })}
+              </label>
+              <textarea
+                id={`page-desc-${n}`}
+                className="text-area pages-input pages-input-desc"
+                rows={FIELD_ROWS}
+                placeholder={t('pages.desc_placeholder')}
+                value={page.image_prompt}
+                onChange={(event) => update_page(n, { image_prompt: event.target.value })}
+              />
+            </div>
+            <div className="row spread">
+              <div className="row">
+                <button type="button" className="btn small" disabled={n <= 1} onClick={() => set_selected(n - 1)}>
+                  {t('pages.prev_page')}
+                </button>
+                <button type="button" className="btn small" disabled={n >= story_count} onClick={() => set_selected(n + 1)}>
+                  {t('pages.next_page')}
+                </button>
+              </div>
+              {is_ai && (
+                <button type="button" className="btn small" onClick={() => void run_split()} disabled={is_busy}>
+                  {t('pages.rewrite')}
+                </button>
+              )}
+            </div>
+          </section>
+        </div>
       )}
     </StepShell>
   );

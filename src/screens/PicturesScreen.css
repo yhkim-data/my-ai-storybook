@@ -1,15 +1,16 @@
-/* Pictures step layout. */
+/* Pictures step: page list on the left; the chosen page's picture, words and picture actions on the right. */
 .pic-layout {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 28px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  gap: clamp(16px, 2.4vw, 28px);
 }
 .pic-nav {
-  flex: 1 1 200px;
-  max-width: 240px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: clamp(6px, 1.2vh, 10px);
 }
 .pic-nav-title {
   font-size: 16px;
@@ -17,21 +18,21 @@
   color: var(--text-sub);
 }
 .pic-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  gap: 6px;
 }
 .pic-item {
-  min-height: 52px;
-  padding: 0 14px;
+  white-space: nowrap;
+  min-height: clamp(38px, 5.2vh, 48px);
+  padding: 0 10px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--card);
   color: var(--text);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 6px;
   font-size: 16px;
   font-weight: 500;
 }
@@ -41,35 +42,50 @@
   color: var(--primary-dark);
   font-weight: 700;
 }
-.pic-item .pic-has {
-  color: var(--ok-text);
-  font-weight: 700;
+/* Status dot: filled green when the page has a picture, an empty ring when it does not. */
+.pic-mark {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
 }
-.pic-item .pic-none {
-  color: var(--text-sub);
+.pic-has .pic-mark {
+  background: var(--ok-text);
+}
+.pic-none .pic-mark {
+  border: 2px solid var(--line-input);
 }
 .pic-all {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 6px;
+  margin-top: 4px;
+}
+.pic-all .btn {
+  min-height: 48px;
 }
 .pic-main {
-  flex: 999 1 560px;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: clamp(10px, 2vh, 20px);
 }
+/* The picture takes the largest square that fits next to the words. */
 .pic-middle {
+  flex: 1 1 auto;
+  min-height: 0;
+  container-type: size;
+}
+.pic-middle-row {
+  height: 100%;
   display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
+  gap: clamp(14px, 2vw, 24px);
 }
 .pic-frame {
-  flex: 1 1 320px;
-  max-width: 400px;
-  aspect-ratio: 1 / 1;
+  flex: none;
+  width: min(100cqh, 56cqw);
+  height: min(100cqh, 56cqw);
   border-radius: 16px;
   overflow: hidden;
   background: var(--card);
@@ -87,6 +103,8 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
+  padding: 12px;
+  text-align: center;
   color: var(--text-sub);
   font-size: 17px;
   font-weight: 500;
@@ -98,11 +116,12 @@
   border: 2px dashed var(--line-input);
 }
 .pic-side {
-  flex: 1 1 300px;
+  flex: 1 1 0;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: clamp(10px, 1.6vh, 16px);
 }
 .pic-field {
   display: flex;
@@ -116,46 +135,62 @@
 }
 .pic-text {
   margin: 0;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-radius: 12px;
   background: var(--card);
   border: 1px solid var(--line);
-  font-size: 17px;
-  line-height: 1.7;
+  font-size: 16px;
+  line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.pic-textarea {
-  font-size: 17px;
+.text-area.pic-textarea {
+  font-size: 16px;
   line-height: 1.6;
+  resize: none;
 }
 .pic-fallback {
   width: 100%;
   font-size: 15px;
 }
-
-@media (max-width: 720px) {
-  .pic-layout {
-    gap: 20px;
-  }
-  .pic-nav {
-    flex-basis: 100%;
-    max-width: none;
-    min-width: 0;
-  }
-  /* Small screens turn the page list into one horizontally scrolling row. */
-  .pic-list {
-    min-width: 0;
-    flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 6px;
-  }
-  .pic-item {
-    flex: none;
-    min-width: 150px;
+.pic-main .choice.medium {
+  min-height: clamp(64px, 10vh, 112px);
+  padding: clamp(10px, 1.6vh, 18px) 16px;
+}
+.pic-main .choice.medium .choice-title {
+  font-size: clamp(18px, 2.6vh, 21px);
+}
+.pic-main .choice.medium .choice-desc {
+  font-size: 14px;
+}
+/* A narrow right side (portrait tablets) puts the words under the picture. */
+@container (max-width: 560px) {
+  .pic-middle-row {
+    flex-direction: column;
   }
   .pic-frame {
-    flex-basis: 100%;
-    max-width: none;
+    width: min(100cqw, 100cqh - 300px);
+    height: min(100cqw, 100cqh - 300px);
+    align-self: center;
+  }
+}
+@media (max-width: 599px) {
+  .pic-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .pic-list {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)) !important;
+  }
+  .pic-middle {
+    container-type: normal;
+  }
+  .pic-middle-row {
+    flex-direction: column;
+  }
+  .pic-frame {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
   }
 }

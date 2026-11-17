@@ -41,6 +41,7 @@ export function StyleScreen() {
         <h1 className="title-lg">{t('style.heading')}</h1>
         <p className="hint">{t('style.hint')}</p>
       </div>
+      <div className="style-layout">
       <div className="style-grid">
         {STYLE_IDS.map((style_id) => {
           const name = t(`style.name.${style_id}`);
@@ -61,6 +62,7 @@ export function StyleScreen() {
             </button>
           );
         })}
+      </div>
       </div>
     </StepShell>
   );

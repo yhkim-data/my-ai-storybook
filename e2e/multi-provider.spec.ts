@@ -7,6 +7,7 @@ import {
   choose_first_plot,
   fill_seed,
   open_start,
+  open_story_page,
   pass_pages,
   pass_style,
   start_new_book,
@@ -165,6 +166,7 @@ async function walk_to_pages(page: Page): Promise<void> {
   await expect(cards.first()).toContainText('가짜 줄거리 1');
   await choose_first_plot(page, LANG);
   await expect(page.locator('#page-text-1')).toHaveValue('가짜 1쪽 글');
+  await open_story_page(page, PAGE_COUNT);
   await expect(page.locator(`#page-text-${PAGE_COUNT}`)).toHaveValue(`가짜 ${PAGE_COUNT}쪽 글`);
   await pass_pages(page, LANG);
   await pass_style(page, LANG);
