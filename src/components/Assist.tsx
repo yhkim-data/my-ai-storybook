@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useT } from '../i18n';
 import { get_text_provider, type AssistRequest, type AssistResult } from '../providers';
 import type { ProviderError } from '../providers/types';
-import { useSettings } from '../store/settings_store';
+import { needs_key, useSettings } from '../store/settings_store';
 import { AiErrorNotice, to_provider_error } from './Notice';
 
 const ICON_SIZE = 16;
@@ -97,14 +97,21 @@ interface AssistControlProps<T> {
 export function AssistControl<T>({ state, field_key, on_ask, on_undo }: AssistControlProps<T>) {
   const t = useT();
   const has_ai = useSettings((settings) => settings.practice || settings.text_key !== '');
+  const is_key_needed = useSettings((settings) => needs_key(settings));
+  const open_key_prompt = useSettings((settings) => settings.open_key_prompt);
   const is_busy = state.busy_key === field_key;
   return (
     <span className="assist">
-      <button type="button" className="assist-btn" onClick={on_ask} disabled={!has_ai || state.busy_key !== null}>
+      <button
+        type="button"
+        className="assist-btn"
+        onClick={is_key_needed ? open_key_prompt : on_ask}
+        disabled={(!has_ai && !is_key_needed) || state.busy_key !== null}
+      >
         <SparkleIcon />
         {t('assist.button')}
       </button>
-      {!has_ai && <span className="assist-note">{t('assist.need_ai')}</span>}
+      {!has_ai && <span className="assist-note">{t(is_key_needed ? 'key_prompt.short' : 'assist.need_ai')}</span>}
       {is_busy && (
         <span className="assist-note" role="status">
           {t('assist.busy')}

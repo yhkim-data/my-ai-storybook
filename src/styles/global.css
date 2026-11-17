@@ -896,3 +896,61 @@ legend {
     text-align: center;
   }
 }
+
+/* Key safety: "this is my key" check, key windows and the away-timer message */
+.own-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+.own-key-label {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.own-key-label input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--primary);
+}
+.own-key-terms {
+  font-size: 14px;
+}
+.dialog.key-dialog {
+  gap: 12px;
+}
+.key-dialog-title {
+  margin: 0;
+  font-size: 20px;
+}
+.key-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.idle-toast {
+  position: fixed;
+  z-index: 70;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--text);
+  color: #ffffff;
+  font-size: 15px;
+  box-shadow: 0 10px 30px rgba(23, 35, 58, 0.3);
+}

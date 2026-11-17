@@ -1,6 +1,7 @@
 // Step 4 page split screen: a page list, and the chosen page's text and image description. One AI call splits the pages.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AssistControl, AssistError, assist_text, useAssist } from '../components/Assist';
+import { KeyNeededNotice } from '../components/KeySafety';
 import { AiErrorNotice, Busy, to_provider_error } from '../components/Notice';
 import { StepShell } from '../components/Shell';
 import { page_name, useT } from '../i18n';
@@ -132,6 +133,7 @@ export function PagesScreen() {
         <h1 className="title-lg">{t('pages.heading')}</h1>
         {story_count > 0 && <p className="hint">{t(is_ai ? 'pages.hint' : 'pages.self_hint')}</p>}
       </div>
+      <KeyNeededNotice />
 
       {is_busy && <Busy>{t('pages.loading')}</Busy>}
       {error && !is_busy && <AiErrorNotice error={error} on_retry={() => void run_split()} extra_action={self_button} />}

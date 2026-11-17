@@ -16,7 +16,7 @@ import {
   use_version,
   versions_of,
 } from '../store/image_versions';
-import { useSettings } from '../store/settings_store';
+import { needs_key, useSettings } from '../store/settings_store';
 import type { BookPage, PageImage } from '../types';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from './Notice';
 import './EditPicture.css';
@@ -73,6 +73,7 @@ export function EditPicture({ page_index, compact = false, busy_elsewhere = fals
 
   if (!page) return null;
   const availability = edit_availability(page);
+  const is_key_needed = availability === 'no_ai' && needs_key(useSettings.getState());
   const newest = newest_fixed_index(page);
   const is_on = newest !== null && active_index(page) === newest;
   const can_send = availability === 'ok' && !is_busy && !busy_elsewhere;
@@ -145,7 +146,15 @@ export function EditPicture({ page_index, compact = false, busy_elsewhere = fals
           {t('edit.button')}
         </button>
       </div>
-      {availability !== 'ok' && <p className="edit-pic-hint">{t(hint_key[availability] ?? 'edit.need_image')}</p>}
+      {availability !== 'ok' && !is_key_needed && <p className="edit-pic-hint">{t(hint_key[availability] ?? 'edit.need_image')}</p>}
+      {is_key_needed && (
+        <p className="edit-pic-hint">
+          {t('key_prompt.short')}{' '}
+          <button type="button" className="back-link" onClick={() => useSettings.getState().open_key_prompt()}>
+            {t('key_prompt.button')}
+          </button>
+        </p>
+      )}
       {availability === 'ok' && is_versions_full(page) && (
         <Notice kind="warn" role="status">
           {t('edit.full')}

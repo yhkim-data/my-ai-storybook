@@ -1,5 +1,6 @@
 // Screen switching is driven by the store's `screen` value, not by URL routing.
 import { useEffect } from 'react';
+import { IdleGuard, KeyPromptDialog } from './components/KeySafety';
 import { useT } from './i18n';
 import { ConnectScreen } from './screens/ConnectScreen';
 import { EditorScreen } from './screens/EditorScreen';
@@ -54,5 +55,11 @@ export function App() {
     document.title = t('app.name');
   }, [t]);
 
-  return pick_screen(shown_screen);
+  return (
+    <>
+      {pick_screen(shown_screen)}
+      <KeyPromptDialog />
+      <IdleGuard />
+    </>
+  );
 }

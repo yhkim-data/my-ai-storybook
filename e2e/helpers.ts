@@ -238,7 +238,7 @@ export async function read_download(page: Page, test_id: string): Promise<Downlo
   return { name: download.suggestedFilename(), path: file_path, bytes: readFileSync(file_path) };
 }
 
-/** Today's AI call count from localStorage; 0 if none. */
+/** Today's AI call count (text requests and pictures) from localStorage; 0 if none. */
 export async function read_usage_count(page: Page): Promise<number> {
   return page.evaluate((usage_key) => {
     const raw = localStorage.getItem(usage_key);
@@ -251,17 +251,53 @@ export async function read_usage_count(page: Page): Promise<number> {
   }, USAGE_KEY);
 }
 
-/** The saved text-provider key from localStorage; empty string if none. */
-export async function read_saved_text_key(page: Page): Promise<string> {
-  return page.evaluate((settings_key) => {
-    const raw = localStorage.getItem(settings_key);
-    if (!raw) return '';
-    try {
-      return (JSON.parse(raw) as { text_key?: string }).text_key ?? '';
-    } catch {
-      return '';
+/** Everything kept in localStorage and sessionStorage, as one string (keys must never be in it). */
+export async function read_web_storage(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const parts: string[] = [];
+    for (const storage of [localStorage, sessionStorage]) {
+      for (let index = 0; index < storage.length; index += 1) {
+        const name = storage.key(index) ?? '';
+        parts.push(`${name}=${storage.getItem(name) ?? ''}`);
+      }
     }
-  }, SETTINGS_KEY);
+    return parts.join('\n');
+  });
+}
+
+/** Everything in the app's IndexedDB, as one string. */
+export async function read_indexed_db(page: Page): Promise<string> {
+  return page.evaluate(async () => {
+    const names = (await indexedDB.databases()).map((item) => item.name ?? '').filter((name) => name);
+    const parts: string[] = [];
+    for (const name of names) {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open(name);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      for (const store_name of Array.from(db.objectStoreNames)) {
+        const values = await new Promise<unknown[]>((resolve, reject) => {
+          const request = db.transaction(store_name).objectStore(store_name).getAll();
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        parts.push(JSON.stringify(values));
+      }
+      db.close();
+    }
+    return parts.join('\n');
+  });
+}
+
+/** From the start screen: opens "Connect AI", ticks "this is my key", checks the key and goes back. */
+export async function connect_key(page: Page, lang: Lang, key: string, name: string, tail: string): Promise<void> {
+  await page.getByRole('button', { name: tr(lang, 'start.connect') }).click();
+  await page.getByRole('checkbox', { name: tr(lang, 'connect.own_key') }).check();
+  await page.locator('#key-input').fill(key);
+  await page.getByRole('button', { name: tr(lang, 'connect.check'), exact: true }).click();
+  await expect(page.getByText(tr(lang, 'connect.ok', { name, tail }))).toBeVisible();
+  await page.getByRole('button', { name: tr(lang, 'common.home'), exact: true }).click();
 }
 
 /** Returns an array that collects the URL of every outgoing request. */

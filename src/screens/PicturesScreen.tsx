@@ -1,6 +1,7 @@
 // Step 6 pictures: each page gets an AI image, an uploaded image, or a copied image prompt.
 import { useEffect, useRef, useState, type CSSProperties, type ChangeEvent } from 'react';
 import { EditPicture } from '../components/EditPicture';
+import { ask_key_again } from '../components/KeySafety';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { StepShell } from '../components/Shell';
 import { BATCH_IMAGE_GAP_MS, PAGE_SHAPE_MM } from '../constants';
@@ -138,7 +139,7 @@ export function PicturesScreen() {
   const make_one = async (target_index: number) => {
     clear_messages();
     if (!get_image_provider()) {
-      set_notice('need_connect');
+      if (!ask_key_again()) set_notice('need_connect');
       return;
     }
     const latest = useBook.getState().book;
@@ -158,7 +159,7 @@ export function PicturesScreen() {
   const make_all = async () => {
     clear_messages();
     if (!get_image_provider()) {
-      set_notice('need_connect');
+      if (!ask_key_again()) set_notice('need_connect');
       return;
     }
     const start_book = useBook.getState().book;

@@ -18,15 +18,36 @@ const FAKE_NAME = 'Google Gemini';
 const CLAUDE_FAKE_KEY = 'sk-ant-' + 'test-fake-A1b2';
 const OPENAI_FAKE_KEY = 'sk-' + 'test-fake-A1b2';
 
+/** Ticks "this is my own key" (needed before any check). */
+async function tick_own_key() {
+  await userEvent.click(screen.getByRole('checkbox', { name: ko('connect.own_key') }));
+}
+
+/** Connects a key the way the screen does (memory only). */
+function connect(key: string) {
+  useSettings.getState().connect_key(key, 'text');
+  useSettings.setState({ practice: true });
+}
+
 beforeEach(() => {
-  useSettings.setState({ lang: 'ko', practice: true, text_key: '', image_key: '' });
+  localStorage.clear();
+  useSettings.setState({ lang: 'ko', practice: true, connections: [], text_connection: null, image_connection: null, text_key: '', image_key: '' });
   useBook.setState({ screen: 'connect', return_screen: 'seed' });
 });
 afterEach(() => cleanup());
 
 describe('ConnectScreen', () => {
+  it('asks for the "my own key" tick before checking', async () => {
+    render(<ConnectScreen />);
+    await userEvent.type(screen.getByLabelText(ko('connect.key_label')), FAKE_KEY);
+    await userEvent.click(screen.getByRole('button', { name: ko('connect.check') }));
+    expect(screen.getByRole('alert')).toHaveTextContent(ko('connect.own_key_need'));
+    expect(useSettings.getState().text_key).toBe('');
+  });
+
   it('shows an empty-input notice when checking an empty field', async () => {
     render(<ConnectScreen />);
+    await tick_own_key();
     await userEvent.click(screen.getByRole('button', { name: ko('connect.check') }));
     expect(screen.getByRole('alert')).toHaveTextContent(ko('connect.empty'));
     expect(useSettings.getState().text_key).toBe('');
@@ -34,6 +55,7 @@ describe('ConnectScreen', () => {
 
   it('shows only the last 4 characters after a check and never the full key', async () => {
     render(<ConnectScreen />);
+    await tick_own_key();
     await userEvent.type(screen.getByLabelText(ko('connect.key_label')), FAKE_KEY);
     await userEvent.click(screen.getByRole('button', { name: ko('connect.check') }));
     await waitFor(() => expect(screen.getByText(ko('connect.ok', { name: FAKE_NAME, tail: FAKE_TAIL }))).toBeInTheDocument());
@@ -44,19 +66,20 @@ describe('ConnectScreen', () => {
 
   it('checks the key on Enter', async () => {
     render(<ConnectScreen />);
+    await tick_own_key();
     await userEvent.type(screen.getByLabelText(ko('connect.key_label')), `${FAKE_KEY}{Enter}`);
     await waitFor(() => expect(useSettings.getState().text_key).toBe(FAKE_KEY));
   });
 
-  it('shows only the tail of a saved key', () => {
-    useSettings.setState({ text_key: FAKE_KEY });
+  it('shows only the tail of a connected key', () => {
+    connect(FAKE_KEY);
     render(<ConnectScreen />);
     expect(screen.getByText(ko('connect.saved_tail', { name: FAKE_NAME, tail: FAKE_TAIL }))).toBeInTheDocument();
     expect(document.body.textContent).not.toContain(FAKE_KEY);
   });
 
   it('clears the keys and shows a notice', async () => {
-    useSettings.setState({ text_key: FAKE_KEY, image_key: FAKE_KEY });
+    connect(FAKE_KEY);
     render(<ConnectScreen />);
     await userEvent.click(screen.getByRole('button', { name: ko('connect.clear') }));
     expect(useSettings.getState().text_key).toBe('');
@@ -78,7 +101,8 @@ describe('ConnectScreen', () => {
     expect(screen.getByTestId('usage-line')).toHaveTextContent(ko('connect.usage', { n: 3 }));
   });
 
-  it('changes and resets the model in advanced settings', async () => {
+  it('changes and resets the model in advanced settings once a key is connected', async () => {
+    connect(FAKE_KEY);
     render(<ConnectScreen />);
     await userEvent.click(screen.getByText(ko('connect.details')));
     await userEvent.selectOptions(screen.getByLabelText(ko('connect.text_kind_label')), 'gemini-3.8-flash');
@@ -89,6 +113,7 @@ describe('ConnectScreen', () => {
 
   it('a Claude key shows the no-image notice and Claude text models', async () => {
     render(<ConnectScreen />);
+    await tick_own_key();
     await userEvent.type(screen.getByLabelText(ko('connect.key_label')), CLAUDE_FAKE_KEY);
     await userEvent.click(screen.getByRole('button', { name: ko('connect.check') }));
     await waitFor(() => expect(screen.getByText(ko('connect.no_image'))).toBeInTheDocument());
@@ -99,7 +124,7 @@ describe('ConnectScreen', () => {
   });
 
   it('an OpenAI key shows OpenAI image models and no no-image notice', () => {
-    useSettings.setState({ text_key: OPENAI_FAKE_KEY });
+    connect(OPENAI_FAKE_KEY);
     render(<ConnectScreen />);
     expect(screen.queryByText(ko('connect.no_image'))).toBeNull();
     const options = Array.from(document.querySelectorAll<HTMLOptionElement>('#image-model-select option')).map((option) => option.value);
@@ -108,10 +133,21 @@ describe('ConnectScreen', () => {
 
   it('warns and does not save a Claude key in the image key field', async () => {
     render(<ConnectScreen />);
+    await tick_own_key();
     await userEvent.click(screen.getByText(ko('connect.details')));
     await userEvent.type(screen.getByLabelText(ko('connect.image_key_label')), CLAUDE_FAKE_KEY);
     await userEvent.click(screen.getByRole('button', { name: ko('connect.image_key_save') }));
     expect(screen.getByRole('alert')).toHaveTextContent(ko('connect.image_key_claude'));
     expect(useSettings.getState().image_key).toBe('');
+  });
+
+  it('a checked key is kept in memory only, never in web storage', async () => {
+    render(<ConnectScreen />);
+    await tick_own_key();
+    await userEvent.type(screen.getByLabelText(ko('connect.key_label')), `${FAKE_KEY}{Enter}`);
+    await waitFor(() => expect(useSettings.getState().text_key).toBe(FAKE_KEY));
+    for (const storage of [localStorage, sessionStorage]) {
+      for (let index = 0; index < storage.length; index += 1) expect(storage.getItem(storage.key(index) ?? '')).not.toContain(FAKE_KEY);
+    }
   });
 });

@@ -1,6 +1,7 @@
 // Step 7 editor: text, text box, layout and page order are edited locally without calling the AI.
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { EditPicture } from '../components/EditPicture';
+import { ask_key_again } from '../components/KeySafety';
 import { AiErrorNotice, Busy, Notice, to_provider_error } from '../components/Notice';
 import { PageView } from '../components/PageView';
 import { DiLabBadge, HomeBrand, MadeByLine, Shell } from '../components/Shell';
@@ -200,7 +201,7 @@ export function EditorScreen() {
       const latest_book = useBook.getState().book;
       const image = latest_book ? await generate_page_image(latest_book, current_page) : null;
       if (image) change_image(image);
-      else set_message(t('editor.regen_need'));
+      else if (!ask_key_again()) set_message(t('editor.regen_need'));
     } catch (cause) {
       set_ai_error(to_provider_error(cause));
     } finally {

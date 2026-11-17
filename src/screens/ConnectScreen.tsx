@@ -1,18 +1,11 @@
-// Connect screen. The key is stored only on this device and only its last 4 characters are shown.
+// Connect screen. The key is kept only in this window's memory (never saved) and only its last 4 characters are shown.
 import { useState, type KeyboardEvent } from 'react';
+import { OwnKeyCheck, useKeyCheck, type KeyMessage } from '../components/KeySafety';
 import { DiLabBadge, Shell } from '../components/Shell';
 import { Notice } from '../components/Notice';
 import { useT } from '../i18n';
-import { create_text_provider_for_key } from '../providers/index';
 import { DEFAULT_IMAGE_MODEL, DEFAULT_TEXT_MODEL } from '../providers/gemini_config';
-import {
-  PROVIDER_INFO,
-  PROVIDER_ORDER,
-  detect_provider,
-  resolve_image_model,
-  resolve_text_model,
-} from '../providers/provider_kinds';
-import type { ProviderErrorKind } from '../providers/types';
+import { PROVIDER_INFO, PROVIDER_ORDER, detect_provider, resolve_image_model, resolve_text_model } from '../providers/provider_kinds';
 import { useBook } from '../store/book_store';
 import { effective_image_key, key_tail, useSettings } from '../store/settings_store';
 import './ConnectScreen.css';
@@ -20,18 +13,6 @@ import './ConnectScreen.css';
 /** SVG viewBox size of the step illustrations. */
 const ART_WIDTH = 240;
 const ART_HEIGHT = 96;
-
-interface Message {
-  kind: 'ok' | 'warn';
-  text: string;
-}
-
-function failure_key(reason: ProviderErrorKind): string {
-  if (reason === 'browser_blocked') return 'connect.browser_blocked';
-  if (reason === 'bad_key' || reason === 'no_permission') return 'connect.bad_key';
-  if (reason === 'network') return 'connect.network';
-  return 'connect.failed';
-}
 
 /** Step 1 art: a new window opening over another. */
 function StepArtOpen({ label }: { label: string }) {
@@ -95,60 +76,34 @@ function SideHeader({ title }: { title: string }) {
 export function ConnectScreen() {
   const t = useT();
   const close_side = useBook((state) => state.close_side);
+  const open_side = useBook((state) => state.open_side);
   const text_key = useSettings((state) => state.text_key);
   const image_key = useSettings((state) => state.image_key);
   const text_model = useSettings((state) => state.text_model);
   const image_model = useSettings((state) => state.image_model);
   const usage_count = useSettings((state) => state.usage_count);
-  const set_text_key = useSettings((state) => state.set_text_key);
-  const set_image_key = useSettings((state) => state.set_image_key);
   const set_text_model = useSettings((state) => state.set_text_model);
   const set_image_model = useSettings((state) => state.set_image_model);
   const clear_keys = useSettings((state) => state.clear_keys);
+  const { check, is_checking } = useKeyCheck();
 
   const [key_input, set_key_input] = useState('');
   const [image_key_input, set_image_key_input] = useState('');
-  const [is_checking, set_is_checking] = useState(false);
-  const [message, set_message] = useState<Message | null>(null);
-  const [image_message, set_image_message] = useState<Message | null>(null);
+  const [is_owned, set_owned] = useState(false);
+  const [message, set_message] = useState<KeyMessage | null>(null);
+  const [image_message, set_image_message] = useState<KeyMessage | null>(null);
 
-  /** Tests the key; it is saved through on_ok only when the connection succeeds. */
-  const check_key = async (
-    raw_key: string,
-    for_image: boolean,
-    on_ok: (key: string) => void,
-    clear_input: () => void,
-    show: (message: Message) => void,
-  ) => {
-    const key = raw_key.trim();
-    if (!key) {
-      show({ kind: 'warn', text: t('connect.empty') });
-      return;
-    }
-    const info = PROVIDER_INFO[detect_provider(key)];
-    if (for_image && info.image_model === null) {
-      show({ kind: 'warn', text: t('connect.image_key_claude') });
-      return;
-    }
-    set_is_checking(true);
-    try {
-      const result = await create_text_provider_for_key(key).testConnection();
-      if (result.ok) {
-        on_ok(key);
-        clear_input();
-        show({ kind: 'ok', text: t('connect.ok', { name: info.label, tail: key_tail(key) }) });
-      } else {
-        show({ kind: 'warn', text: t(failure_key(result.reason)) });
-      }
-    } catch {
-      show({ kind: 'warn', text: t('connect.failed') });
-    } finally {
-      set_is_checking(false);
-    }
+  /** Checks the key; it is connected only when the check succeeds, and the input is emptied then. */
+  const handle_check = async () => {
+    const result = await check(key_input, 'text', is_owned);
+    set_message(result);
+    if (result.kind === 'ok') set_key_input('');
   };
-
-  const handle_check = () => check_key(key_input, false, set_text_key, () => set_key_input(''), set_message);
-  const handle_check_image = () => check_key(image_key_input, true, set_image_key, () => set_image_key_input(''), set_image_message);
+  const handle_check_image = async () => {
+    const result = await check(image_key_input, 'image', is_owned);
+    set_image_message(result);
+    if (result.kind === 'ok') set_image_key_input('');
+  };
 
   const handle_enter = (event: KeyboardEvent<HTMLInputElement>, action: () => Promise<void>) => {
     if (event.key === 'Enter' && !is_checking) {
@@ -168,14 +123,14 @@ export function ConnectScreen() {
     set_image_model(DEFAULT_IMAGE_MODEL);
   };
 
-  /** Describes a saved key by provider name and last characters only. */
-  const saved_message = (key: string): Message | null =>
+  /** Describes a connected key by provider name and last characters only. */
+  const saved_message = (key: string): KeyMessage | null =>
     key ? { kind: 'ok', text: t('connect.saved_tail', { name: PROVIDER_INFO[detect_provider(key)].label, tail: key_tail(key) }) } : null;
 
-  const shown_message: Message | null = message ?? saved_message(text_key);
-  const shown_image_message: Message | null = image_message ?? saved_message(image_key);
+  const shown_message: KeyMessage | null = message ?? saved_message(text_key);
+  const shown_image_message: KeyMessage | null = image_message ?? saved_message(image_key);
 
-  // Model lists follow the saved key's provider; with no key, the Gemini lists are shown.
+  // Model lists follow the connected key's provider; with no key, the Gemini lists are shown.
   const text_info = PROVIDER_INFO[detect_provider(text_key)];
   const image_info = PROVIDER_INFO[detect_provider(effective_image_key({ text_key, image_key }))];
   const shown_text_model = resolve_text_model(text_info.kind, text_model);
@@ -236,6 +191,7 @@ export function ConnectScreen() {
             {is_checking ? t('connect.checking') : t('connect.check')}
           </button>
         </div>
+        <OwnKeyCheck checked={is_owned} on_change={set_owned} on_terms={() => open_side('rights')} />
         {shown_message && (
           <Notice kind={shown_message.kind} role={shown_message.kind === 'warn' ? 'alert' : 'status'}>
             {shown_message.text}
@@ -279,7 +235,7 @@ export function ConnectScreen() {
               <label htmlFor="text-model-select" className="field-label small">
                 {t('connect.text_kind_label')}
               </label>
-              <select id="text-model-select" className="select" value={shown_text_model} onChange={(event) => set_text_model(event.target.value)}>
+              <select id="text-model-select" className="select" value={shown_text_model} disabled={!text_key} onChange={(event) => set_text_model(event.target.value)}>
                 {text_info.text_choices.map((choice) => (
                   <option key={choice} value={choice}>
                     {choice}
@@ -292,7 +248,13 @@ export function ConnectScreen() {
                 <label htmlFor="image-model-select" className="field-label small">
                   {t('connect.image_kind_label')}
                 </label>
-                <select id="image-model-select" className="select" value={shown_image_model} onChange={(event) => set_image_model(event.target.value)}>
+                <select
+                  id="image-model-select"
+                  className="select"
+                  value={shown_image_model}
+                  disabled={!effective_image_key({ text_key, image_key })}
+                  onChange={(event) => set_image_model(event.target.value)}
+                >
                   {image_info.image_choices.map((choice) => (
                     <option key={choice} value={choice}>
                       {choice}
@@ -301,7 +263,7 @@ export function ConnectScreen() {
                 </select>
               </div>
             )}
-            <p className="hint">{t('connect.kind_hint')}</p>
+            <p className="hint">{t(text_key ? 'connect.kind_hint' : 'connect.kind_need_key')}</p>
             <div>
               <button type="button" className="btn" onClick={handle_reset_kinds}>
                 {t('connect.kind_reset')}
