@@ -16,6 +16,7 @@ import { apply_layout } from '../store/book_model';
 import { insert_blank_page, move_page, remove_page, useBook } from '../store/book_store';
 import { clean_custom_style, page_aspect } from '../store/book_model';
 import { with_new_image } from '../store/image_versions';
+import { image_limit_reached, useSettings } from '../store/settings_store';
 import type { ArtStyle, BookPage, BoxBackground, BoxKind, FontId, LayoutId, PageImage, PageShape, Rect, TextAlign, TextBox } from '../types';
 import { prepare_upload_image } from '../utils/image';
 import { useElementSize } from '../utils/use_element_size';
@@ -119,6 +120,7 @@ export function EditorScreen() {
   const [message, set_message] = useState<string | null>(null);
   const [selected_box, set_selected_box] = useState<BoxKind>('text');
   const [is_fixing, set_is_fixing] = useState(false);
+  const is_limit_reached = useSettings((state) => image_limit_reached(state));
 
   // Ctrl+Z undoes; Ctrl+Shift+Z or Ctrl+Y redoes.
   useEffect(() => {
@@ -469,7 +471,7 @@ export function EditorScreen() {
                   type="button"
                   className={needs_redraw ? 'btn small primary attention' : 'btn small'}
                   onClick={() => void handle_regenerate()}
-                  disabled={is_drawing || is_fixing}
+                  disabled={is_drawing || is_fixing || is_limit_reached}
                 >
                   {t(needs_redraw ? 'pictures.redo_style' : 'editor.regen')}
                 </button>

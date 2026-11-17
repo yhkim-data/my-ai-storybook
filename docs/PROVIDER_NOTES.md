@@ -279,3 +279,20 @@
 | 그림 1장 값 | $0.0336 | 해당 없음 | 문서에 없음 |
 | 부르는 법 | `fetch` | 공식 SDK | `fetch` |
 | 나이 조건 | 키는 18세 이상. 18세 미만이 쓰는 서비스에는 연결할 수 없음 (약관 확인함) | 조건부: 18세 미만이 쓰게 하려면 기관이 보호 조치를 갖춰야 함 (기관 안내 확인함). 키에 적용되는 상업 약관에는 나이 조항 없음 (약관 확인함) | 조건부: 18세 미만에게 쓰게 하려면 보호 조치와 보호자 동의가 필요함 (안내와 서비스 계약 한국어판 확인함) |
+
+## 11. 사용량과 남은 금액 (2026-11-17 확인)
+
+- 학생이 쓰는 일반 API 키로 남은 금액이나 남은 한도를 알려 주는 API는 세 회사 모두 없다. 그래서 앱은 "이 앱에서 쓴 양"(글 요청 수, 그림 장수)만 세고, 남은 금액은 각 회사 화면 링크로 안내한다.
+  - Anthropic: 사용량·비용 API는 관리자 키가 필요하다. 원문: "Admin API credentials required." 출처: <https://platform.claude.com/docs/en/manage-claude/usage-cost-api>
+  - OpenAI: 사용량·비용 API 예시는 모두 관리자 키(`OPENAI_ADMIN_KEY`)를 쓴다. "관리자 키가 꼭 필요하다"는 문장 자체는 찾지 못했다. 출처: Usage·Costs 참조 문서.
+  - Gemini: 사용량이나 잔액을 묻는 API가 문서에 없다. AI Studio의 Usage, Billing 화면에서 본다. 출처: <https://aistudio.google.com/docs/billing>
+- 앱이 링크하는 사용량 화면(`src/providers/provider_pages.json`, `npm run check:links`가 응답을 확인한다):
+  - Google AI Studio: <https://aistudio.google.com/usage>
+  - OpenAI: <https://platform.openai.com/settings/organization/usage>
+  - Claude Console: <https://platform.claude.com/usage>
+- 예상 금액: 문서가 그림 한 장 값을 직접 적은 모델만 보여 준다(`src/providers/prices.ts`). `gemini-3.1-flash-lite-image`와 `gemini-nano-banana-2.1`은 1K 한 장 $0.0336, `gemini-3.1-flash-image`는 $0.067이다. 출처: <https://aistudio.google.com/docs/pricing> OpenAI `gpt-image-2.6` 두 종류는 토큰 값만 있고 한 장 값이 없어 금액을 숨긴다. 글 요청은 토큰으로 값을 매기는데 앱이 토큰을 세지 않으므로 금액을 보여 주지 않는다.
+- 원화 환산: 서울외국환중개 매매기준율 2026-11-17 1,335.00원/달러(<http://www.smbs.biz/ExRate/TodayExRate.jsp>). 환율이 바뀌므로 화면에는 "약 ○○원"으로만 쓴다.
+- 예산·한도 걸기(키 주인이 할 일):
+  - OpenAI: 조직이나 프로젝트에 지출 한도를 건다. <https://developers.openai.com/api/docs/guides/spend-limits>
+  - Anthropic: 작업 공간마다 월 지출 한도를 건다(기본 작업 공간은 안 됨). <https://platform.claude.com/docs/en/manage-claude/workspaces>
+  - Google: AI Studio의 프로젝트 지출 한도(실험 기능). <https://aistudio.google.com/docs/billing>

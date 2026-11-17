@@ -1,0 +1,7 @@
+{
+  "usage": {
+    "gemini": "https://aistudio.google.com/usage",
+    "openai": "https://platform.openai.com/settings/organization/usage",
+    "claude": "https://platform.claude.com/usage"
+  }
+}

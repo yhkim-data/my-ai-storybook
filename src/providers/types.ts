@@ -11,6 +11,8 @@ export type ProviderErrorKind =
   | 'no_permission'
   /** The key is valid but the organization has disabled browser access. */
   | 'browser_blocked'
+  /** Today's picture limit set on this computer is used up. */
+  | 'limit'
   /** Practice mode could not tell which thing and color a "Fix the picture" note asks for. */
   | 'practice_edit'
   | 'unknown';
