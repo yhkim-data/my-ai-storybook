@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Brand, DiLabBadge, MadeByLine, Shell } from '../components/Shell';
 import { Notice } from '../components/Notice';
+import { load_scene_art } from '../art/scenes';
 import { build_demo_book } from '../data/demo_book';
 import { useT } from '../i18n';
 import { parse_book_file } from '../storage/book_file';
@@ -96,6 +97,12 @@ export function StartScreen() {
 
   const handle_toggle_lang = () => set_lang(lang === 'ko' ? 'en' : 'ko');
 
+  // The sample art loads in the background; wait for it so the demo opens with its pictures.
+  const open_demo = async () => {
+    await load_scene_art().catch(() => undefined);
+    open_book(build_demo_book(lang), true);
+  };
+
   const handle_resume = async () => {
     try {
       const book = await load_current_book();
@@ -187,7 +194,7 @@ export function StartScreen() {
             <span className="choice-desc">{has_saved_book ? t('start.resume.desc') : t('start.resume.none')}</span>
           </span>
         </button>
-        <button type="button" className="choice" onClick={() => open_book(build_demo_book(lang), true)}>
+        <button type="button" className="choice" onClick={() => void open_demo()}>
           <PlayIcon />
           <span className="start-choice-text">
             <span className="choice-title">{t('start.demo.title')}</span>

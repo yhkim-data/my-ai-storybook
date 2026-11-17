@@ -7,3 +7,6 @@ test-results/
 playwright-report/
 *.local
 .DS_Store
+
+# Python bytecode from tools/art
+__pycache__/

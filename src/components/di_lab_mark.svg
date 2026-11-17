@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 200" role="img" aria-label="DI Lab">
+  <defs>
+    <mask id="di-lab-cut">
+      <rect width="190" height="200" fill="#fff"/>
+      <rect x="61" y="38" width="25" height="127" rx="12.5" fill="#000"/>
+      <circle cx="171.5" cy="104" r="23.5" fill="#000"/>
+    </mask>
+  </defs>
+  <path d="M0 0H86A85 100 0 0 1 86 200H0Z" fill="#0054C3" mask="url(#di-lab-cut)"/>
+  <circle cx="171.5" cy="104" r="17.5" fill="#00AC8E"/>
+</svg>
