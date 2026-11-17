@@ -140,6 +140,8 @@ The calculation below is for Google Gemini. Claude writes text only; the text fo
 
 - Tell students not to write real names, addresses, or phone numbers. The story seed screen also says "Don't write real names, addresses, or phone numbers." The main character's name should be made up.
 - The author's name can be a nickname.
+- Tell students not to write real names or personal information in the [My own style] box either. What they write there goes into the picture request as it is when AI is connected.
+- [Ask AI for help] works only when AI is connected. Without a connection the button cannot be pressed and "Connect AI to use this" is shown. Pressing it sends what is in that box and the book content (topic, main character, plot, the pages before and after) to the connected AI provider.
 - **When Gemini is used within the free limit, what is typed in is used by the provider to improve its services, and people may review it.** The terms say: "Google uses the content you submit to the Services and any generated responses to provide, improve, and develop Google products and services and machine learning technologies..." / "human reviewers may read, annotate, and process your API input and output." / "Do not submit sensitive, confidential, or personal information to the Unpaid Services."
 - When Gemini is used on the paid plan, content is not used to improve products. Logs are still kept for a while to detect abuse.
 - Anthropic's Commercial Terms of Service state: "Anthropic may not train models on Customer Content from Services." (checked 2026-11-16). Under OpenAI's Services Agreement, OpenAI does not use customer content to develop or improve its services unless the customer explicitly agrees (checked 2026-11-16). Read the provider's terms before use.
@@ -173,7 +175,7 @@ For the rights to the book and the fonts, see [Rights and terms of use](rights.e
 | "You've used all of today's turns." | This is the daily limit. Try again after the time on screen, or write the words yourself and add your own pictures. |
 | Writing works but pictures do not. | Claude does not make pictures. Add your own, or enter a Gemini or OpenAI key for pictures in [More settings]. Gemini pictures need a key with billing connected. The key check only sees that the key is accepted. |
 | "The key looks right, but the Claude organization that made it has browser use turned off in its settings." | The Claude organization's setting blocks calls straight from the browser. Ask the person who manages the organization to turn it on, or put in a different key. |
-| The character looks different on each page. | Describe the character in more detail, and press [Remake only this picture] in Decorate for pictures you do not like. |
+| The character looks different on each page. | Describe the character in more detail, and press [Remake only this picture] on the [Picture] tab in Decorate for pictures you do not like. |
 | Text boxes are hard to use on a phone. | Use a bigger screen, or click the words and fix them directly. |
 
 For getting a key, see [How to get a key](key-guide.en.md).
