@@ -19,6 +19,7 @@ const SEED: StorySeed = { age_band: '8-10', topic: '우정', hero_name: '보리'
 const IMAGE_REQ: ImageRequest = {
   description: '숲속 길',
   style_id: 'watercolor',
+  custom_style: '',
   hero_card: '',
   reference_image: null,
   page_index: 1,
@@ -182,5 +183,14 @@ describe('page image generation', () => {
     expect(prompt).toContain(card);
     expect(prompt).toContain(build_image_prompt('', book.style_id, '', book.lang));
     expect(full_image_prompt(book, 99)).toBe('');
+  });
+
+  it('"my own style" puts the written style into the copied prompt, and practice pictures use the plain scene', async () => {
+    const book = { ...build_demo_book('ko'), style_id: 'custom' as const, custom_style: '파스텔 크레파스 느낌' };
+    expect(full_image_prompt(book, 1)).toContain('그림체: 파스텔 크레파스 느낌');
+    useSettings.setState({ practice: true });
+    const image = await generate_page_image(book, 1);
+    expect(image?.data_url.startsWith('data:image/svg+xml')).toBe(true);
+    expect(decodeURIComponent(image?.data_url ?? '')).not.toContain('<filter');
   });
 });

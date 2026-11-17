@@ -24,7 +24,7 @@ export function create_openai_image(api_key: string, model: string): ImageProvid
     generate: async (req: ImageRequest): Promise<Blob> => {
       const body = await post_openai<ImagesBody>(OPENAI_IMAGES_URL, api_key, {
         model,
-        prompt: build_image_prompt(req.description, req.style_id, req.hero_card, req.lang),
+        prompt: build_image_prompt(req.description, req.style_id, req.hero_card, req.lang, req.custom_style),
         size: IMAGE_SIZE,
         quality: IMAGE_QUALITY,
         output_format: IMAGE_FORMAT,

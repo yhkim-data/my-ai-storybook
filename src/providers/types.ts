@@ -1,5 +1,5 @@
 // Provider interfaces, so text and image providers can be swapped.
-import type { Lang, PageDraft, Plot, StorySeed, StyleId } from '../types';
+import type { ArtStyle, Lang, PageDraft, Plot, StorySeed } from '../types';
 
 /** The on-screen message comes from the error.<kind> translation key. */
 export type ProviderErrorKind =
@@ -31,7 +31,9 @@ export type ConnectionResult = { ok: true } | { ok: false; reason: ProviderError
 export interface ImageRequest {
   /** This page's image description. */
   description: string;
-  style_id: StyleId;
+  style_id: ArtStyle;
+  /** The user's own style description, used when style_id is 'custom'. */
+  custom_style: string;
   /** Fixed sentence describing the hero's look. */
   hero_card: string;
   /** Data URL; used only if the provider supports reference images. */

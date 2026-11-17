@@ -1,16 +1,18 @@
 // Pure functions that create and update book data; no UI or store dependencies.
 import {
   COVER_FONT_SIZE,
+  CUSTOM_STYLE_MAX_LENGTH,
   DEFAULT_AGE_BAND,
   DEFAULT_LAYOUT_ID,
   DEFAULT_PAGE_COUNT,
   PAGE_COUNT_MAX,
   PAGE_COUNT_MIN,
+  STYLE_IDS,
   DEFAULT_STYLE_ID,
   DEFAULT_TEXT_BOX,
   LAYOUT_TEXT_RECT,
 } from '../constants';
-import type { Book, BookPage, Lang, LayoutId, PageDraft, StorySeed, TextBox } from '../types';
+import type { ArtStyle, Book, BookPage, Lang, LayoutId, PageDraft, StorySeed, TextBox } from '../types';
 
 /** Cover title box position, in percent. */
 const COVER_TEXT_RECT = { x: 8, y: 6, w: 84, h: 22 };
@@ -68,12 +70,28 @@ export function clamp_page_count(value: unknown): number {
   return Math.max(PAGE_COUNT_MIN, Math.min(Math.round(value), PAGE_COUNT_MAX));
 }
 
+/** Keeps a style description to one line of at most CUSTOM_STYLE_MAX_LENGTH characters. */
+export function clean_custom_style(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value.replace(/\s*[\r\n]+\s*/g, ' ').slice(0, CUSTOM_STYLE_MAX_LENGTH);
+}
+
+/** True for the six styles and 'custom'. */
+export function is_art_style(value: unknown): value is ArtStyle {
+  return value === 'custom' || STYLE_IDS.some((style_id) => style_id === value);
+}
+
 /**
  * Fills fields that older saved books may lack and fixes out-of-range values.
  * Used for every book that is opened (saved on this device, loaded from a file, or the demo).
  */
 export function normalize_book(book: Book): Book {
-  return { ...book, seed: { ...make_seed(), ...book.seed, page_count: clamp_page_count(book.seed?.page_count) } };
+  return {
+    ...book,
+    seed: { ...make_seed(), ...book.seed, page_count: clamp_page_count(book.seed?.page_count) },
+    style_id: is_art_style(book.style_id) ? book.style_id : DEFAULT_STYLE_ID,
+    custom_style: clean_custom_style(book.custom_style),
+  };
 }
 
 export function make_seed(): StorySeed {
@@ -94,6 +112,7 @@ export function create_book(lang: Lang): Book {
     chosen_plot: null,
     pages_key: '',
     style_id: DEFAULT_STYLE_ID,
+    custom_style: '',
     pages: [],
     step: 'seed',
     updated_at: Date.now(),

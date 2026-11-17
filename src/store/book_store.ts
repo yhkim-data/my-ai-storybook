@@ -2,8 +2,8 @@
 import { create } from 'zustand';
 import { HISTORY_LIMIT, STEP_SCREENS } from '../constants';
 import { build_cover_description } from '../providers/prompts';
-import type { Book, BookPage, Lang, PageDraft, PageImage, Plot, Screen, StorySeed, StyleId, WriteMode } from '../types';
-import { build_pages, create_book, make_story_page, normalize_book, resize_pages } from './book_model';
+import type { ArtStyle, Book, BookPage, Lang, PageDraft, PageImage, Plot, Screen, StorySeed, WriteMode } from '../types';
+import { build_pages, clean_custom_style, create_book, make_story_page, normalize_book, resize_pages } from './book_model';
 
 /** Side screens that are not wizard steps. */
 export type SideScreen = 'connect' | 'rights';
@@ -38,7 +38,9 @@ export interface BookState {
   ensure_page_count: () => void;
   update_page: (index: number, patch: Partial<BookPage>) => void;
   set_page_image: (index: number, image: PageImage | null) => void;
-  set_style: (style_id: StyleId) => void;
+  set_style: (style_id: ArtStyle) => void;
+  /** Saves the user's own style description and picks the 'custom' style. */
+  set_custom_style: (text: string) => void;
   set_author: (author: string) => void;
   set_current_page: (index: number) => void;
   edit_pages: (mutator: (pages: BookPage[]) => BookPage[], change_key?: string) => void;
@@ -134,6 +136,7 @@ export const useBook = create<BookState>((set, get) => {
       })),
     set_page_image: (index, image) => get().update_page(index, { image }),
     set_style: (style_id) => change_book((book) => ({ ...book, style_id })),
+    set_custom_style: (text) => change_book((book) => ({ ...book, style_id: 'custom', custom_style: clean_custom_style(text) })),
     set_author: (author) => change_book((book) => ({ ...book, author })),
     set_current_page: (index) => {
       const pages = get().book?.pages ?? [];

@@ -21,7 +21,7 @@ const SAFETY_SETTINGS_FIELD = 'safety_settings';
  */
 function build_input(req: ImageRequest, use_reference: boolean): object[] {
   const input: object[] = [
-    { type: 'text', text: build_image_prompt(req.description, req.style_id, req.hero_card, req.lang) },
+    { type: 'text', text: build_image_prompt(req.description, req.style_id, req.hero_card, req.lang, req.custom_style) },
   ];
   if (use_reference && req.reference_image) {
     const parts = split_data_url(req.reference_image);

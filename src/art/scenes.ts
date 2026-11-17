@@ -1,7 +1,7 @@
 // Sample-story scenes (cover + 8 story scenes) in six art styles. No external images.
 // The plain scenes live in ./scenes/*.svg (regenerate with tools/art/build_scenes.py) and load on
 // demand; ./styles.ts turns one plain scene into each art style with SVG filters.
-import type { StyleId } from '../types';
+import type { ArtStyle } from '../types';
 import { apply_style } from './styles';
 
 export const COVER_SCENE_INDEX = 0;
@@ -56,9 +56,9 @@ export function render_base_scene_svg(scene_index: number): string {
 }
 
 /**
- * Returns a square SVG for a scene (0 = cover, 1-8 = story) in the given style.
+ * Returns a square SVG for a scene (0 = cover, 1-8 = story) in the given style; 'custom' gives the plain scene.
  * Out-of-range indices wrap into 1-8. Call load_scene_art() first.
  */
-export function render_scene_svg(scene_index: number, style_id: StyleId): string {
+export function render_scene_svg(scene_index: number, style_id: ArtStyle): string {
   return apply_style(render_base_scene_svg(scene_index), style_id);
 }

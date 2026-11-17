@@ -7,6 +7,8 @@ export type AgeBand = '5-7' | '8-10' | '11-13';
 export type PageCount = number;
 /** Illustration style. */
 export type StyleId = 'watercolor' | 'crayon' | 'clay' | 'papercut' | 'pencil' | 'pixel';
+/** One of the six styles, or 'custom': a style the user describes in words. */
+export type ArtStyle = StyleId | 'custom';
 /** Text and image layout. */
 export type LayoutId = 'image_top' | 'text_top' | 'image_left' | 'text_left' | 'full';
 export type FontId = 'round' | 'plain' | 'hand';
@@ -96,7 +98,9 @@ export interface Book {
   chosen_plot: Plot | null;
   /** Key of the input that produced the page split. */
   pages_key: string;
-  style_id: StyleId;
+  style_id: ArtStyle;
+  /** The user's own style description, used when style_id is 'custom' (one line, at most CUSTOM_STYLE_MAX_LENGTH). */
+  custom_style: string;
   /** pages[0] is the cover; its text is the book title. The rest are story pages. */
   pages: BookPage[];
   /** Last step screen the user was on. */
