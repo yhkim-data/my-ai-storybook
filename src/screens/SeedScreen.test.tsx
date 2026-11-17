@@ -1,5 +1,5 @@
 // Step 2 story seed screen tests.
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CUSTOM_PAGE_COUNT_START, PAGE_COUNT_MAX, PAGE_COUNT_MIN } from '../constants';
@@ -131,5 +131,39 @@ describe('SeedScreen', () => {
     useBook.getState().update_seed({ page_count: 13 });
     render(<SeedScreen />);
     expect(screen.getByRole('spinbutton', { name: ko('seed.pages.count_aria') })).toHaveValue(13);
+  });
+
+  it('"Ask AI for help" cannot be pressed without AI and says why', () => {
+    useSettings.setState({ practice: false, text_key: '' });
+    render(<SeedScreen />);
+    const buttons = screen.getAllByRole('button', { name: ko('assist.button') });
+    expect(buttons.length).toBeGreaterThanOrEqual(2);
+    for (const help of buttons) expect(help).toBeDisabled();
+    expect(screen.getAllByText(ko('assist.need_ai')).length).toBe(buttons.length);
+  });
+
+  it('practice mode writes a name; the box is read-only while waiting; undo puts back the old words', async () => {
+    render(<SeedScreen />);
+    const name_input = screen.getByLabelText(ko('seed.hero_name.label'));
+    fireEvent.change(name_input, { target: { value: '구름' } });
+    const [name_help] = screen.getAllByRole('button', { name: ko('assist.button') });
+    fireEvent.click(name_help as HTMLElement);
+    expect(screen.getByText(ko('assist.busy'))).toBeInTheDocument();
+    expect(name_input).toHaveAttribute('readonly');
+    await waitFor(() => expect(current_seed().hero_name).toBe('토리'));
+    expect(name_input).not.toHaveAttribute('readonly');
+    fireEvent.click(screen.getByRole('button', { name: ko('assist.undo') }));
+    expect(current_seed().hero_name).toBe('구름');
+    expect(screen.queryByRole('button', { name: ko('assist.undo') })).not.toBeInTheDocument();
+  });
+
+  it('editing after the AI wrote hides the undo link', async () => {
+    render(<SeedScreen />);
+    const look_help = screen.getAllByRole('button', { name: ko('assist.button') })[1] as HTMLElement;
+    fireEvent.click(look_help);
+    await waitFor(() => expect(current_seed().hero_look).not.toBe(''));
+    expect(screen.getByRole('button', { name: ko('assist.undo') })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(ko('seed.hero_look.label')), { target: { value: '직접 고친 모습' } });
+    expect(screen.queryByRole('button', { name: ko('assist.undo') })).not.toBeInTheDocument();
   });
 });

@@ -1,4 +1,5 @@
 // Original sample story (3 plots, 8 scenes) used by the mock AI provider and the demo book.
+import type { AssistRequest, AssistResult } from '../providers/types';
 import type { Lang, PageCount, PageDraft, Plot } from '../types';
 import { clamp_page_count } from '../store/book_model';
 
@@ -59,6 +60,12 @@ const IMAGE_TEMPLATES: Record<Lang, string[]> = {
     '{hero} finding a sparkling light in the grass and looking amazed',
     '{hero} coming home at sunset together with a blue bird friend',
   ],
+};
+
+/** One-line story for the "write my own" topic box in practice mode. */
+const SAMPLE_TOPIC_LINE: Record<Lang, string> = {
+  ko: '밤사이 떨어진 작은 별을 찾아 길을 나서는 이야기',
+  en: 'A trip to find a little star that fell in the night',
 };
 
 /** Short linking lines for the extra pages of books longer than eight pages, used in turn. */
@@ -298,3 +305,19 @@ export function find_sample_scene(image_prompt: string): number | null {
   }
   return best_scene;
 }
+
+/** Practice-mode answer for "Ask AI for help": lines from the sample story that fit the box. */
+export function get_sample_assist(req: AssistRequest): AssistResult {
+  const hero = SAMPLE_HERO[req.lang];
+  if (req.kind === 'hero_name') return { text: hero.name };
+  if (req.kind === 'hero_look') return { text: hero.look };
+  if (req.kind === 'topic') return { text: SAMPLE_TOPIC_LINE[req.lang] };
+  if (req.kind === 'plot') {
+    const plot = get_sample_plots(req.lang, req.seed.hero_name)[0];
+    return { title: plot?.title ?? '', summary: plot?.summary ?? '' };
+  }
+  const pages = get_sample_pages(DEFAULT_PLOT_ID, req.lang, req.seed.hero_name, req.seed.page_count);
+  const page = pages[Math.max(0, Math.min((req.page_number ?? 1) - 1, pages.length - 1))];
+  return { text: (req.kind === 'page_text' ? page?.text : page?.image_prompt) ?? '' };
+}
+

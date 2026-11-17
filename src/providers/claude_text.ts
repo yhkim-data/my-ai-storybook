@@ -5,15 +5,18 @@ import { RATE_LIMIT_WAIT_SECONDS } from '../constants';
 import type { Lang, PageDraft, Plot, StorySeed } from '../types';
 import {
   PLOTS_SCHEMA,
+  build_assist_prompt,
+  build_assist_schema,
   build_pages_prompt,
   build_pages_schema,
   build_plots_prompt,
+  parse_assist,
   parse_pages,
   parse_plots,
   text_system_instruction,
 } from './prompts';
 import { to_strict_schema } from './strict_schema';
-import { ProviderError, type ConnectionResult, type TextProvider } from './types';
+import { ProviderError, type ConnectionResult, type AssistRequest, type AssistResult, type TextProvider } from './types';
 
 const MS_PER_SECOND = 1000;
 /** Total attempts, including the one retry after a malformed response. */
@@ -132,6 +135,8 @@ export function create_claude_text(api_key: string, model: string): TextProvider
         lang,
         (raw) => parse_pages(raw, seed.page_count),
       ),
+    assist: (req: AssistRequest): Promise<AssistResult> =>
+      request_json(api_key, model, build_assist_prompt(req), build_assist_schema(req.kind), req.lang, (raw) => parse_assist(raw, req.kind)),
     testConnection: () => check_claude_key(api_key),
   };
 }

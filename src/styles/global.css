@@ -577,6 +577,56 @@ legend {
   background: var(--selected-bg);
 }
 
+/* A label with a small "Ask AI for help" button on the same row. */
+.field-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 10px;
+}
+.assist {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 14px;
+}
+.assist-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--primary-dark);
+  font-size: 14px;
+  font-weight: 700;
+}
+.assist-btn:hover:not(:disabled) {
+  background: var(--selected-bg);
+}
+.assist-btn:disabled {
+  border-color: var(--line-input);
+  color: var(--text-sub);
+}
+.assist-note {
+  color: var(--text-sub);
+  font-weight: 500;
+}
+.assist-undo {
+  min-height: 36px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 /* A choice whose picture no longer matches the page's style: the redraw button stands out. */
 .choice.attention,
 .btn.attention {

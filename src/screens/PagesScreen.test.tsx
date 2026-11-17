@@ -148,4 +148,30 @@ describe('PagesScreen', () => {
     expect(usage() - before).toBe(1);
     await waitFor(() => expect(screen.getAllByLabelText(TEXT_LABEL)[0]).not.toHaveValue('고친 글'));
   });
+
+  it('"Ask AI for help" writes only the chosen page, and each page keeps its own undo', async () => {
+    prepare_store({ write_mode: 'self' });
+    render(<PagesScreen />);
+    fireEvent.click(list_items()[1] as HTMLElement);
+    const [text_help] = screen.getAllByRole('button', { name: ko('assist.button') });
+    fireEvent.click(text_help as HTMLElement);
+    await waitFor(() => expect(current_book().pages[2]?.text).not.toBe(''));
+    expect(current_book().pages[1]?.text).toBe('');
+    expect(screen.getByRole('button', { name: ko('assist.undo') })).toBeInTheDocument();
+    // Another page has nothing to undo.
+    fireEvent.click(list_items()[0] as HTMLElement);
+    expect(screen.queryByRole('button', { name: ko('assist.undo') })).not.toBeInTheDocument();
+    fireEvent.click(list_items()[1] as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: ko('assist.undo') }));
+    expect(current_book().pages[2]?.text).toBe('');
+  });
+
+  it('a picture note request carries the page words', async () => {
+    prepare_store({ write_mode: 'self' });
+    render(<PagesScreen />);
+    fireEvent.change(screen.getByLabelText(TEXT_LABEL), { target: { value: '곰이 강을 건너요.' } });
+    const desc_help = screen.getAllByRole('button', { name: ko('assist.button') })[1] as HTMLElement;
+    fireEvent.click(desc_help);
+    await waitFor(() => expect(current_book().pages[1]?.image_prompt).not.toBe(''));
+  });
 });

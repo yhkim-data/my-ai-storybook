@@ -142,6 +142,21 @@ describe('text provider', () => {
   });
 });
 
+describe('ask AI for help', () => {
+  it('sends the assist prompt with a text schema and the same safety rules, and reads the text', async () => {
+    const body = { status: 'completed', steps: [{ type: 'model_output', content: [{ type: 'text', text: '{"text":"보리"}' }] }] };
+    const mock = stub_fetch(json_response(body));
+    const result = await create_gemini_text(TEST_KEY, DEFAULT_TEXT_MODEL).assist({ kind: 'hero_name', lang: 'ko', seed: SEED, current: '' });
+    expect(result).toEqual({ text: '보리' });
+    expect_safe_calls(mock);
+    const sent = body_of(mock, 0) as RequestBody & { input?: string; response_format: { schema?: unknown } };
+    expect(String(sent.input)).toContain('주인공의 이름');
+    expect(JSON.stringify(sent.response_format.schema)).toContain('"text"');
+    expect(sent.safety_settings).toHaveLength(4);
+    expect(sent.store).toBe(false);
+  });
+});
+
 describe('image provider', () => {
   it('request shape and response Blob', async () => {
     const mock = stub_fetch(json_response(IMAGE_BODY));
