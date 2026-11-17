@@ -59,12 +59,12 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('header and footer', () => {
-  it('shows the step title, undo/redo and book shape buttons, the no-AI badge and DI Lab; picture buttons are on the picture tab', () => {
+  it('shows the step title, undo/redo, the no-AI badge and DI Lab; picture buttons are on the picture tab', () => {
     setup();
     expect(screen.getByText('7 / 8 꾸미기')).toBeInTheDocument();
     expect(button(ko('editor.undo'))).toBeInTheDocument();
     expect(button(ko('editor.redo'))).toBeInTheDocument();
-    expect(button(ko('editor.shape_aria', { name: ko('editor.shape.square') }))).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ko('editor.shape.square') })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
     expect(button(ko('editor.regen'))).toBeInTheDocument();
     expect(button(ko('editor.change_image'))).toBeInTheDocument();
@@ -183,6 +183,26 @@ describe('layout', () => {
     }
     fireEvent.click(button(ko('editor.undo')));
     expect(page_one()).toEqual(before);
+    expect_no_ai_calls();
+  });
+});
+
+describe('book shape', () => {
+  it('sits right under the layout buttons on the picture tab, as three pressed-state buttons that change every page with undo', () => {
+    setup();
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
+    const layout_group = screen.getByRole('group', { name: ko('editor.layout') });
+    const shape_group = screen.getByRole('group', { name: ko('editor.shape') });
+    expect(layout_group.compareDocumentPosition(shape_group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const shape_buttons = within(shape_group).getAllByRole('button');
+    expect(shape_buttons.map((item) => item.getAttribute('aria-label'))).toEqual(['square', 'portrait', 'landscape'].map((shape) => ko(`editor.shape.${shape}`)));
+    expect(shape_buttons.map((item) => item.getAttribute('title'))).toEqual(shape_buttons.map((item) => item.getAttribute('aria-label')));
+    expect(shape_buttons[0]).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(shape_buttons[1]!);
+    expect(useBook.getState().book?.page_shape).toBe('portrait');
+    expect(within(shape_group).getAllByRole('button')[1]).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(button(ko('editor.undo')));
+    expect(useBook.getState().book?.page_shape).toBe('square');
     expect_no_ai_calls();
   });
 });

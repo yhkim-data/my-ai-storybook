@@ -470,49 +470,22 @@
     aspect-ratio: 1 / 1;
   }
 }
-/* Book shape menu */
-.shape-menu {
-  position: relative;
-}
-.shape-menu-button {
-  gap: 6px;
-}
-.shape-menu-list {
-  position: absolute;
-  z-index: 30;
-  top: calc(100% + 6px);
-  left: 0;
-  min-width: 200px;
-  margin: 0;
-  padding: 6px;
-  list-style: none;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--card);
-  box-shadow: 0 10px 30px rgba(23, 35, 58, 0.18);
-}
-.shape-menu-list:focus-visible {
-  outline: 3px solid var(--primary);
-}
-.shape-menu-list.up {
-  top: auto;
-  bottom: calc(100% + 6px);
-}
-.shape-menu-option {
+/* Book shape buttons: an outline of the page at its own proportions, centered in the button. */
+.shape-icon {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 0 10px;
-  border-radius: 8px;
-  font-size: 15px;
-  cursor: pointer;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
 }
-.shape-menu-option.active {
-  background: var(--bg);
+.shape-icon-page {
+  border: 2px solid var(--primary);
+  border-radius: 3px;
 }
-.shape-menu-option[aria-selected='true'] {
-  color: var(--primary-dark);
-  font-weight: 700;
+.shape-icon-page.wide {
+  width: 84%;
 }
-
+.shape-icon-page.tall {
+  height: 84%;
+}

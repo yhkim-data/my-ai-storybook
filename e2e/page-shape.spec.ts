@@ -23,8 +23,10 @@ function png_size(bytes: Uint8Array): { width: number; height: number } {
 }
 
 async function pick_shape(page: Page, shape: string): Promise<void> {
-  await page.locator('.shape-menu-button').click();
-  await page.getByRole('option', { name: tr(LANG, `editor.shape.${shape}`) }).click();
+  await page.getByRole('tab', { name: tr(LANG, 'editor.tab.image') }).click();
+  const group = page.getByRole('group', { name: tr(LANG, 'editor.shape') });
+  await group.getByRole('button', { name: tr(LANG, `editor.shape.${shape}`) }).click();
+  await expect(group.getByRole('button', { name: tr(LANG, `editor.shape.${shape}`) })).toHaveAttribute('aria-pressed', 'true');
 }
 
 async function editor_page_ratio(page: Page): Promise<number> {
