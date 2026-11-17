@@ -14,6 +14,8 @@ export type LayoutId = 'image_top' | 'text_top' | 'image_left' | 'text_left' | '
 export type FontId = 'round' | 'plain' | 'hand';
 export type BoxBackground = 'none' | 'white' | 'bubble';
 export type TextAlign = 'left' | 'center' | 'right';
+/** The two boxes on a page. */
+export type BoxKind = 'text' | 'image';
 /** Whether the AI or the user writes the text. */
 export type WriteMode = 'ai' | 'self';
 export type ImageSource = 'ai' | 'upload';
@@ -82,8 +84,15 @@ export interface BookPage {
   text: string;
   image_prompt: string;
   image: PageImage | null;
+  /** Layout last applied; it places both boxes, which can then be moved freely. */
   layout: LayoutId;
   text_box: TextBox;
+  /** Picture position and size in percent of the page, like text_box. */
+  image_box: Rect;
+  /** Which box is drawn on top where the two overlap. */
+  front: BoxKind;
+  /** Keep the picture's proportions when its box is resized. */
+  image_lock: boolean;
   /** This page's own art style; when missing the page follows the book's style. */
   style?: ArtStyle;
   /** This page's own style description, used when style is 'custom'. */

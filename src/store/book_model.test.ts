@@ -1,10 +1,10 @@
 // Book data helpers: page count limits and filling in older saved books.
 import { describe, expect, it } from 'vitest';
-import { CUSTOM_STYLE_MAX_LENGTH, DEFAULT_PAGE_COUNT, PAGE_COUNT_MAX, PAGE_COUNT_MIN } from '../constants';
+import { CUSTOM_STYLE_MAX_LENGTH, DEFAULT_PAGE_COUNT, LAYOUT_IMAGE_RECT, LAYOUT_TEXT_RECT, PAGE_COUNT_MAX, PAGE_COUNT_MIN } from '../constants';
 import { build_demo_book } from '../data/demo_book';
 import { parse_book_file, serialize_book } from '../storage/book_file';
 import type { Book } from '../types';
-import { clamp_page_count, clean_custom_style, effective_style, normalize_book, style_key } from './book_model';
+import { apply_layout, clamp_page_count, clean_custom_style, effective_style, make_story_page, normalize_book, style_key } from './book_model';
 
 describe('clamp_page_count', () => {
   it('keeps counts in range and rounds them', () => {
@@ -81,5 +81,46 @@ describe('page styles', () => {
     expect(effective_style(book, book.pages[1])).toEqual({ style_id: 'crayon', custom_style: '' });
     expect(effective_style(book, { ...book.pages[1]!, style: 'pixel' })).toEqual({ style_id: 'pixel', custom_style: '' });
     expect(style_key({ style_id: 'custom', custom_style: ' 파스텔 ' })).toBe('custom:파스텔');
+  });
+});
+
+describe('picture boxes', () => {
+  it('an older book without picture boxes gets them from its layouts, text in front, proportions kept', () => {
+    const book = build_demo_book('ko');
+    const older = {
+      ...book,
+      pages: book.pages.map((page, index) => {
+        const { image_box: _box, front: _front, image_lock: _lock, ...rest } = page;
+        return index === 2 ? { ...rest, layout: 'image_left' as const } : rest;
+      }),
+    };
+    expect(older.format_version).toBe(1);
+    const opened = parse_book_file(JSON.stringify(older));
+    expect(opened.pages[0]?.image_box).toEqual(LAYOUT_IMAGE_RECT.full);
+    expect(opened.pages[1]?.image_box).toEqual(LAYOUT_IMAGE_RECT.image_top);
+    expect(opened.pages[2]?.image_box).toEqual(LAYOUT_IMAGE_RECT.image_left);
+    for (const page of opened.pages) {
+      expect(page.front).toBe('text');
+      expect(page.image_lock).toBe(true);
+    }
+  });
+
+  it('a moved picture, its order and the proportions setting survive save and load', () => {
+    const book = build_demo_book('ko');
+    const moved = {
+      ...book,
+      pages: book.pages.map((page, index) => (index === 1 ? { ...page, image_box: { x: 12, y: 8, w: 33, h: 44 }, front: 'image' as const, image_lock: false } : page)),
+    };
+    const opened = parse_book_file(serialize_book(moved));
+    expect(opened.pages[1]?.image_box).toEqual({ x: 12, y: 8, w: 33, h: 44 });
+    expect(opened.pages[1]?.front).toBe('image');
+    expect(opened.pages[1]?.image_lock).toBe(false);
+  });
+
+  it('a layout places both boxes at once', () => {
+    const page = { ...make_story_page('글'), image_box: { x: 1, y: 2, w: 30, h: 30 } };
+    const placed = apply_layout(page, 'text_left');
+    expect(placed.image_box).toEqual(LAYOUT_IMAGE_RECT.text_left);
+    expect(placed.text_box).toMatchObject(LAYOUT_TEXT_RECT.text_left);
   });
 });

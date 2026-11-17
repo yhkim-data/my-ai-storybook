@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { build_demo_book } from '../data/demo_book';
 import { translate } from '../i18n';
 import type { Book, BookPage } from '../types';
-import { CreditsPageView, PageView } from './PageView';
+import { CreditsPageView, PageView, image_box_style } from './PageView';
 
 const SIZE = 400;
 /** Outer size ratio with bleed (206 mm / 200 mm). */
@@ -106,5 +106,44 @@ describe('CreditsPageView', () => {
       for (const word of BANNED_WORDS) expect(container.textContent ?? '').not.toContain(word);
       unmount();
     }
+  });
+});
+
+describe('picture box on the page', () => {
+  const OFFSET = 6;
+
+  it('draws the picture at its own box', () => {
+    const page = { ...story_page(), image_box: { x: 10, y: 20, w: 50, h: 25 } };
+    const { container } = render(<PageView page={page} size={SIZE} />);
+    const image = container.querySelector<HTMLElement>('.page-image')!;
+    expect(parseFloat(image.style.left)).toBeCloseTo(SIZE * 0.1);
+    expect(parseFloat(image.style.top)).toBeCloseTo(SIZE * 0.2);
+    expect(parseFloat(image.style.width)).toBeCloseTo(SIZE * 0.5);
+    expect(parseFloat(image.style.height)).toBeCloseTo(SIZE * 0.25);
+  });
+
+  it('draws the front box last, so it covers the other one', () => {
+    const page = story_page();
+    const order = (front: 'text' | 'image') => {
+      const { container, unmount } = render(<PageView page={{ ...page, front }} size={SIZE} />);
+      const classes = Array.from(container.querySelector('.page-inner')!.children).map((child) => child.className);
+      unmount();
+      return classes;
+    };
+    expect(order('text').at(-1)).toContain('text-box');
+    expect(order('image').at(-1)).toContain('page-image');
+  });
+
+  it('sides touching the page edge reach into the print bleed; other sides stay on the page', () => {
+    const edge = image_box_style({ x: 0, y: 30, w: 50, h: 70 }, SIZE, OFFSET);
+    expect(edge.left).toBe(-OFFSET);
+    expect(edge.top).toBeCloseTo(SIZE * 0.3);
+    expect(edge.width).toBeCloseTo(SIZE * 0.5 + OFFSET);
+    expect(edge.height).toBeCloseTo(SIZE * 0.7 + OFFSET);
+    expect(edge.borderRadius).toBe(0);
+    const inside = image_box_style({ x: 10, y: 10, w: 50, h: 50 }, SIZE, OFFSET);
+    expect(inside.left).toBeCloseTo(SIZE * 0.1);
+    expect(inside.width).toBeCloseTo(SIZE * 0.5);
+    expect(Number(inside.borderRadius)).toBeGreaterThan(0);
   });
 });

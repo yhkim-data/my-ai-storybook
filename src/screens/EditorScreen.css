@@ -133,12 +133,26 @@
   overflow: visible;
 }
 
-/* Editable text box */
+/* Editable boxes. The selected one shows a solid outline and its handles, which stay above the other box. */
 .book-page .text-box.editor-box {
   overflow: visible;
-  outline: 2px solid var(--primary);
+  outline: 1px dashed var(--line-input);
   cursor: move;
   touch-action: none;
+}
+.book-page .text-box.editor-box.selected {
+  outline: 2px solid var(--primary);
+}
+.editor-image-box {
+  position: absolute;
+  cursor: move;
+  touch-action: none;
+}
+.editor-image-box.selected {
+  outline: 2px solid var(--primary);
+}
+.editor-image-box.dragging {
+  user-select: none;
 }
 .book-page .text-box.editor-box.dragging {
   user-select: none;
@@ -169,6 +183,7 @@
 }
 .box-handle {
   position: absolute;
+  z-index: 5;
   width: 14px;
   height: 14px;
   padding: 0;
@@ -205,6 +220,7 @@
 }
 .box-grip {
   position: absolute;
+  z-index: 5;
   left: 50%;
   top: -34px;
   width: 44px;
@@ -271,6 +287,31 @@
   background: var(--card);
   color: var(--primary-dark);
   box-shadow: 0 1px 4px rgba(23, 35, 58, 0.15);
+}
+/* Front/back order for the selected box. */
+.editor-order {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.editor-order .btn {
+  padding: 0 4px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.editor-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.editor-check input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--primary);
 }
 .editor-panel {
   display: flex;

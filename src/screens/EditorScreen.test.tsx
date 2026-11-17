@@ -376,3 +376,73 @@ describe('settings tabs and the page art style', () => {
     expect(page_one().style).toBeUndefined();
   });
 });
+
+describe('picture box', () => {
+  it('the picture tab selects the picture: it gets handles and the text box loses them', () => {
+    setup();
+    expect(screen.getByTestId('box-move')).toBeInTheDocument();
+    expect(screen.queryByTestId('image-move')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
+    expect(screen.getByTestId('image-move')).toBeInTheDocument();
+    expect(screen.queryByTestId('box-move')).not.toBeInTheDocument();
+    // Pressing on the text box selects it again.
+    fireEvent.pointerDown(screen.getByTestId('text-box'), { button: 0, clientX: 0, clientY: 0 });
+    expect(screen.getByRole('tab', { name: ko('editor.tab.text') })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('arrow keys move the picture by 1%, Shift+arrow by 5%, and undo puts it back', () => {
+    setup();
+    const start = page_one().image_box;
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
+    const grip = screen.getByTestId('image-move');
+    for (let press = 0; press < ARROW_PRESSES; press += 1) fireEvent.keyDown(grip, { key: 'ArrowDown', shiftKey: true });
+    expect(page_one().image_box.y).toBeCloseTo(Math.min(start.y + 5 * ARROW_PRESSES, 100 - start.h));
+    const after_big = page_one().image_box.y;
+    fireEvent.keyDown(grip, { key: 'ArrowUp' });
+    expect(page_one().image_box.y).toBeCloseTo(after_big - 1);
+    fireEvent.click(button(ko('editor.undo')));
+    expect(page_one().image_box).toEqual(start);
+    expect_no_ai_calls();
+  });
+
+  it('keyboard resize keeps the picture shape while "keep shape" is on, and not when it is off', () => {
+    setup();
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
+    const start = page_one().image_box;
+    fireEvent.keyDown(screen.getByTestId('image-resize'), { key: 'ArrowLeft', shiftKey: true });
+    const locked = page_one().image_box;
+    expect(locked.w / locked.h).toBeCloseTo(start.w / start.h);
+    fireEvent.click(screen.getByLabelText(ko('editor.image_lock')));
+    expect(page_one().image_lock).toBe(false);
+    fireEvent.keyDown(screen.getByTestId('image-resize'), { key: 'ArrowLeft', shiftKey: true });
+    const free = page_one().image_box;
+    expect(free.h).toBeCloseTo(locked.h);
+    expect(free.w).toBeCloseTo(locked.w - 5);
+  });
+
+  it('bring to front and send to back change which box is on top, with undo', () => {
+    setup();
+    expect(page_one().front).toBe('text');
+    expect(button(ko('editor.bring_front'))).toBeDisabled();
+    fireEvent.click(button(ko('editor.send_back')));
+    expect(page_one().front).toBe('image');
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
+    expect(button(ko('editor.bring_front'))).toBeDisabled();
+    fireEvent.click(button(ko('editor.send_back')));
+    expect(page_one().front).toBe('text');
+    fireEvent.click(button(ko('editor.undo')));
+    expect(page_one().front).toBe('image');
+    fireEvent.click(button(ko('editor.undo')));
+    expect(page_one().front).toBe('text');
+    expect_no_ai_calls();
+  });
+
+  it('a layout puts the picture box back at the layout place', () => {
+    setup();
+    fireEvent.click(screen.getByRole('tab', { name: ko('editor.tab.image') }));
+    fireEvent.keyDown(screen.getByTestId('image-move'), { key: 'ArrowRight', shiftKey: true });
+    fireEvent.click(button(ko('editor.layout.full')));
+    expect(page_one().image_box).toEqual({ x: 0, y: 0, w: 100, h: 100 });
+  });
+});
+
