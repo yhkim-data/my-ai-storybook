@@ -150,3 +150,21 @@ describe('custom page counts', () => {
     });
   }
 });
+
+describe('my own style in the image prompt', () => {
+  it('uses the words the user wrote, followed by the same safety sentence', () => {
+    const ko_prompt = build_image_prompt('숲길', 'custom', '', 'ko', '파스텔 색 크레파스 느낌');
+    expect(ko_prompt).toContain('그림체: 파스텔 색 크레파스 느낌');
+    expect(ko_prompt).toContain('실제 인물');
+    const en_prompt = build_image_prompt('a forest path', 'custom', '', 'en', 'pastel crayon look');
+    expect(en_prompt).toContain('Art style: pastel crayon look');
+    expect(en_prompt.indexOf('Art style: pastel crayon look')).toBeLessThan(en_prompt.indexOf('No text or letters'));
+    expect(en_prompt).toMatch(/real people/i);
+  });
+
+  it('an empty description adds no style line, and the fixed style phrases are not used', () => {
+    const prompt = build_image_prompt('숲길', 'custom', '', 'ko', '   ');
+    expect(prompt).not.toContain('그림체:');
+    expect(prompt).toContain('실제 인물');
+  });
+});

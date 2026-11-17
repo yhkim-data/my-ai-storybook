@@ -21,6 +21,7 @@ export async function generate_page_image(book: Book, page_index: number): Promi
   const blob = await provider.generate({
     description: page.image_prompt || page.text,
     style_id: book.style_id,
+    custom_style: book.custom_style,
     hero_card: build_hero_card(book.seed, book.lang),
     reference_image: provider.supportsReferenceImage ? find_reference_image(book, page_index) : null,
     page_index,
@@ -33,5 +34,5 @@ export async function generate_page_image(book: Book, page_index: number): Promi
 export function full_image_prompt(book: Book, page_index: number): string {
   const page = book.pages[page_index];
   if (!page) return '';
-  return build_image_prompt(page.image_prompt || page.text, book.style_id, build_hero_card(book.seed, book.lang), book.lang);
+  return build_image_prompt(page.image_prompt || page.text, book.style_id, build_hero_card(book.seed, book.lang), book.lang, book.custom_style);
 }

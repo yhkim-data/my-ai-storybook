@@ -47,6 +47,7 @@ const SEED = {
 const IMAGE_REQUEST: ImageRequest = {
   description: '숲속 오솔길을 걷는 작은 여우',
   style_id: 'watercolor' as ImageRequest['style_id'],
+  custom_style: '',
   hero_card: '빨간 목도리를 한 작은 여우',
   reference_image: null,
   page_index: 1,

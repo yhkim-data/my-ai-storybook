@@ -17,6 +17,8 @@ export const MANY_PAGES_FROM = 9;
 export const DEFAULT_AGE_BAND: AgeBand = '8-10';
 export const STYLE_IDS: StyleId[] = ['watercolor', 'crayon', 'clay', 'papercut', 'pencil', 'pixel'];
 export const DEFAULT_STYLE_ID: StyleId = 'watercolor';
+/** In characters. */
+export const CUSTOM_STYLE_MAX_LENGTH = 200;
 export const LAYOUT_IDS: LayoutId[] = ['image_top', 'text_top', 'image_left', 'text_left', 'full'];
 export const DEFAULT_LAYOUT_ID: LayoutId = 'image_top';
 /** Topic chips; translation key is seed.topic.<id>. */

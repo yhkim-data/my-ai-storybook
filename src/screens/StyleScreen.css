@@ -1,9 +1,14 @@
-/* Style screen: six style cards in a 3 x 2 grid that fills the space left on the screen. */
+/* Style screen: six style cards in a 3 x 2 grid and a tall "my own style" card, filling the space left on the screen. */
+.style-top {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 .style-layout {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
   gap: clamp(14px, 2vw, 20px);
 }
 .style-grid {
@@ -46,7 +51,71 @@
   font-size: clamp(16px, 2.3vh, 18px);
   font-weight: 700;
 }
+/* "My own style": a dashed card until it is chosen. */
+.style-custom {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1.2vh, 10px);
+  padding: clamp(14px, 2.4vh, 22px);
+  border: 1px dashed var(--line-input);
+  border-radius: 16px;
+  background: var(--card);
+}
+.style-custom.selected {
+  border: 2px solid var(--primary);
+  background: var(--selected-bg);
+  padding: calc(clamp(14px, 2.4vh, 22px) - 1px);
+}
+.style-custom-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  text-align: left;
+}
+.style-custom-title {
+  font-size: clamp(18px, 2.6vh, 21px);
+  font-weight: 700;
+  color: var(--text);
+}
+.style-custom.selected .style-custom-title {
+  color: var(--primary-dark);
+}
+.style-custom-desc {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-sub);
+}
+.style-custom-label {
+  margin-top: clamp(4px, 1vh, 10px);
+  font-size: 15px;
+  font-weight: 700;
+}
+.text-area.style-custom-input {
+  flex: 1 1 auto;
+  min-height: 84px;
+  font-size: 16px;
+  resize: none;
+}
+.style-custom-hint {
+  font-size: 14px;
+  color: var(--text-sub);
+}
+@media (min-width: 600px) and (max-width: 899px) {
+  .style-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+}
 @media (max-width: 599px) {
+  .style-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .style-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: none;

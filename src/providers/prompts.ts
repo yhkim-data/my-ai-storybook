@@ -1,5 +1,5 @@
 // Builds the prompts sent to the AI. Every prompt carries the child-safety rules.
-import type { AgeBand, Lang, PageDraft, Plot, StorySeed, StyleId } from '../types';
+import type { AgeBand, ArtStyle, Lang, PageDraft, Plot, StorySeed, StyleId } from '../types';
 
 export const PLOT_SUGGESTION_COUNT = 3;
 
@@ -80,11 +80,22 @@ export function build_hero_card(seed: StorySeed, lang: Lang): string {
     : `Main character "${name}". Draw the character the same way in every picture.`;
 }
 
+/** Label in front of the user's own style description. */
+const CUSTOM_STYLE_LABEL: Record<Lang, string> = { ko: '그림체:', en: 'Art style:' };
+
+/** The style sentence: a fixed phrase for the six styles, the user's words for 'custom' (nothing if empty). */
+export function build_style_phrase(style_id: ArtStyle, custom_style: string, lang: Lang): string {
+  if (style_id !== 'custom') return STYLE_PHRASES[style_id][lang];
+  const words = custom_style.trim();
+  return words ? `${CUSTOM_STYLE_LABEL[lang]} ${words}` : '';
+}
+
 /**
  * Builds the full image prompt. The same text is sent to the AI and used by "copy image prompt".
+ * The safety sentence always comes last, also after a style the user wrote.
  */
-export function build_image_prompt(description: string, style_id: StyleId, hero_card: string, lang: Lang): string {
-  return [hero_card, description.trim(), STYLE_PHRASES[style_id][lang], IMAGE_SAFETY_RULES[lang]]
+export function build_image_prompt(description: string, style_id: ArtStyle, hero_card: string, lang: Lang, custom_style = ''): string {
+  return [hero_card, description.trim(), build_style_phrase(style_id, custom_style, lang), IMAGE_SAFETY_RULES[lang]]
     .filter((part) => part.length > 0)
     .join('\n');
 }

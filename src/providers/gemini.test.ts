@@ -17,6 +17,7 @@ const SEED: StorySeed = { age_band: '8-10', topic: '우정', hero_name: '보리'
 const IMAGE_REQ: ImageRequest = {
   description: '숲속 길',
   style_id: 'watercolor',
+  custom_style: '',
   hero_card: '',
   reference_image: null,
   page_index: 1,
