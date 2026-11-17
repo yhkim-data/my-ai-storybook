@@ -1,6 +1,7 @@
 // Per-page art style control: a button that opens a list of "same as the book", the six styles and
 // "my own style" (with a description box right under it). Used on the pictures and editor screens.
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { CUSTOM_STYLE_MAX_LENGTH, STYLE_IDS } from '../constants';
 import { useT } from '../i18n';
 import type { ArtStyle, StyleChoice } from '../types';
@@ -25,10 +26,16 @@ interface StyleMenuProps {
 export function StyleMenu({ book_style, page_style, page_custom_style, on_change, id, class_name = '' }: StyleMenuProps) {
   const t = useT();
   const button_ref = useRef<HTMLButtonElement>(null);
-  const popover = usePopover<HTMLDivElement>(button_ref);
+  const popover = usePopover<HTMLDivElement>(button_ref, 'end');
   const book_name = t(`style.name.${book_style.style_id}`);
   const shown_name = page_style ? t(`style.name.${page_style}`) : book_name;
   const custom_id = `${id}-custom`;
+  const { is_open, list_ref } = popover;
+
+  // The list opens at the end of the page, so keyboard focus moves to the chosen item in it.
+  useEffect(() => {
+    if (is_open) list_ref.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus();
+  }, [is_open, list_ref]);
 
   const choose = (style: ArtStyle | undefined) => {
     on_change(style, page_custom_style);
@@ -52,35 +59,37 @@ export function StyleMenu({ book_style, page_style, page_custom_style, on_change
           <path d="M3 5l4 4 4-4" />
         </svg>
       </button>
-      {popover.is_open && (
-        <div id={`${id}-list`} className={popover.opens_up ? 'style-menu-list up' : 'style-menu-list'} role="group" aria-label={t('style.page.label')}>
-          <button type="button" className="style-menu-item" aria-pressed={page_style === undefined} onClick={() => choose(undefined)}>
-            {t('style.page.follow', { name: book_name })}
-          </button>
-          {STYLE_IDS.map((style_id) => (
-            <button key={style_id} type="button" className="style-menu-item" aria-pressed={page_style === style_id} onClick={() => choose(style_id)}>
-              {t(`style.name.${style_id}`)}
+      {popover.is_open &&
+        createPortal(
+          <div ref={popover.list_ref} id={`${id}-list`} className="style-menu-list popover-layer" role="group" aria-label={t('style.page.label')}>
+            <button type="button" className="style-menu-item" aria-pressed={page_style === undefined} onClick={() => choose(undefined)}>
+              {t('style.page.follow', { name: book_name })}
             </button>
-          ))}
-          <button type="button" className="style-menu-item" aria-pressed={page_style === 'custom'} onClick={() => choose('custom')}>
-            {t('style.name.custom')}
-          </button>
-          {page_style === 'custom' && (
-            <div className="style-menu-custom">
-              <label htmlFor={custom_id}>{t('style.page.custom_label')}</label>
-              <textarea
-                id={custom_id}
-                className="text-area"
-                rows={CUSTOM_ROWS}
-                maxLength={CUSTOM_STYLE_MAX_LENGTH}
-                placeholder={t('style.custom.placeholder')}
-                value={page_custom_style}
-                onChange={(event) => on_change('custom', event.target.value)}
-              />
-            </div>
-          )}
-        </div>
-      )}
+            {STYLE_IDS.map((style_id) => (
+              <button key={style_id} type="button" className="style-menu-item" aria-pressed={page_style === style_id} onClick={() => choose(style_id)}>
+                {t(`style.name.${style_id}`)}
+              </button>
+            ))}
+            <button type="button" className="style-menu-item" aria-pressed={page_style === 'custom'} onClick={() => choose('custom')}>
+              {t('style.name.custom')}
+            </button>
+            {page_style === 'custom' && (
+              <div className="style-menu-custom">
+                <label htmlFor={custom_id}>{t('style.page.custom_label')}</label>
+                <textarea
+                  id={custom_id}
+                  className="text-area"
+                  rows={CUSTOM_ROWS}
+                  maxLength={CUSTOM_STYLE_MAX_LENGTH}
+                  placeholder={t('style.custom.placeholder')}
+                  value={page_custom_style}
+                  onChange={(event) => on_change('custom', event.target.value)}
+                />
+              </div>
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
