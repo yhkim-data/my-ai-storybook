@@ -5,6 +5,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # typescript-eslint 8.73.0 accepts only TypeScript below 6.1.0 (peer range ">=4.8.4 <6.1.0").
+      # Remove this entry once a typescript-eslint release accepts TypeScript 7.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
