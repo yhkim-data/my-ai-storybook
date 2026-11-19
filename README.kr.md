@@ -138,7 +138,7 @@ The rights to the book you make belong to you. This tool and DI Lab claim no rig
 
 ## 개발
 
-Node 20 이상이 필요합니다.
+Node 22.22.2 이상(22번대), 24.15.0 이상(24번대), 또는 26 이상이 필요합니다. CI는 Node 24를 씁니다.
 
 ```
 npm install

@@ -138,7 +138,7 @@ The app is tested at tablet and phone screen sizes. Moving and resizing text box
 
 ## Development
 
-Requires Node 20 or later.
+Requires Node 22.22.2 or later in the 22 line, 24.15.0 or later in the 24 line, or Node 26 or later. CI uses Node 24.
 
 ```
 npm install
